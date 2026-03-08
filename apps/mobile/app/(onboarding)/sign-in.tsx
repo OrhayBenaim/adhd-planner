@@ -56,7 +56,7 @@ export default function SignInStep() {
         const { error } = await authClient.signUp.email({
           email: email.trim(),
           password,
-          name: name.trim() || undefined,
+          name: name.trim() || "",
         });
         if (error) {
           Alert.alert("Sign-up failed", error.message ?? "Please try again.");

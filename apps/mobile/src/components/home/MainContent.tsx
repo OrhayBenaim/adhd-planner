@@ -61,9 +61,6 @@ export function MainContent() {
     const ease = { duration: 300, easing: Easing.out(Easing.quad) };
     const settle = { duration: 400, easing: Easing.inOut(Easing.quad) };
 
-    const ease = { duration: 300, easing: Easing.out(Easing.quad) };
-    const settle = { duration: 400, easing: Easing.inOut(Easing.quad) };
-
     aiRotate.value = withSequence(
       withTiming(0.04, ease),
       withTiming(-0.04, ease),
