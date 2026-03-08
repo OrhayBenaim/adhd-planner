@@ -14,6 +14,7 @@
     "@adhd-planner/types": "*",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/slider": "5.1.2",
     "@tanstack/react-query": "^5.90.21",
     "expo": "~55.0.5",
     "expo-av": "^16.0.8",
@@ -40,7 +41,9 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "testMatch": ["**/src/lib/__tests__/**/*.test.ts"],
+    "testMatch": [
+      "**/src/lib/__tests__/**/*.test.ts"
+    ],
     "moduleNameMapper": {
       "^@adhd-planner/types$": "<rootDir>/../../packages/types/src/index.ts"
     }
