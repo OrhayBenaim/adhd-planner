@@ -1,4 +1,5 @@
 import { View, ScrollView } from "react-native";
+import type { Id } from "@adhd-planner/convex/convex/_generated/dataModel";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRef, useState, useCallback, type RefObject } from "react";
 import BottomSheet from "@gorhom/bottom-sheet";
@@ -60,11 +61,11 @@ export default function HomeScreen() {
   const aiScale = useSharedValue(1);
   const aiRotate = useSharedValue(0);
 
-  const { data: tasks = [] } = useTasks();
+  const tasks = useTasks();
   const createTask = useCreateTask();
   const completeTask = useCompleteTask();
   const deleteTask = useDeleteTask();
-  const { progress, addPoints } = useUserProgress();
+  const { progress } = useUserProgress();
   const { settings, updateSetting } = useSettings();
 
   // Sheet refs
@@ -101,7 +102,7 @@ export default function HomeScreen() {
 
   // onClose handler for sheets that may navigate to another sheet.
   // Called by the BottomSheet after its close animation completes (both gesture and programmatic).
-  const onSheetClosed = useCallback((sheetRef: RefObject<BottomSheet>) => () => {
+  const onSheetClosed = useCallback((sheetRef: RefObject<BottomSheet | null>) => () => {
     const next = nextSheetRef.current;
     nextSheetRef.current = null;
     sheetRef.current?.close(); // no-op if already closed; covers swipe-to-dismiss path
@@ -138,12 +139,11 @@ export default function HomeScreen() {
   // Complete task
   const handleComplete = useCallback(
     async (task: Task) => {
-      await completeTask.mutateAsync(task.id);
-      const { earned } = await addPoints(task.difficulty);
+      const result = await completeTask({ id: task._id as Id<"tasks"> });
       setSelectedTask(null);
-      setToast({ points: earned, visible: true });
+      setToast({ points: result?.earned ?? 0, visible: true });
     },
-    [completeTask, addPoints]
+    [completeTask]
   );
 
   // Add task flow
@@ -172,7 +172,7 @@ export default function HomeScreen() {
       return;
     }
     closeSheet();
-    await createTask.mutateAsync({
+    await createTask({
       title: pendingTaskTitle,
       difficulty: moodLevel,
       dueDate: selectedDay || undefined,
@@ -301,7 +301,7 @@ export default function HomeScreen() {
         ref={allTasksSheetRef}
         tasks={tasks}
         onEdit={() => {}}
-        onDelete={(id) => deleteTask.mutate(id)}
+        onDelete={(id) => deleteTask({ id: id as Id<"tasks"> })}
         onClose={closeSheet}
       />
       <SettingsSheet

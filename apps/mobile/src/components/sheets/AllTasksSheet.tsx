@@ -40,7 +40,7 @@ function TaskItem({ task, onEdit, onDelete }: TaskItemProps) {
             <Ionicons name="create-outline" size={20} color="#364153" />
           </Pressable>
           <Pressable
-            onPress={() => onDelete(task.id)}
+            onPress={() => onDelete(task._id)}
             className="w-8 h-8 rounded-full items-center justify-center"
           >
             <Ionicons name="trash-outline" size={20} color="#364153" />
@@ -78,7 +78,7 @@ export const AllTasksSheet = forwardRef<BottomSheet, Props>(
         </View>
         <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}>
           {tasks.map((task) => (
-            <TaskItem key={task.id} task={task} onEdit={onEdit} onDelete={onDelete} />
+            <TaskItem key={task._id} task={task} onEdit={onEdit} onDelete={onDelete} />
           ))}
           {tasks.length === 0 && (
             <Text className="text-center text-[#99a1af] mt-8">No tasks yet</Text>
