@@ -46,6 +46,26 @@ export const scoreTaskDifficulty = internalAction({
       return;
     }
 
+    const prefs = await ctx.runQuery(internal.preferences.getByUserId, { userId });
+
+    let systemPrompt =
+      "You are a task difficulty scorer for an ADHD planner app. " +
+      "Given a task title, rate its difficulty from 0 to 100. " +
+      "0 = trivially easy (e.g. drink water), 100 = extremely difficult (e.g. write a thesis). " +
+      "Consider cognitive load, time required, and executive function demand. " +
+      "Respond with ONLY the number, nothing else.";
+
+    if (prefs) {
+      systemPrompt +=
+        "\n\nUser context:" +
+        `\n- Finds these challenging: ${prefs.difficulties.join(", ")}` +
+        `\n- Enjoys and is good at: ${prefs.strengths.join(", ")}` +
+        `\n- Most productive during: ${prefs.bestWorkTimes.join(", ")}` +
+        "\n\nUse this context to personalize the difficulty score. " +
+        "Tasks related to their challenges should score higher. " +
+        "Tasks aligned with their strengths should score lower.";
+    }
+
     try {
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -57,12 +77,7 @@ export const scoreTaskDifficulty = internalAction({
           messages: [
             {
               role: "system",
-              content:
-                "You are a task difficulty scorer for an ADHD planner app. " +
-                "Given a task title, rate its difficulty from 0 to 100. " +
-                "0 = trivially easy (e.g. drink water), 100 = extremely difficult (e.g. write a thesis). " +
-                "Consider cognitive load, time required, and executive function demand. " +
-                "Respond with ONLY the number, nothing else.",
+              content: systemPrompt,
             },
             {
               role: "user",
