@@ -6,8 +6,8 @@ export interface Task {
   description?: string;
   difficulty: number;
   completed: boolean;
-  dueDate?: string;
-  dueTime?: string;
+  dueDate: string;
+  dueTime: string;
   _creationTime: number;
 }
 
