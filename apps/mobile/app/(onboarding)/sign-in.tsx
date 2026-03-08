@@ -45,6 +45,7 @@ export default function SignInStep() {
             {Platform.OS === "android" && (
               <Pressable
                 onPress={() => handleSignIn("google")}
+                disabled={isSubmitting}
                 className="flex-row items-center gap-3 px-4 py-4 rounded-3xl border border-[#e5e7eb] bg-white shadow-sm"
               >
                 <Ionicons name="logo-google" size={24} color="#4285F4" />
@@ -58,6 +59,7 @@ export default function SignInStep() {
             {Platform.OS === "ios" && (
               <Pressable
                 onPress={() => handleSignIn("apple")}
+                disabled={isSubmitting}
                 className="flex-row items-center gap-3 px-4 py-4 rounded-3xl border border-[#e5e7eb] bg-white shadow-sm"
               >
                 <Ionicons name="logo-apple" size={24} color="#000" />
@@ -70,6 +72,7 @@ export default function SignInStep() {
             {/* Email (always) */}
             <Pressable
               onPress={() => handleSignIn("email")}
+              disabled={isSubmitting}
               className="flex-row items-center gap-3 px-4 py-4 rounded-3xl border border-[#e5e7eb] bg-white shadow-sm"
             >
               <Ionicons name="mail-outline" size={24} color="#6a7282" />
