@@ -1,0 +1,147 @@
+// apps/mobile/src/components/home/MainContent.tsx
+import { View, ScrollView, Pressable, Text } from "react-native";
+import { useCallback } from "react";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+
+import { XPBar } from "../XPBar";
+import { MoodSlider } from "../MoodSlider";
+import { TaskCard } from "../TaskCard";
+import { BottomNav } from "../BottomNav";
+import { PointsToast } from "../PointsToast";
+import { useHome } from "./HomeProvider";
+
+export function MainContent() {
+  const {
+    tasks,
+    progress,
+    moodLevel,
+    setMoodLevel,
+    selectedTask,
+    setSelectedTask,
+    toast,
+    hideToast,
+    completeTask,
+    showToast,
+    openSheet,
+  } = useHome();
+
+  // AI button animation — local to this component
+  const aiScale = useSharedValue(1);
+  const aiRotate = useSharedValue(0);
+
+  const handleAIPick = useCallback(() => {
+    const incomplete = tasks.filter((t) => !t.completed);
+    if (!incomplete.length) return;
+
+    aiRotate.value = withSequence(
+      withTiming(0.1, { duration: 100 }),
+      withTiming(-0.1, { duration: 100 }),
+      withTiming(0, { duration: 100 })
+    );
+    aiScale.value = withSequence(
+      withSpring(1.1, { damping: 8 }),
+      withSpring(1, { damping: 12 })
+    );
+
+    const best = incomplete.reduce((prev, curr) =>
+      Math.abs(curr.difficulty - moodLevel) < Math.abs(prev.difficulty - moodLevel)
+        ? curr
+        : prev
+    );
+    setTimeout(() => setSelectedTask(best), 300);
+  }, [tasks, moodLevel, setSelectedTask, aiRotate, aiScale]);
+
+  const handleComplete = useCallback(
+    async (task: typeof selectedTask) => {
+      if (!task) return;
+      const result = await completeTask(task._id);
+      setSelectedTask(null);
+      showToast(result?.earned ?? 0);
+    },
+    [completeTask, setSelectedTask, showToast]
+  );
+
+  const aiAnimStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: aiScale.value },
+      { rotate: `${aiRotate.value}rad` },
+    ],
+  }));
+
+  return (
+    <View className="flex-1 bg-[#f5f7fa]">
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 130 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header */}
+        <View className="items-center pt-8 pb-4 px-6">
+          <Text className="text-2xl font-medium text-[#0a0a0a] text-center">How are you feeling?</Text>
+          <Text className="text-sm text-[#6a7282] text-center mt-1">Let's find the perfect task for you</Text>
+        </View>
+
+        {/* XP bar */}
+        <View className="py-6">
+          <View className="relative">
+            <XPBar progress={progress} />
+            <PointsToast
+              points={toast.points}
+              visible={toast.visible}
+              onDone={hideToast}
+            />
+          </View>
+        </View>
+
+        {/* Mood slider */}
+        <View className="px-6 pt-2 pb-8">
+          <MoodSlider value={moodLevel} onChange={setMoodLevel} />
+        </View>
+
+        {/* AI button */}
+        <View className="items-center pb-6">
+          <Animated.View style={aiAnimStyle}>
+            <Pressable onPress={handleAIPick}>
+              <View style={{ width: 154, height: 154, borderRadius: 77, backgroundColor: "#b9cbea", shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 15, elevation: 8 }}>
+                <View style={{ width: 154, height: 154, borderRadius: 77, overflow: "hidden" }}>
+                  <LinearGradient
+                    colors={["#a2d2ff", "#cdb4db"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+                  >
+                    <Ionicons name="sparkles-outline" size={58} color="#fff" />
+                  </LinearGradient>
+                </View>
+              </View>
+            </Pressable>
+          </Animated.View>
+        </View>
+
+        {/* Task card */}
+        <View className="px-6">
+          <TaskCard
+            task={selectedTask}
+            onComplete={handleComplete}
+            onLater={() => setSelectedTask(null)}
+          />
+        </View>
+      </ScrollView>
+
+      {/* Bottom nav */}
+      <BottomNav
+        onListPress={() => openSheet("allTasks")}
+        onAddPress={() => openSheet("addTask")}
+        onSettingsPress={() => openSheet("settings")}
+      />
+    </View>
+  );
+}
