@@ -20,6 +20,12 @@ export interface Task {
   updatedAt: string;
 }
 
+export interface UserProgress {
+  level: number;
+  points: number;
+  pointsToNextLevel: number;
+}
+
 // API response wrapper
 export interface ApiResponse<T> {
   data: T;
