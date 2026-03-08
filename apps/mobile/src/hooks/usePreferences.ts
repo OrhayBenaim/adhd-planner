@@ -5,6 +5,10 @@ export function usePreferences() {
   return useQuery(api.preferences.get);
 }
 
+export function useNeedsOnboarding() {
+  return useQuery(api.preferences.needsOnboarding);
+}
+
 export function useSavePreferences() {
   return useMutation(api.preferences.save);
 }

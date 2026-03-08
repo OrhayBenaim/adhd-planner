@@ -14,6 +14,57 @@ export const get = query({
   },
 });
 
+export const needsOnboarding = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return false;
+
+    const userId = identity.subject;
+
+    // Has preferences with onboarding completed? Skip.
+    const prefs = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    if (prefs?.onboardingCompleted) return false;
+
+    // Has existing data (tasks or progress)? They're a pre-onboarding user. Skip.
+    const hasTask = await ctx.db
+      .query("tasks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    if (hasTask) return false;
+
+    const hasProgress = await ctx.db
+      .query("userProgress")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    if (hasProgress) return false;
+
+    // New user with no data and no completed onboarding
+    return true;
+  },
+});
+
+export const setNotificationsEnabled = mutation({
+  args: { enabled: v.boolean() },
+  handler: async (ctx, { enabled }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+
+    const userId = identity.subject;
+    const existing = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { notificationsEnabled: enabled });
+    }
+  },
+});
+
 export const getByUserId = internalQuery({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {

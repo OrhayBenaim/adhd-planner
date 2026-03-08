@@ -2,12 +2,12 @@ import { ActivityIndicator, View } from "react-native";
 import { useEffect } from "react";
 import { router } from "expo-router";
 import { authClient } from "../src/lib/authClient";
-import { usePreferences } from "../src/hooks/usePreferences";
+import { useNeedsOnboarding } from "../src/hooks/usePreferences";
 import { HomeScreen } from "../src/components/home";
 
 export default function IndexPage() {
   const { data: session, isPending } = authClient.useSession();
-  const preferences = usePreferences();
+  const needsOnboarding = useNeedsOnboarding();
 
   // Trigger anonymous sign-in when there's no session
   useEffect(() => {
@@ -18,15 +18,15 @@ export default function IndexPage() {
     }
   }, [session, isPending]);
 
-  // Redirect to onboarding if not completed
+  // Redirect to onboarding if needed
   useEffect(() => {
-    if (session && preferences !== undefined && !preferences?.onboardingCompleted) {
+    if (session && needsOnboarding === true) {
       router.replace("/(onboarding)/welcome");
     }
-  }, [session, preferences]);
+  }, [session, needsOnboarding]);
 
-  // Show loader until session is ready and preferences are loaded
-  if (isPending || !session || preferences === undefined) {
+  // Show loader until session is ready and onboarding check is loaded
+  if (isPending || !session || needsOnboarding === undefined) {
     return (
       <View className="flex-1 bg-[#f5f7fa] items-center justify-center">
         <ActivityIndicator size="large" color="#a2d2ff" />
@@ -34,8 +34,8 @@ export default function IndexPage() {
     );
   }
 
-  // If onboarding not done, show loader (redirect is happening)
-  if (!preferences?.onboardingCompleted) {
+  // If onboarding needed, show loader (redirect is happening)
+  if (needsOnboarding) {
     return (
       <View className="flex-1 bg-[#f5f7fa] items-center justify-center">
         <ActivityIndicator size="large" color="#a2d2ff" />
