@@ -1,5 +1,6 @@
 import { forwardRef, useState } from "react";
-import { View, Text, Pressable, Keyboard } from "react-native";
+import { View, Text, Keyboard } from "react-native";
+import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import Animated, {
@@ -7,6 +8,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { SPRING_BOUNCY } from "../../animations/springs";
 
 interface Props {
@@ -75,10 +77,26 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
                 onPress={onMicPress}
                 onPressIn={() => { micScale.value = withSpring(0.92, SPRING_BOUNCY); }}
                 onPressOut={() => { micScale.value = withSpring(1, SPRING_BOUNCY); }}
-                className="w-16 h-16 rounded-full items-center justify-center"
-                style={{ backgroundColor: "#a2d2ff" }}
               >
-                <Ionicons name="mic-outline" size={26} color="#fff" />
+                <LinearGradient
+                  colors={["#a2d2ff", "#cdb4db"]}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 9999,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 10 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 15,
+                    elevation: 8,
+                  }}
+                >
+                  <Ionicons name="mic-outline" size={28} color="#fff" />
+                </LinearGradient>
               </Pressable>
             </Animated.View>
 
@@ -87,10 +105,27 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
                 onPress={handleConfirm}
                 onPressIn={() => { confirmScale.value = withSpring(0.92, SPRING_BOUNCY); }}
                 onPressOut={() => { confirmScale.value = withSpring(1, SPRING_BOUNCY); }}
-                className="w-16 h-16 rounded-full items-center justify-center"
-                style={{ backgroundColor: "#bde0fe", opacity: text.trim() ? 1 : 0.5 }}
               >
-                <Ionicons name="checkmark" size={26} color="#fff" />
+                <LinearGradient
+                  colors={["#bde0fe", "#a2d2ff"]}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 9999,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: text.trim() ? 1 : 0.5,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 10 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 15,
+                    elevation: 8,
+                  }}
+                >
+                  <Ionicons name="checkmark" size={28} color="#fff" />
+                </LinearGradient>
               </Pressable>
             </Animated.View>
           </View>
