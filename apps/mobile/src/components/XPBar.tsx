@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "react-native";
-import { UserProgress, xpPercent } from "../lib/points";
+import type { UserProgress } from "@adhd-planner/types";
 import { SPRING_XP_BAR, SPRING_BOUNCY } from "../animations/springs";
 
 interface Props {
@@ -17,7 +17,7 @@ interface Props {
 }
 
 export function XPBar({ progress }: Props) {
-  const percent = xpPercent(progress);
+  const percent = Math.min(progress.points / progress.pointsToNextLevel, 1);
   const barWidth = useSharedValue(percent);
   const trophyScale = useSharedValue(1);
 

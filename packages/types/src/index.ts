@@ -1,14 +1,6 @@
-// Domain types shared between apps/api and apps/mobile
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  createdAt: string;
-}
-
+// Domain types shared between apps
 export interface Task {
-  id: string;
+  _id: string;
   userId: string;
   title: string;
   description?: string;
@@ -16,25 +8,11 @@ export interface Task {
   completed: boolean;
   dueDate?: string;
   dueTime?: string;
-  createdAt: string;
-  updatedAt: string;
+  _creationTime: number;
 }
 
 export interface UserProgress {
   level: number;
   points: number;
   pointsToNextLevel: number;
-}
-
-// API response wrapper
-export interface ApiResponse<T> {
-  data: T;
-  error?: string;
-}
-
-// Auth
-export interface AuthSession {
-  userId: string;
-  email: string;
-  name: string;
 }
