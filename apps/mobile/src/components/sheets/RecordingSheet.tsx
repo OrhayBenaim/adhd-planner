@@ -8,6 +8,7 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
 import { SPRING_BOUNCY } from "../../animations/springs";
 
@@ -16,16 +17,15 @@ interface Props {
   onClose: () => void;
 }
 
-const DOT_COUNT = 20;
+const DOT_COUNT = 50;
 
 function SpectroDot({ volume, index }: { volume: number; index: number }) {
-  const height = useSharedValue(8);
+  const height = useSharedValue(4);
 
-  // Each dot responds to volume with a slight offset for visual variety
   const offset = Math.sin(index * 0.7) * 0.3;
   useEffect(() => {
-    const target = 8 + (volume + offset) * 40;
-    height.value = withSpring(Math.max(8, Math.min(48, target)), {
+    const target = 4 + (volume + offset) * 28;
+    height.value = withSpring(Math.max(4, Math.min(32, target)), {
       damping: 12,
       stiffness: 180,
     });
@@ -33,10 +33,11 @@ function SpectroDot({ volume, index }: { volume: number; index: number }) {
 
   const style = useAnimatedStyle(() => ({
     height: height.value,
-    width: 6,
-    borderRadius: 3,
+    width: 3,
+    borderRadius: 1.5,
     backgroundColor: "#ffafcc",
-    marginHorizontal: 2,
+    opacity: 0.3,
+    marginHorizontal: 1,
   }));
 
   return <Animated.View style={style} />;
@@ -51,22 +52,17 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
       start,
       stop,
       cancel,
-      append,
       error,
     } = useSpeechRecognition();
 
-    const cancelScale = useSharedValue(1);
+    const stopScale = useSharedValue(1);
     const confirmScale = useSharedValue(1);
-    const micScale = useSharedValue(1);
 
-    const cancelStyle = useAnimatedStyle(() => ({
-      transform: [{ scale: cancelScale.value }],
+    const stopStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: stopScale.value }],
     }));
     const confirmStyle = useAnimatedStyle(() => ({
       transform: [{ scale: confirmScale.value }],
-    }));
-    const micStyle = useAnimatedStyle(() => ({
-      transform: [{ scale: micScale.value }],
     }));
 
     // Start recognition when sheet opens
@@ -99,7 +95,7 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
       }
     }, [error]);
 
-    const handleCancel = () => {
+    const handleStop = () => {
       cancel();
       onClose();
     };
@@ -109,16 +105,8 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
       if (transcript.trim()) {
         onStop(transcript.trim());
       }
-      // If empty, stay on sheet — do nothing
     };
 
-    const handleMicPress = () => {
-      if (state === "stopped" || state === "error") {
-        append();
-      }
-    };
-
-    const isListening = state === "listening";
     const showRetry =
       state === "error" && error !== "permissions_denied";
 
@@ -126,7 +114,7 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
       <BottomSheet
         ref={ref}
         index={-1}
-        snapPoints={["50%"]}
+        snapPoints={["45%"]}
         enablePanDownToClose
         onClose={() => {
           cancel();
@@ -140,88 +128,96 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
         handleIndicatorStyle={{ display: "none" }}
       >
         <BottomSheetView className="px-6 pt-6">
-          <View className="flex-row items-center justify-between mb-4">
+          {/* Header */}
+          <View className="flex-row items-center justify-between mb-6">
             <Text className="text-xl font-semibold text-[#1e2939]">
-              {isListening ? "Listening..." : "Recording"}
+              Add New Task
             </Text>
-            <Pressable onPress={handleCancel}>
+            <Pressable onPress={handleStop}>
               <Ionicons name="close" size={24} color="#364153" />
             </Pressable>
           </View>
 
-          {/* Spectrograph */}
+          {/* Transcript display (textarea area) */}
           <View
-            className="rounded-3xl overflow-hidden justify-center items-center"
-            style={{
-              height: 64,
-              backgroundColor: "rgba(162,210,255,0.2)",
-            }}
-          >
-            <View className="flex-row items-end" style={{ height: 48 }}>
-              {Array.from({ length: DOT_COUNT }).map((_, i) => (
-                <SpectroDot key={i} volume={volume} index={i} />
-              ))}
-            </View>
-          </View>
-
-          {/* Transcript display */}
-          <View
-            className="mt-4 min-h-[60px] rounded-2xl px-4 py-3"
-            style={{ backgroundColor: "rgba(162,210,255,0.1)" }}
+            className="min-h-[128px] rounded-3xl px-4 py-4 mb-6"
+            style={{ borderWidth: 1.1, borderColor: "#e5e7eb" }}
           >
             <Text
-              className="text-base text-[#1e2939]"
-              style={{ opacity: transcript ? 1 : 0.4 }}
+              className="text-base leading-6"
+              style={{
+                color: transcript ? "#1e2939" : "#99a1af",
+              }}
             >
-              {transcript || "Start speaking..."}
+              {transcript || "Describe your task..."}
             </Text>
           </View>
 
           {/* Error / retry message */}
           {showRetry && (
-            <Text className="text-sm text-[#f87171] mt-2 text-center">
+            <Text className="text-sm text-[#f87171] mb-2 text-center">
               Couldn't catch that. Tap the mic to try again.
             </Text>
           )}
 
-          {/* Buttons */}
-          <View className="flex-row items-center justify-end gap-4 mt-4">
-            {/* Cancel */}
-            <Animated.View style={cancelStyle}>
+          {/* Bottom row: [Spectrograph pill] [X stop] [Check confirm] */}
+          <View className="flex-row items-center gap-4">
+            {/* Spectrograph pill */}
+            <View className="flex-1">
+              <LinearGradient
+                colors={["rgba(162,210,255,0.2)", "rgba(205,180,219,0.2)"]}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={{
+                  height: 64,
+                  borderRadius: 9999,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  overflow: "hidden",
+                }}
+              >
+                <View className="flex-row items-center" style={{ gap: 0 }}>
+                  {Array.from({ length: DOT_COUNT }).map((_, i) => (
+                    <SpectroDot key={i} volume={volume} index={i} />
+                  ))}
+                </View>
+              </LinearGradient>
+            </View>
+
+            {/* X stop button — gradient #a2d2ff → #cdb4db */}
+            <Animated.View style={stopStyle}>
               <Pressable
-                onPress={handleCancel}
+                onPress={handleStop}
                 onPressIn={() => {
-                  cancelScale.value = withSpring(0.92, SPRING_BOUNCY);
+                  stopScale.value = withSpring(0.92, SPRING_BOUNCY);
                 }}
                 onPressOut={() => {
-                  cancelScale.value = withSpring(1, SPRING_BOUNCY);
+                  stopScale.value = withSpring(1, SPRING_BOUNCY);
                 }}
-                className="w-14 h-14 rounded-full items-center justify-center bg-[#ffc8dd]"
               >
-                <Ionicons name="close" size={24} color="#fff" />
+                <LinearGradient
+                  colors={["#a2d2ff", "#cdb4db"]}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 9999,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 10 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 15,
+                    elevation: 8,
+                  }}
+                >
+                  <Ionicons name="close" size={28} color="#fff" />
+                </LinearGradient>
               </Pressable>
             </Animated.View>
 
-            {/* Mic (append/retry) — shown when stopped */}
-            {!isListening && (
-              <Animated.View style={micStyle}>
-                <Pressable
-                  onPress={handleMicPress}
-                  onPressIn={() => {
-                    micScale.value = withSpring(0.92, SPRING_BOUNCY);
-                  }}
-                  onPressOut={() => {
-                    micScale.value = withSpring(1, SPRING_BOUNCY);
-                  }}
-                  className="w-14 h-14 rounded-full items-center justify-center"
-                  style={{ backgroundColor: "#a2d2ff" }}
-                >
-                  <Ionicons name="mic" size={24} color="#fff" />
-                </Pressable>
-              </Animated.View>
-            )}
-
-            {/* Confirm */}
+            {/* Check confirm button — gradient #bde0fe → #a2d2ff */}
             <Animated.View style={confirmStyle}>
               <Pressable
                 onPress={handleConfirm}
@@ -231,13 +227,27 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
                 onPressOut={() => {
                   confirmScale.value = withSpring(1, SPRING_BOUNCY);
                 }}
-                className="w-14 h-14 rounded-full items-center justify-center"
-                style={{
-                  backgroundColor: "#bde0fe",
-                  opacity: transcript.trim() ? 1 : 0.5,
-                }}
               >
-                <Ionicons name="checkmark" size={24} color="#fff" />
+                <LinearGradient
+                  colors={["#bde0fe", "#a2d2ff"]}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: 9999,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    opacity: transcript.trim() ? 1 : 0.5,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 10 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 15,
+                    elevation: 8,
+                  }}
+                >
+                  <Ionicons name="checkmark" size={28} color="#fff" />
+                </LinearGradient>
               </Pressable>
             </Animated.View>
           </View>
