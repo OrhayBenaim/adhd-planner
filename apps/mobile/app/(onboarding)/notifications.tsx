@@ -31,24 +31,36 @@ export default function NotificationsStep() {
       continueEnabled={false}
       showFooter={false}
     >
-      <View className="flex-1 items-center justify-center">
+      <View className="flex-1 items-center">
         {/* Illustration placeholder */}
-        <View className="w-48 h-48 rounded-3xl bg-[#ffc8dd]/20 items-center justify-center mb-4">
+        <View className="w-48 h-48 rounded-3xl bg-[#ffc8dd]/20 items-center justify-center" style={{ marginBottom: 32 }}>
           <Text className="text-6xl">🔔</Text>
         </View>
 
         {/* Bell icon badge */}
         <LinearGradient
           colors={["#ffc8dd", "#ffafcc"]}
-          className="w-20 h-20 rounded-full items-center justify-center shadow-lg -mt-12 mb-6"
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: 32,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 24,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 10 },
+            shadowOpacity: 0.1,
+            shadowRadius: 15,
+            elevation: 6,
+          }}
         >
-          <Ionicons name="notifications" size={40} color="#fff" />
+          <Ionicons name="notifications-outline" size={28} color="#fff" />
         </LinearGradient>
 
-        <Text className="text-2xl font-bold text-[#1e2939] text-center mb-2">
+        <Text className="text-3xl font-bold text-[#1e2939] text-center mb-2">
           Stay on track 🔔
         </Text>
-        <Text className="text-base text-[#4a5565] text-center mb-10 px-4">
+        <Text className="text-lg text-[#4a5565] text-center mb-10 px-4">
           Enable notifications to get gentle reminders when it's time to tackle your tasks
         </Text>
 
@@ -57,7 +69,17 @@ export default function NotificationsStep() {
           colors={["#a2d2ff", "#cdb4db"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 0, y: 1 }}
-          className="w-full h-14 rounded-3xl shadow-lg mb-4"
+          style={{
+            width: "100%",
+            height: 56,
+            borderRadius: 9999,
+            marginBottom: 16,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 8,
+            elevation: 6,
+          }}
         >
           <Pressable onPress={handleEnable} className="flex-1 items-center justify-center">
             <Text className="text-white font-semibold text-base">

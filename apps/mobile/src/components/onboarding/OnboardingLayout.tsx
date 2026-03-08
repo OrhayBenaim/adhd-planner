@@ -39,8 +39,8 @@ export function OnboardingLayout({
 
           {/* Footer */}
           {showFooter && (
-            <View className="border-t border-[#f3f4f6] px-6 py-6 flex-row items-center justify-between">
-              {/* Back button */}
+            <View className="px-6 py-6 flex-row items-center justify-between">
+              {/* Back button — hidden on first step */}
               {onBack ? (
                 <Pressable
                   onPress={onBack}
@@ -49,9 +49,7 @@ export function OnboardingLayout({
                   <Ionicons name="chevron-back" size={24} color="#364153" />
                 </Pressable>
               ) : (
-                <View className="w-12 h-12 rounded-full bg-[#f3f4f6] items-center justify-center opacity-30">
-                  <Ionicons name="chevron-back" size={24} color="#364153" />
-                </View>
+                <View className="w-12 h-12" />
               )}
 
               {/* Continue button */}
@@ -59,8 +57,8 @@ export function OnboardingLayout({
                 colors={["#a2d2ff", "#cdb4db"]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 0, y: 1 }}
-                className="flex-1 ml-4 h-14 rounded-3xl shadow-lg"
-                style={{ opacity: continueEnabled ? 1 : 0.5 }}
+                className="flex-1 ml-4 h-14 shadow-lg"
+                style={{ borderRadius: 9999, opacity: continueEnabled ? 1 : 0.5 }}
               >
                 <Pressable
                   onPress={onContinue}

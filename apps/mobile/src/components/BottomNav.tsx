@@ -1,4 +1,5 @@
-import { View, Pressable } from "react-native";
+import { View } from "react-native";
+import { AppPressable as Pressable } from "./AppPressable";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,

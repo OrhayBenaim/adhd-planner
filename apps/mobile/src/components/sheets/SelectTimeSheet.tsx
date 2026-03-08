@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
-import { View, Text, Pressable, Keyboard } from "react-native";
+import { View, Text, Keyboard } from "react-native";
+import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { LinearGradient } from "expo-linear-gradient";

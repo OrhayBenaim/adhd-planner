@@ -12,6 +12,20 @@ export const updateTaskDifficulty = internalMutation({
   },
 });
 
+export const logScoringAudit = internalMutation({
+  args: {
+    taskId: v.id("tasks"),
+    userId: v.string(),
+    taskTitle: v.string(),
+    score: v.number(),
+    reason: v.string(),
+    model: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.insert("aiScoringAudit", args);
+  },
+});
+
 export const getUserAiEnabled = internalQuery({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
@@ -19,8 +33,10 @@ export const getUserAiEnabled = internalQuery({
       .query("userSettings")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
-    // Default to true if no settings row exists
-    return settings?.aiEnabled ?? true;
+    // Admin override takes priority, then user preference
+    const adminEnabled = settings?.aiEnabled ?? true;
+    const userEnabled = settings?.userAiEnabled ?? true;
+    return adminEnabled && userEnabled;
   },
 });
 
@@ -53,7 +69,7 @@ export const scoreTaskDifficulty = internalAction({
       "Given a task title, rate its difficulty from 0 to 100. " +
       "0 = trivially easy (e.g. drink water), 100 = extremely difficult (e.g. write a thesis). " +
       "Consider cognitive load, time required, and executive function demand. " +
-      "Respond with ONLY the number, nothing else.";
+      'Respond with JSON only: {"score": <number>, "reason": "<1-2 sentence explanation>"}';
 
     if (prefs) {
       systemPrompt +=
@@ -92,16 +108,47 @@ export const scoreTaskDifficulty = internalAction({
       }
 
       const data = await response.json();
-      const raw = data.choices?.[0]?.message?.content?.trim();
-      const score = parseInt(raw, 10);
+      let raw = data.choices?.[0]?.message?.content?.trim() ?? "";
+      const model = data.model ?? undefined;
+
+      // Strip markdown code blocks if present
+      raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+
+      let score: number;
+      let reason: string;
+
+      try {
+        const parsed = JSON.parse(raw);
+        score = parsed.score;
+        reason = parsed.reason ?? "";
+      } catch {
+        // Fallback: try parsing as plain number
+        score = parseInt(raw, 10);
+        reason = "";
+      }
 
       if (isNaN(score) || score < 0 || score > 100) {
         throw new Error(`Invalid score from AI: "${raw}"`);
       }
 
       await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: score });
+      await ctx.runMutation(internal.ai.logScoringAudit, {
+        taskId,
+        userId,
+        taskTitle: title,
+        score,
+        reason,
+        model,
+      });
     } catch (error) {
       await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
+      await ctx.runMutation(internal.ai.logScoringAudit, {
+        taskId,
+        userId,
+        taskTitle: title,
+        score: 0,
+        reason: `Error: ${error instanceof Error ? error.message : String(error)}`,
+      });
       console.error(`[AI] scoring failed for task ${taskId}:`, error);
     }
   },

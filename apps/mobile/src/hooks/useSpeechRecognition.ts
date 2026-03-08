@@ -76,7 +76,6 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
     const model = await AsyncStorage.getItem(STT_MODEL_KEY);
     const requiresOnDevice = model !== null && model !== "default";
     return {
-      lang: "en-US",
       interimResults: true,
       requiresOnDeviceRecognition: requiresOnDevice,
       addsPunctuation: true,

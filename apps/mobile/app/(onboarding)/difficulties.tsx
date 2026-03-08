@@ -22,10 +22,10 @@ export default function DifficultiesStep() {
             <Text className="text-5xl">😓</Text>
           </View>
 
-          <Text className="text-2xl font-bold text-[#1e2939] text-center mb-2">
+          <Text className="text-3xl font-bold text-[#1e2939] text-center mb-2">
             What feels hard? 😓
           </Text>
-          <Text className="text-base text-[#4a5565] text-center mb-8">
+          <Text className="text-lg text-[#4a5565] text-center mb-8">
             Select tasks you find difficult or annoying (we'll help!)
           </Text>
 

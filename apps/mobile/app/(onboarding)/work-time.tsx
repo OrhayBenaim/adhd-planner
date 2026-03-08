@@ -22,10 +22,10 @@ export default function WorkTimeStep() {
             <Text className="text-6xl">⏰</Text>
           </View>
 
-          <Text className="text-2xl font-bold text-[#1e2939] text-center mb-2">
+          <Text className="text-3xl font-bold text-[#1e2939] text-center mb-2">
             When do you work best? ⏰
           </Text>
-          <Text className="text-base text-[#4a5565] text-center mb-8">
+          <Text className="text-lg text-[#4a5565] text-center mb-8">
             Help us schedule tasks when you're most productive
           </Text>
 
@@ -41,7 +41,7 @@ export default function WorkTimeStep() {
                     colors={["rgba(189,224,254,0.2)", "rgba(162,210,255,0.2)"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
-                    className="rounded-3xl px-4 py-4"
+                    className="rounded-3xl px-5 py-5"
                     style={{ borderWidth: 1.5, borderColor: "#a2d2ff" }}
                   >
                     <Text className="text-base font-medium text-[#1e2939]">
@@ -53,7 +53,7 @@ export default function WorkTimeStep() {
                 <Pressable
                   key={time.id}
                   onPress={() => toggleArrayItem("bestWorkTimes", time.label)}
-                  className="rounded-3xl px-4 py-4"
+                  className="rounded-3xl px-5 py-5"
                   style={{ borderWidth: 1.5, borderColor: "#e5e7eb" }}
                 >
                   <Text className="text-base font-medium text-[#364153]">

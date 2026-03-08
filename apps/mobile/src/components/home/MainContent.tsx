@@ -1,5 +1,6 @@
 // apps/mobile/src/components/home/MainContent.tsx
-import { View, ScrollView, Pressable, Text } from "react-native";
+import { View, ScrollView, Text } from "react-native";
+import { AppPressable as Pressable } from "../AppPressable";
 import { useCallback } from "react";
 import Animated, {
   useSharedValue,
