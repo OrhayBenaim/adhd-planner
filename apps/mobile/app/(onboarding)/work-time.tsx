@@ -31,11 +31,11 @@ export default function WorkTimeStep() {
 
           <View className="w-full gap-3">
             {PRODUCTIVE_TIMES.map((time) => {
-              const isSelected = state.bestWorkTimes.includes(time.id);
+              const isSelected = state.bestWorkTimes.includes(time.label);
               return isSelected ? (
                 <Pressable
                   key={time.id}
-                  onPress={() => toggleArrayItem("bestWorkTimes", time.id)}
+                  onPress={() => toggleArrayItem("bestWorkTimes", time.label)}
                 >
                   <LinearGradient
                     colors={["rgba(189,224,254,0.2)", "rgba(162,210,255,0.2)"]}
@@ -52,7 +52,7 @@ export default function WorkTimeStep() {
               ) : (
                 <Pressable
                   key={time.id}
-                  onPress={() => toggleArrayItem("bestWorkTimes", time.id)}
+                  onPress={() => toggleArrayItem("bestWorkTimes", time.label)}
                   className="rounded-3xl px-4 py-4"
                   style={{ borderWidth: 1.5, borderColor: "#e5e7eb" }}
                 >

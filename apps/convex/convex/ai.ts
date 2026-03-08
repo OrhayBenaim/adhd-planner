@@ -24,36 +24,6 @@ export const getUserAiEnabled = internalQuery({
   },
 });
 
-const LABEL_MAP: Record<string, string> = {
-  early_morning: "Early morning",
-  mid_morning: "Mid-morning",
-  afternoon: "Afternoon",
-  evening: "Evening",
-  night: "Night",
-  starting_tasks: "Starting tasks",
-  finishing_projects: "Finishing projects",
-  keeping_track_of_time: "Keeping track of time",
-  staying_focused: "Staying focused",
-  making_decisions: "Making decisions",
-  cooking_meal_prep: "Cooking & meal prep",
-  cleaning_tidying: "Cleaning & tidying",
-  paying_bills: "Paying bills",
-  grocery_shopping: "Grocery shopping",
-  exercising: "Exercising",
-  creative_work: "Creative work",
-  helping_others: "Helping others",
-  learning_new_things: "Learning new things",
-  problem_solving: "Problem solving",
-  quick_small_tasks: "Quick small tasks",
-  shopping: "Shopping",
-  social_activities: "Social activities",
-  reading_research: "Reading & research",
-};
-
-function toLabels(ids: string[]): string {
-  return ids.map((id) => LABEL_MAP[id] ?? id).join(", ");
-}
-
 export const scoreTaskDifficulty = internalAction({
   args: {
     taskId: v.id("tasks"),
@@ -88,9 +58,9 @@ export const scoreTaskDifficulty = internalAction({
     if (prefs) {
       systemPrompt +=
         "\n\nUser context:" +
-        `\n- Finds these challenging: ${toLabels(prefs.difficulties)}` +
-        `\n- Enjoys and is good at: ${toLabels(prefs.strengths)}` +
-        `\n- Most productive during: ${toLabels(prefs.bestWorkTimes)}` +
+        `\n- Finds these challenging: ${prefs.difficulties.join(", ")}` +
+        `\n- Enjoys and is good at: ${prefs.strengths.join(", ")}` +
+        `\n- Most productive during: ${prefs.bestWorkTimes.join(", ")}` +
         "\n\nUse this context to personalize the difficulty score. " +
         "Tasks related to their challenges should score higher. " +
         "Tasks aligned with their strengths should score lower.";
