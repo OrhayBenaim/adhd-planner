@@ -11,4 +11,11 @@ export default defineSchema({
     dueDate: v.optional(v.string()),
     dueTime: v.optional(v.string()),
   }).index("by_user", ["userId"]),
+
+  userProgress: defineTable({
+    userId: v.string(),
+    level: v.number(),
+    points: v.number(),
+    pointsToNextLevel: v.number(),
+  }).index("by_user", ["userId"]),
 });
