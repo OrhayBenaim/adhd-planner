@@ -14,6 +14,20 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     secret: process.env.BETTER_AUTH_SECRET!,
     trustedOrigins: ["adhd-planner://"],
     database: authComponent.adapter(ctx),
+    emailAndPassword: {
+      enabled: true,
+      requireEmailVerification: false,
+    },
+    socialProviders: {
+      google: {
+        clientId: process.env.GOOGLE_CLIENT_ID!,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      },
+      apple: {
+        clientId: process.env.APPLE_CLIENT_ID!,
+        clientSecret: process.env.APPLE_CLIENT_SECRET!,
+      },
+    },
     plugins: [
       expo(),
       convex({
