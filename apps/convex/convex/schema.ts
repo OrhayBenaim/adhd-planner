@@ -6,13 +6,9 @@ export default defineSchema({
     userId: v.string(),
     title: v.string(),
     description: v.optional(v.string()),
+    difficulty: v.number(),
     completed: v.boolean(),
     dueDate: v.optional(v.string()),
+    dueTime: v.optional(v.string()),
   }).index("by_user", ["userId"]),
-
-  users: defineTable({
-    externalId: v.string(), // better-auth user ID
-    email: v.string(),
-    name: v.string(),
-  }).index("by_external_id", ["externalId"]),
 });

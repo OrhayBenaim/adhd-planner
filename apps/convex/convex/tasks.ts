@@ -16,7 +16,9 @@ export const create = mutation({
     userId: v.string(),
     title: v.string(),
     description: v.optional(v.string()),
+    difficulty: v.number(),
     dueDate: v.optional(v.string()),
+    dueTime: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     return ctx.db.insert("tasks", {
