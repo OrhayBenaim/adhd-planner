@@ -15,6 +15,9 @@ export default defineSchema({
   userSettings: defineTable({
     userId: v.string(),
     aiEnabled: v.boolean(),
+    userAiEnabled: v.optional(v.boolean()),
+    sttModel: v.optional(v.string()),
+    sttLocale: v.optional(v.string()),
   }).index("by_user", ["userId"]),
 
   userProgress: defineTable({
@@ -23,6 +26,15 @@ export default defineSchema({
     points: v.number(),
     pointsToNextLevel: v.number(),
   }).index("by_user", ["userId"]),
+
+  aiScoringAudit: defineTable({
+    taskId: v.id("tasks"),
+    userId: v.string(),
+    taskTitle: v.string(),
+    score: v.number(),
+    reason: v.string(),
+    model: v.optional(v.string()),
+  }).index("by_task", ["taskId"]).index("by_user", ["userId"]),
 
   userPreferences: defineTable({
     userId: v.string(),
