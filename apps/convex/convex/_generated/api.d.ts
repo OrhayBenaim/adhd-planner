@@ -8,8 +8,11 @@
  * @module
  */
 
+import type * as ai from "../ai.js";
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
+import type * as migration from "../migration.js";
+import type * as preferences from "../preferences.js";
 import type * as progress from "../progress.js";
 import type * as tasks from "../tasks.js";
 
@@ -20,8 +23,11 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  ai: typeof ai;
   auth: typeof auth;
   http: typeof http;
+  migration: typeof migration;
+  preferences: typeof preferences;
   progress: typeof progress;
   tasks: typeof tasks;
 }>;
