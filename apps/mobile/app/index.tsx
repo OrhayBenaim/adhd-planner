@@ -1,8 +1,10 @@
-import { View, SafeAreaView, ScrollView } from "react-native";
+import { View, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRef, useState, useCallback } from "react";
 import BottomSheet from "@gorhom/bottom-sheet";
 import Animated, {
   useSharedValue,
+  useAnimatedStyle,
   withSpring,
   withSequence,
   withTiming,
@@ -160,12 +162,12 @@ export default function HomeScreen() {
     setSelectedDay("");
   };
 
-  const aiAnimStyle = {
+  const aiAnimStyle = useAnimatedStyle(() => ({
     transform: [
-      { scale: aiScale },
+      { scale: aiScale.value },
       { rotate: `${aiRotate.value}rad` },
     ],
-  };
+  }));
 
   return (
     <SafeAreaView className="flex-1 bg-[#f5f7fa]">
