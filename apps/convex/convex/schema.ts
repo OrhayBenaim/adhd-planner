@@ -23,4 +23,14 @@ export default defineSchema({
     points: v.number(),
     pointsToNextLevel: v.number(),
   }).index("by_user", ["userId"]),
+
+  userPreferences: defineTable({
+    userId: v.string(),
+    name: v.string(),
+    bestWorkTimes: v.array(v.string()),
+    difficulties: v.array(v.string()),
+    strengths: v.array(v.string()),
+    notificationsEnabled: v.boolean(),
+    onboardingCompleted: v.boolean(),
+  }).index("by_user", ["userId"]),
 });
