@@ -92,3 +92,14 @@ export const scoreTaskDifficulty = internalAction({
     }
   },
 });
+
+export const getStaleScoringTasks = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+    const allTasks = await ctx.db.query("tasks").collect();
+    return allTasks.filter(
+      (t) => t.difficulty === -1 && t._creationTime < fiveMinutesAgo
+    );
+  },
+});
