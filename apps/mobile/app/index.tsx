@@ -184,7 +184,7 @@ export default function HomeScreen() {
           </View>
 
           {/* XP bar */}
-          <View className="pb-4">
+          <View className="pb-8">
             <View className="relative">
               <XPBar progress={progress} />
               <PointsToast
@@ -196,7 +196,7 @@ export default function HomeScreen() {
           </View>
 
           {/* Mood slider */}
-          <View className="px-6 pb-6">
+          <View className="px-6 pb-8">
             <MoodSlider value={moodLevel} onChange={setMoodLevel} />
           </View>
 
@@ -204,14 +204,16 @@ export default function HomeScreen() {
           <View className="items-center pb-6">
             <Animated.View style={aiAnimStyle}>
               <Pressable onPress={handleAIPick}>
-                <LinearGradient
-                  colors={["#a2d2ff", "#cdb4db"]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{ width: 128, height: 128, borderRadius: 64, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.15, shadowRadius: 15, elevation: 10 }}
-                >
-                  <Text style={{ fontSize: 52 }}>✦</Text>
-                </LinearGradient>
+                <View style={{ width: 128, height: 128, borderRadius: 64, shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.15, shadowRadius: 15, elevation: 10 }}>
+                  <LinearGradient
+                    colors={["#a2d2ff", "#cdb4db"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{ width: 128, height: 128, borderRadius: 64, alignItems: "center", justifyContent: "center" }}
+                  >
+                    <Text style={{ fontSize: 52 }}>✦</Text>
+                  </LinearGradient>
+                </View>
               </Pressable>
             </Animated.View>
           </View>
