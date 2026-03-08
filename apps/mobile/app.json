@@ -23,6 +23,7 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
+      "softwareKeyboardLayoutMode": "adjustResize",
       "package": "com.orhaybenaim.adhdplanner"
     },
     "web": {
