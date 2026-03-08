@@ -16,3 +16,15 @@ export interface UserProgress {
   points: number;
   pointsToNextLevel: number;
 }
+
+export interface UserPreferences {
+  _id: string;
+  userId: string;
+  name: string;
+  bestWorkTimes: string[];
+  difficulties: string[];
+  strengths: string[];
+  notificationsEnabled: boolean;
+  onboardingCompleted: boolean;
+  _creationTime: number;
+}
