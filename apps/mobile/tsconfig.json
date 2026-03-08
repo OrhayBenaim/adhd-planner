@@ -3,8 +3,15 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@adhd-planner/types": ["../../packages/types/src/index.ts"]
+      "@adhd-planner/types": [
+        "../../packages/types/src/index.ts"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.d.ts", "expo-env.d.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.d.ts",
+    "nativewind-env.d.ts"
+  ]
 }

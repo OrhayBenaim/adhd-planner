@@ -1,10 +1,11 @@
 import { forwardRef } from "react";
 import { View, Text, Pressable, Switch } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import type { Settings } from "../../hooks/useSettings";
 
 interface SettingRowProps {
-  icon: string;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
   color: string;
   title: string;
   subtitle: string;
@@ -20,7 +21,7 @@ function SettingRow({ icon, color, title, subtitle, value, onChange }: SettingRo
           className="w-10 h-10 rounded-full items-center justify-center"
           style={{ backgroundColor: color }}
         >
-          <Text className="text-base">{icon}</Text>
+          <Ionicons name={icon} size={20} color="#fff" />
         </View>
         <View>
           <Text className="text-sm font-medium text-[#1e2939]">{title}</Text>
@@ -59,16 +60,16 @@ export const SettingsSheet = forwardRef<BottomSheet, Props>(
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-lg font-medium text-[#1e2939]">Settings</Text>
             <Pressable onPress={onClose}>
-              <Text className="text-[#364153] text-lg">✕</Text>
+              <Ionicons name="close" size={24} color="#364153" />
             </Pressable>
           </View>
-          <SettingRow icon="🔔" color="#a2d2ff" title="Notifications" subtitle="Task reminders"
+          <SettingRow icon="notifications-outline" color="#a2d2ff" title="Notifications" subtitle="Task reminders"
             value={settings.notifications} onChange={(v) => onUpdate("notifications", v)} />
-          <SettingRow icon="🌙" color="#cdb4db" title="Focus Mode" subtitle="Minimize distractions"
+          <SettingRow icon="moon-outline" color="#cdb4db" title="Focus Mode" subtitle="Minimize distractions"
             value={settings.focusMode} onChange={(v) => onUpdate("focusMode", v)} />
-          <SettingRow icon="🔊" color="#ffc8dd" title="Sound Effects" subtitle="Audio feedback"
+          <SettingRow icon="volume-high-outline" color="#ffc8dd" title="Sound Effects" subtitle="Audio feedback"
             value={settings.soundEffects} onChange={(v) => onUpdate("soundEffects", v)} />
-          <SettingRow icon="⚡" color="#bde0fe" title="Smart Scheduling" subtitle="AI-powered task order"
+          <SettingRow icon="flash-outline" color="#bde0fe" title="Smart Scheduling" subtitle="AI-powered task order"
             value={settings.smartScheduling} onChange={(v) => onUpdate("smartScheduling", v)} />
         </BottomSheetView>
       </BottomSheet>

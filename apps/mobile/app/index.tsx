@@ -1,6 +1,6 @@
 import { View, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, type RefObject } from "react";
 import BottomSheet from "@gorhom/bottom-sheet";
 import Animated, {
   useSharedValue,
@@ -11,6 +11,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, Text } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 import { XPBar } from "../src/components/XPBar";
 import { MoodSlider } from "../src/components/MoodSlider";
@@ -74,6 +75,10 @@ export default function HomeScreen() {
   const allTasksSheetRef = useRef<BottomSheet>(null);
   const settingsSheetRef = useRef<BottomSheet>(null);
 
+  // Queues the next sheet to open after the current sheet's close animation finishes.
+  // Prevents the race where onClose re-fires closeSheet and kills the newly opened sheet.
+  const nextSheetRef = useRef<ActiveSheet | null>(null);
+
   const openSheet = useCallback((sheet: ActiveSheet) => {
     setActiveSheet(sheet);
     if (sheet === "addTask") addSheetRef.current?.expand();
@@ -93,6 +98,19 @@ export default function HomeScreen() {
     allTasksSheetRef.current?.close();
     settingsSheetRef.current?.close();
   }, []);
+
+  // onClose handler for sheets that may navigate to another sheet.
+  // Called by the BottomSheet after its close animation completes (both gesture and programmatic).
+  const onSheetClosed = useCallback((sheetRef: RefObject<BottomSheet>) => () => {
+    const next = nextSheetRef.current;
+    nextSheetRef.current = null;
+    sheetRef.current?.close(); // no-op if already closed; covers swipe-to-dismiss path
+    if (next) {
+      openSheet(next);
+    } else {
+      setActiveSheet("none");
+    }
+  }, [openSheet]);
 
   // AI pick task
   const handleAIPick = useCallback(() => {
@@ -131,8 +149,9 @@ export default function HomeScreen() {
   // Add task flow
   const handleTaskConfirmed = (title: string) => {
     setPendingTaskTitle(title);
-    closeSheet();
-    setTimeout(() => openSheet("selectDay"), 300);
+    nextSheetRef.current = "selectDay";
+    addSheetRef.current?.close();
+    setActiveSheet("none");
   };
 
   const handleDaySelected = (day: string) => {
@@ -142,8 +161,9 @@ export default function HomeScreen() {
     }
     setSelectedDay(day);
     setShowCustomDay(false);
-    closeSheet();
-    setTimeout(() => openSheet("selectTime"), 300);
+    nextSheetRef.current = "selectTime";
+    daySheetRef.current?.close();
+    setActiveSheet("none");
   };
 
   const handleTimeSelected = async (time: string) => {
@@ -204,15 +224,19 @@ export default function HomeScreen() {
           <View className="items-center pb-6">
             <Animated.View style={aiAnimStyle}>
               <Pressable onPress={handleAIPick}>
-                <View style={{ width: 128, height: 128, borderRadius: 64, shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 15, elevation: 8 }}>
-                  <LinearGradient
-                    colors={["#a2d2ff", "#cdb4db"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{ width: 128, height: 128, borderRadius: 64, alignItems: "center", justifyContent: "center" }}
-                  >
-                    <Text style={{ fontSize: 52 }}>✦</Text>
-                  </LinearGradient>
+                {/* Shadow layer — needs backgroundColor for iOS/Android shadow, no overflow:hidden */}
+                <View style={{ width: 154, height: 154, borderRadius: 77, backgroundColor: "#b9cbea", shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 15, elevation: 8 }}>
+                  {/* Clip layer — overflow:hidden clips gradient to circle on Android */}
+                  <View style={{ width: 154, height: 154, borderRadius: 77, overflow: "hidden" }}>
+                    <LinearGradient
+                      colors={["#a2d2ff", "#cdb4db"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+                    >
+                      <Ionicons name="sparkles-outline" size={58} color="#fff" />
+                    </LinearGradient>
+                  </View>
                 </View>
               </Pressable>
             </Animated.View>
@@ -240,18 +264,27 @@ export default function HomeScreen() {
       <AddTaskSheet
         ref={addSheetRef}
         onConfirm={handleTaskConfirmed}
-        onMicPress={() => { closeSheet(); setTimeout(() => openSheet("recording"), 300); }}
-        onClose={closeSheet}
+        onMicPress={() => {
+          nextSheetRef.current = "recording";
+          addSheetRef.current?.close();
+          setActiveSheet("none");
+        }}
+        onClose={onSheetClosed(addSheetRef)}
       />
       <RecordingSheet
         ref={recordingSheetRef}
-        onStop={(text) => { closeSheet(); if (text) setPendingTaskTitle(text); setTimeout(() => openSheet("selectDay"), 300); }}
-        onClose={closeSheet}
+        onStop={(text) => {
+          if (text) setPendingTaskTitle(text);
+          nextSheetRef.current = "selectDay";
+          recordingSheetRef.current?.close();
+          setActiveSheet("none");
+        }}
+        onClose={onSheetClosed(recordingSheetRef)}
       />
       <SelectDaySheet
         ref={daySheetRef}
         onSelect={handleDaySelected}
-        onClose={closeSheet}
+        onClose={onSheetClosed(daySheetRef)}
         customValue={customDay}
         onCustomChange={setCustomDay}
         showCustomInput={showCustomDay}

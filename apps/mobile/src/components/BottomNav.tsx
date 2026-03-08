@@ -5,6 +5,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
 import { SPRING_BOUNCY } from "../animations/springs";
 
 interface Props {
@@ -60,22 +61,15 @@ export function BottomNav({ onListPress, onAddPress, onSettingsPress }: Props) {
     <View className="absolute bottom-0 left-0 right-0 bg-white/80 border-t border-[#f3f4f6] px-6 pt-6 pb-8">
       <View className="flex-row items-center justify-center gap-8">
         <NavButton onPress={onListPress}>
-          <View className="w-6 h-6 items-center justify-center gap-1">
-            <View className="w-5 h-0.5 bg-[#364153]" />
-            <View className="w-5 h-0.5 bg-[#364153]" />
-            <View className="w-5 h-0.5 bg-[#364153]" />
-          </View>
+          <Ionicons name="list-outline" size={24} color="#364153" />
         </NavButton>
 
         <NavButton onPress={onAddPress} gradient>
-          <View className="w-7 h-7 items-center justify-center">
-            <View className="absolute w-5 h-0.5 bg-white" />
-            <View className="absolute w-0.5 h-5 bg-white" />
-          </View>
+          <Ionicons name="add" size={28} color="#fff" />
         </NavButton>
 
         <NavButton onPress={onSettingsPress}>
-          <Animated.Text className="text-[#364153] text-xl">⚙</Animated.Text>
+          <Ionicons name="settings-outline" size={24} color="#364153" />
         </NavButton>
       </View>
     </View>
