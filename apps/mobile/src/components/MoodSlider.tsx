@@ -76,19 +76,28 @@ export function MoodSlider({ value, onChange }: Props) {
           style={{ height: THUMB_SIZE + 8, justifyContent: "center" }}
           onLayout={handleLayout}
         >
-          {/* Gradient track */}
-          <LinearGradient
-            colors={["#a2d2ff", "#bde0fe", "#cdb4db", "#ffc8dd", "#ffafcc"]}
-            start={{ x: 0, y: 0.5 }}
-            end={{ x: 1, y: 0.5 }}
+          {/* Gradient track with shadow */}
+          <View
             style={{
               position: "absolute",
               left: THUMB_SIZE / 2,
               right: THUMB_SIZE / 2,
               height: TRACK_HEIGHT,
               borderRadius: 9999,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.12,
+              shadowRadius: 4,
+              elevation: 3,
             }}
-          />
+          >
+            <LinearGradient
+              colors={["#a2d2ff", "#bde0fe", "#cdb4db", "#ffc8dd", "#ffafcc"]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={{ flex: 1, borderRadius: 9999 }}
+            />
+          </View>
 
           {/* Thumb */}
           <Animated.View
