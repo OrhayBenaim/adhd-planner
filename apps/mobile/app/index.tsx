@@ -177,8 +177,14 @@ export default function HomeScreen() {
           contentContainerStyle={{ paddingBottom: 130 }}
           showsVerticalScrollIndicator={false}
         >
+          {/* Header */}
+          <View className="items-center pt-8 pb-4 px-6">
+            <Text className="text-2xl font-medium text-[#0a0a0a] text-center">How are you feeling?</Text>
+            <Text className="text-sm text-[#6a7282] text-center mt-1">Let's find the perfect task for you</Text>
+          </View>
+
           {/* XP bar */}
-          <View className="pt-8 pb-4">
+          <View className="pb-4">
             <View className="relative">
               <XPBar progress={progress} />
               <PointsToast
@@ -202,7 +208,7 @@ export default function HomeScreen() {
                   colors={["#a2d2ff", "#cdb4db"]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={{ width: 128, height: 128, borderRadius: 64, alignItems: "center", justifyContent: "center" }}
+                  style={{ width: 128, height: 128, borderRadius: 64, alignItems: "center", justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.15, shadowRadius: 15, elevation: 10 }}
                 >
                   <Text style={{ fontSize: 52 }}>✦</Text>
                 </LinearGradient>

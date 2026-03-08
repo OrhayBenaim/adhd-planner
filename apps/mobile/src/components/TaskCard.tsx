@@ -51,7 +51,8 @@ export function TaskCard({ task, onComplete, onLater }: Props) {
     <Animated.View
       entering={FadeInDown.springify().damping(20)}
       exiting={FadeOutDown.duration(250)}
-      className="bg-white border border-[#f3f4f6] rounded-3xl p-6 shadow-sm"
+      className="bg-white border border-[#f3f4f6] rounded-3xl p-6"
+      style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 3 }}
     >
       <Text className="text-lg font-medium text-[#1e2939] mb-1">{task.title}</Text>
       {task.description ? (
