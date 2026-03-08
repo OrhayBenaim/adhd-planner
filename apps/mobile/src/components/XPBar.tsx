@@ -2,15 +2,14 @@ import { View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
-  withSequence,
+  withTiming,
+  Easing,
 } from "react-native-reanimated";
 import { useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "react-native";
 import type { UserProgress } from "@adhd-planner/types";
-import { SPRING_XP_BAR, SPRING_BOUNCY } from "../animations/springs";
 
 interface Props {
   progress: UserProgress;
@@ -22,7 +21,7 @@ export function XPBar({ progress }: Props) {
   const trophyScale = useSharedValue(1);
 
   useEffect(() => {
-    barWidth.value = withSpring(percent, SPRING_XP_BAR);
+    barWidth.value = withTiming(percent, { duration: 600, easing: Easing.out(Easing.quad) });
   }, [percent]);
 
   const barStyle = useAnimatedStyle(() => ({

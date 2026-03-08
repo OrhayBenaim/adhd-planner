@@ -4,9 +4,9 @@ import { useCallback } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withSequence,
   withTiming,
+  Easing,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -41,14 +41,17 @@ export function MainContent() {
     const incomplete = tasks.filter((t) => !t.completed);
     if (!incomplete.length) return;
 
+    const ease = { duration: 300, easing: Easing.out(Easing.quad) };
+    const settle = { duration: 400, easing: Easing.inOut(Easing.quad) };
+
     aiRotate.value = withSequence(
-      withTiming(0.1, { duration: 100 }),
-      withTiming(-0.1, { duration: 100 }),
-      withTiming(0, { duration: 100 })
+      withTiming(0.04, ease),
+      withTiming(-0.04, ease),
+      withTiming(0, settle)
     );
     aiScale.value = withSequence(
-      withSpring(1.1, { damping: 8 }),
-      withSpring(1, { damping: 12 })
+      withTiming(1.06, ease),
+      withTiming(1, settle)
     );
 
     const best = incomplete.reduce((prev, curr) =>
@@ -56,7 +59,7 @@ export function MainContent() {
         ? curr
         : prev
     );
-    setTimeout(() => setSelectedTask(best), 300);
+    setTimeout(() => setSelectedTask(best), 500);
   }, [tasks, moodLevel, setSelectedTask, aiRotate, aiScale]);
 
   const handleComplete = useCallback(

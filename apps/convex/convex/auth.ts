@@ -6,7 +6,6 @@ import { expo } from "@better-auth/expo";
 import { anonymous } from "better-auth/plugins";
 import { components } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
-import authConfig from "./auth.config";
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
@@ -17,7 +16,19 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
     database: authComponent.adapter(ctx),
     plugins: [
       expo(),
-      convex({ authConfig }),
+      convex({
+        authConfig: {
+          providers: [
+            {
+              type: "customJwt",
+              issuer: "https://affable-tiger-74.eu-west-1.convex.site",
+              applicationID: "convex",
+              algorithm: "RS256",
+              jwks: "https://affable-tiger-74.eu-west-1.convex.site/api/auth/convex/jwks",
+            },
+          ],
+        },
+      }),
       anonymous(),
     ],
   });

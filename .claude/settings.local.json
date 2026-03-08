@@ -14,7 +14,11 @@
       "Bash(npx tsc:*)",
       "Skill(superpowers:requesting-code-review)",
       "WebFetch(domain:docs.expo.dev)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "mcp__plugin_figma_figma__get_metadata",
+      "Bash(xargs grep:*)",
+      "Bash(grep:*)",
+      "mcp__plugin_figma_figma__get_design_context"
     ]
   }
 }
