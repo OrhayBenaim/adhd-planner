@@ -2,7 +2,7 @@
 import { ActivityIndicator, View } from "react-native";
 import { useEffect } from "react";
 import { authClient } from "../src/lib/authClient";
-import { HomeScreen } from "../src/components/home/HomeScreen";
+import { HomeScreen } from "../src/components/home";
 
 export default function IndexPage() {
   const { data: session, isPending } = authClient.useSession();
