@@ -1,6 +1,12 @@
 // apps/convex/convex/auth.config.ts
-import { getAuthConfigProvider } from "@convex-dev/better-auth/auth-config";
-
 export default {
-  providers: [getAuthConfigProvider()],
+  providers: [
+    {
+      type: "customJwt",
+      issuer: "https://affable-tiger-74.eu-west-1.convex.site",
+      applicationID: "convex",
+      algorithm: "RS256",
+      jwks: "https://affable-tiger-74.eu-west-1.convex.site/api/auth/convex/jwks",
+    },
+  ],
 };
