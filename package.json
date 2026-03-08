@@ -11,6 +11,7 @@
     "lint": "turbo lint",
     "typecheck": "turbo typecheck"
   },
+  "packageManager": "npm@11.6.2",
   "devDependencies": {
     "turbo": "latest",
     "typescript": "^5.0.0"
