@@ -1,0 +1,16 @@
+// apps/mobile/src/components/home/HomeScreen.tsx
+import { SafeAreaView } from "react-native-safe-area-context";
+import { HomeProvider } from "./HomeProvider";
+import { MainContent } from "./MainContent";
+import { SheetManager } from "./SheetManager";
+
+export function HomeScreen() {
+  return (
+    <HomeProvider>
+      <SafeAreaView className="flex-1 bg-[#f5f7fa]">
+        <MainContent />
+        <SheetManager />
+      </SafeAreaView>
+    </HomeProvider>
+  );
+}
