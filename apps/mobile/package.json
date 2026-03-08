@@ -17,6 +17,7 @@
     "@better-auth/expo": "1.4.9",
     "@expo/vector-icons": "^15.0.2",
     "@gorhom/bottom-sheet": "^5.2.8",
+    "@jamsch/expo-speech-recognition": "^0.2.15",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/slider": "5.1.2",
     "better-auth": "1.4.9",
