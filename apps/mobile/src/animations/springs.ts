@@ -6,8 +6,8 @@ export const SPRING_DEFAULT: WithSpringConfig = {
 };
 
 export const SPRING_BOUNCY: WithSpringConfig = {
-  damping: 12,
-  stiffness: 200,
+  damping: 20,
+  stiffness: 300,
 };
 
 export const SPRING_XP_BAR: WithSpringConfig = {

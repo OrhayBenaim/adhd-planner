@@ -5,6 +5,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   runOnJS,
+  clamp,
 } from "react-native-reanimated";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { LinearGradient } from "expo-linear-gradient";
@@ -25,11 +26,8 @@ export function MoodSlider({ value, onChange }: Props) {
 
   const thumbX = useSharedValue((value / 100) * (trackWidth - THUMB_SIZE));
 
-  const clamp = (v: number, min: number, max: number) =>
-    Math.min(Math.max(v, min), max);
-
   const notifyChange = (x: number) => {
-    const pct = clamp(x / (trackWidth - THUMB_SIZE), 0, 1);
+    const pct = Math.min(Math.max(x / (trackWidth - THUMB_SIZE), 0), 1);
     onChange(Math.round(pct * 100));
   };
 

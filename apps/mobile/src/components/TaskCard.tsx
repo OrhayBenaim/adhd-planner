@@ -5,8 +5,8 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withSequence,
-  FadeInDown,
-  FadeOutDown,
+  FadeInRight,
+  FadeOutLeft,
 } from "react-native-reanimated";
 import type { Task } from "@adhd-planner/types";
 import { getDifficultyLabel } from "../lib/moodLabels";
@@ -50,8 +50,8 @@ export function TaskCard({ task, onComplete, onLater }: Props) {
 
   return (
     <Animated.View
-      entering={FadeInDown.springify().damping(20)}
-      exiting={FadeOutDown.duration(250)}
+      entering={FadeInRight.duration(300)}
+      exiting={FadeOutLeft.duration(250)}
       className="bg-white border border-[#f3f4f6] rounded-3xl p-6"
       style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2 }}
     >

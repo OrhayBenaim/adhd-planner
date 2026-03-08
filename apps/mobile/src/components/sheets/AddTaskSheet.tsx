@@ -42,8 +42,9 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
         snapPoints={["45%"]}
         enablePanDownToClose
         onClose={onClose}
-        keyboardBehavior="interactive"
+        keyboardBehavior="extend"
         keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustResize"
         backgroundStyle={{ borderTopLeftRadius: 48, borderTopRightRadius: 48 }}
         handleIndicatorStyle={{ display: "none" }}
       >

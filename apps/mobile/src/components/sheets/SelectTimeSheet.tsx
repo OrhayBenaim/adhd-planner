@@ -1,7 +1,7 @@
 import { forwardRef } from "react";
-import { View, Text, Pressable, TextInput } from "react-native";
+import { View, Text, Pressable, Keyboard } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 import { SPRING_BOUNCY } from "../../animations/springs";
@@ -26,7 +26,7 @@ function GradientOption({ label, colors, onPress }: { label: string; colors: [st
 }
 
 interface Props {
-  onSelect: (time: "noon" | "afternoon" | "end_of_day" | "custom") => void;
+  onSelect: (time: string) => void;
   onClose: () => void;
   customValue: string;
   onCustomChange: (v: string) => void;
@@ -42,13 +42,16 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
         snapPoints={["28%", "40%"]}
         enablePanDownToClose
         onClose={onClose}
+        keyboardBehavior="extend"
+        keyboardBlurBehavior="restore"
+        android_keyboardInputMode="adjustResize"
         backgroundStyle={{ borderTopLeftRadius: 48, borderTopRightRadius: 48 }}
         handleIndicatorStyle={{ display: "none" }}
       >
         <BottomSheetView className="px-6 pt-6">
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-xl font-semibold text-[#1e2939]">What time?</Text>
-            <Pressable onPress={onClose}>
+            <Pressable onPress={() => { Keyboard.dismiss(); onClose(); }}>
               <Ionicons name="close" size={24} color="#364153" />
             </Pressable>
           </View>
@@ -62,13 +65,23 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
               <GradientOption label="Custom" colors={["#ffc8dd", "#ffafcc"]} onPress={() => onSelect("custom")} />
             </View>
             {showCustomInput && (
-              <TextInput
-                className="border border-[#e5e7eb] rounded-3xl px-4 py-3 text-base text-[#1e2939] mt-1"
-                placeholder="e.g. 14:30"
-                placeholderTextColor="#99a1af"
-                value={customValue}
-                onChangeText={onCustomChange}
-              />
+              <View className="flex-row items-center gap-2 mt-1">
+                <BottomSheetTextInput
+                  className="flex-1 border border-[#e5e7eb] rounded-3xl px-4 py-3 text-base text-[#1e2939]"
+                  placeholder="e.g. 14:30"
+                  placeholderTextColor="#99a1af"
+                  value={customValue}
+                  onChangeText={onCustomChange}
+                  returnKeyType="done"
+                  onSubmitEditing={() => customValue.trim() && onSelect(customValue.trim())}
+                />
+                <Pressable
+                  onPress={() => customValue.trim() && onSelect(customValue.trim())}
+                  style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "#a2d2ff", alignItems: "center", justifyContent: "center" }}
+                >
+                  <Ionicons name="checkmark" size={22} color="#fff" />
+                </Pressable>
+              </View>
             )}
           </View>
         </BottomSheetView>

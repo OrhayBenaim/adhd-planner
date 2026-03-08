@@ -8,5 +8,6 @@ export function useUserProgress() {
     points: 0,
     pointsToNextLevel: 50,
   };
+
   return { progress };
 }
