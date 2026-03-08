@@ -8,8 +8,13 @@ export default defineSchema({
     description: v.optional(v.string()),
     difficulty: v.number(),
     completed: v.boolean(),
-    dueDate: v.optional(v.string()),
-    dueTime: v.optional(v.string()),
+    dueDate: v.string(),
+    dueTime: v.string(),
+  }).index("by_user", ["userId"]),
+
+  userSettings: defineTable({
+    userId: v.string(),
+    aiEnabled: v.boolean(),
   }).index("by_user", ["userId"]),
 
   userProgress: defineTable({
