@@ -54,7 +54,6 @@ export const scoreTaskDifficulty = internalAction({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "",
           messages: [
             {
               role: "system",
