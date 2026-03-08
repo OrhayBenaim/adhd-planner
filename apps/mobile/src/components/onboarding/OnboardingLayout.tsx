@@ -1,4 +1,5 @@
 import { View, Text, Pressable } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { ProgressBar } from "./ProgressBar";
@@ -26,7 +27,7 @@ export function OnboardingLayout({
       locations={[0, 0.5, 1]}
       className="flex-1"
     >
-      <View className="flex-1 mx-4 my-5">
+      <SafeAreaView className="flex-1 mx-4 my-5">
         <View className="flex-1 bg-white rounded-[48px] overflow-hidden shadow-2xl">
           {/* Progress bar */}
           <ProgressBar currentStep={step} />
@@ -75,7 +76,7 @@ export function OnboardingLayout({
             </View>
           )}
         </View>
-      </View>
+      </SafeAreaView>
     </LinearGradient>
   );
 }

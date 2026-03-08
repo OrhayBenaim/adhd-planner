@@ -79,15 +79,6 @@ export default function SignInStep() {
             </Pressable>
           </View>
 
-          <View className="items-center mt-6">
-            <Text className="text-sm text-[#6a7282]">Don't have an account?</Text>
-            <Pressable>
-              <Text className="text-sm font-semibold text-[#a2d2ff] underline mt-1">
-                Sign up here
-              </Text>
-            </Pressable>
-          </View>
-
           {/* Back link */}
           <View className="flex-1 justify-end items-center pb-6">
             <Pressable
