@@ -13,7 +13,7 @@ export function useConvexAuth() {
   const { data: session, isPending } = authClient.useSession();
 
   const fetchAccessToken = useCallback(
-    async ({ forceRefreshToken }: { forceRefreshToken: boolean }) => {
+    async (_opts: { forceRefreshToken: boolean }) => {
       if (!session?.session?.token) return null;
       try {
         const res = await fetch(CONVEX_TOKEN_URL, {
