@@ -32,7 +32,7 @@ export default function StrengthsStep() {
           <ChipGrid
             items={STRENGTHS}
             selected={state.strengths}
-            onToggle={(id) => toggleArrayItem("strengths", id)}
+            onToggle={(label) => toggleArrayItem("strengths", label)}
             variant="strengths"
           />
         </View>

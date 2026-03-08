@@ -33,12 +33,12 @@ export function ChipGrid({ items, selected, onToggle, variant }: Props) {
   return (
     <View className="flex-row flex-wrap gap-3">
       {items.map((item) => {
-        const isSelected = selected.includes(item.id);
+        const isSelected = selected.includes(item.label);
 
         return (
           <Pressable
             key={item.id}
-            onPress={() => onToggle(item.id)}
+            onPress={() => onToggle(item.label)}
             className="relative"
             style={{ width: "47%" }}
           >
