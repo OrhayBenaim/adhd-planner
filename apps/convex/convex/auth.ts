@@ -45,11 +45,18 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
       }),
       anonymous({
         onLinkAccount: async ({ anonymousUser, newUser }) => {
+          console.log(
+            `[auth] onLinkAccount: migrating data from ${anonymousUser.id} to ${newUser.id}`,
+          );
           if ("runMutation" in ctx) {
             await ctx.runMutation(internal.migration.migrateUserData, {
               oldUserId: anonymousUser.id,
               newUserId: newUser.id,
             });
+          } else {
+            console.error(
+              "[auth] onLinkAccount: ctx missing runMutation, migration skipped",
+            );
           }
         },
       }),
