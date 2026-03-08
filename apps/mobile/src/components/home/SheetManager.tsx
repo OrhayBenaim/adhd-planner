@@ -9,12 +9,12 @@ import { SelectTimeSheet } from "../sheets/SelectTimeSheet";
 import { AllTasksSheet } from "../sheets/AllTasksSheet";
 import { SettingsSheet } from "../sheets/SettingsSheet";
 import { useHome, type ActiveSheet } from "./HomeProvider";
+import { daySelectionToDate, timeSelectionToTime } from "../../lib/dateTimeConvert";
 
 export function SheetManager() {
   const {
     tasks,
     settings,
-    moodLevel,
     createTask,
     deleteTask,
     updateSetting,
@@ -75,7 +75,7 @@ export function SheetManager() {
       setShowCustomDay(true);
       return;
     }
-    setSelectedDay(day);
+    setSelectedDay(daySelectionToDate(day));
     setShowCustomDay(false);
     nextSheetRef.current = "selectTime";
     daySheetRef.current?.close();
@@ -90,14 +90,13 @@ export function SheetManager() {
       closeSheet();
       await createTask({
         title: pendingTaskTitle,
-        difficulty: moodLevel,
-        dueDate: selectedDay || undefined,
-        dueTime: time,
+        dueDate: selectedDay,
+        dueTime: timeSelectionToTime(time),
       });
       setPendingTaskTitle("");
       setSelectedDay("");
     },
-    [closeSheet, createTask, pendingTaskTitle, moodLevel, selectedDay]
+    [closeSheet, createTask, pendingTaskTitle, selectedDay]
   );
 
   return (

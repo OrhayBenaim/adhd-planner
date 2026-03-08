@@ -5,9 +5,8 @@ import { api } from "@adhd-planner/convex/convex/_generated/api";
 export type CreateTaskInput = {
   title: string;
   description?: string;
-  difficulty: number;
-  dueDate?: string;
-  dueTime?: string;
+  dueDate: string;
+  dueTime: string;
 };
 
 export function useTasks() {

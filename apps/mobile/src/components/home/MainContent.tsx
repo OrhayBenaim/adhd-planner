@@ -38,8 +38,28 @@ export function MainContent() {
   const aiRotate = useSharedValue(0);
 
   const handleAIPick = useCallback(() => {
-    const incomplete = tasks.filter((t) => !t.completed);
-    if (!incomplete.length) return;
+    const now = new Date();
+    const maxDaysAhead = 3; // Mirrors Convex env MAX_DUE_DATE_RANGE_DAYS
+
+    const cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() + maxDaysAhead);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    const todayStr = now.toISOString().slice(0, 10);
+
+    const eligible = tasks
+      .filter(
+        (t) =>
+          !t.completed &&
+          t.difficulty >= 0 &&
+          t.dueDate >= todayStr &&
+          t.dueDate <= cutoffStr
+      )
+      .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+
+    if (!eligible.length) return;
+
+    const ease = { duration: 300, easing: Easing.out(Easing.quad) };
+    const settle = { duration: 400, easing: Easing.inOut(Easing.quad) };
 
     const ease = { duration: 300, easing: Easing.out(Easing.quad) };
     const settle = { duration: 400, easing: Easing.inOut(Easing.quad) };
@@ -54,7 +74,7 @@ export function MainContent() {
       withTiming(1, settle)
     );
 
-    const best = incomplete.reduce((prev, curr) =>
+    const best = eligible.reduce((prev, curr) =>
       Math.abs(curr.difficulty - moodLevel) < Math.abs(prev.difficulty - moodLevel)
         ? curr
         : prev
