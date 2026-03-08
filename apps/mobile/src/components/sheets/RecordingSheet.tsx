@@ -1,5 +1,6 @@
 import { forwardRef, useEffect } from "react";
 import { View, Text, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
 import Animated, {
   useSharedValue,
@@ -58,7 +59,7 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-xl font-semibold text-[#1e2939]">Recording...</Text>
             <Pressable onPress={onClose}>
-              <Text className="text-[#364153] text-lg">✕</Text>
+              <Ionicons name="close" size={24} color="#364153" />
             </Pressable>
           </View>
 
@@ -80,14 +81,14 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
               onPress={() => onStop("")}
               className="w-16 h-16 rounded-full items-center justify-center bg-[#ffc8dd]"
             >
-              <Text className="text-xl">✕</Text>
+              <Ionicons name="close" size={26} color="#fff" />
             </Pressable>
             <Pressable
               onPress={() => onStop("")}
               className="w-16 h-16 rounded-full items-center justify-center"
               style={{ backgroundColor: "#bde0fe" }}
             >
-              <Text className="text-xl">✓</Text>
+              <Ionicons name="checkmark" size={26} color="#fff" />
             </Pressable>
           </View>
         </BottomSheetView>

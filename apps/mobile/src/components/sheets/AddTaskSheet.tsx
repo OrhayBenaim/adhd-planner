@@ -1,6 +1,7 @@
 import { forwardRef, useState } from "react";
-import { View, Text, TextInput, Pressable } from "react-native";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { View, Text, Pressable, Keyboard } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import BottomSheet, { BottomSheetView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -29,6 +30,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
 
     const handleConfirm = () => {
       if (!text.trim()) return;
+      Keyboard.dismiss();
       onConfirm(text.trim());
       setText("");
     };
@@ -40,6 +42,8 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
         snapPoints={["45%"]}
         enablePanDownToClose
         onClose={onClose}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
         backgroundStyle={{ borderTopLeftRadius: 48, borderTopRightRadius: 48 }}
         handleIndicatorStyle={{ display: "none" }}
       >
@@ -48,12 +52,12 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-xl font-semibold text-[#1e2939]">Add New Task</Text>
             <Pressable onPress={onClose}>
-              <Text className="text-[#364153] text-lg">✕</Text>
+              <Ionicons name="close" size={24} color="#364153" />
             </Pressable>
           </View>
 
           {/* Textarea */}
-          <TextInput
+          <BottomSheetTextInput
             className="border border-[#e5e7eb] rounded-3xl p-4 text-base text-[#1e2939] min-h-[128px]"
             placeholder="Describe your task..."
             placeholderTextColor="#99a1af"
@@ -73,7 +77,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
                 className="w-16 h-16 rounded-full items-center justify-center"
                 style={{ backgroundColor: "#a2d2ff" }}
               >
-                <Text className="text-2xl">🎤</Text>
+                <Ionicons name="mic-outline" size={26} color="#fff" />
               </Pressable>
             </Animated.View>
 
@@ -85,7 +89,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
                 className="w-16 h-16 rounded-full items-center justify-center"
                 style={{ backgroundColor: "#bde0fe", opacity: text.trim() ? 1 : 0.5 }}
               >
-                <Text className="text-2xl">✓</Text>
+                <Ionicons name="checkmark" size={26} color="#fff" />
               </Pressable>
             </Animated.View>
           </View>

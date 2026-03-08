@@ -1,5 +1,6 @@
 import { forwardRef } from "react";
 import { View, Text, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import Animated, {
   FadeInRight,
@@ -36,13 +37,13 @@ function TaskItem({ task, onEdit, onDelete }: TaskItemProps) {
             onPress={() => onEdit(task)}
             className="w-8 h-8 rounded-full items-center justify-center"
           >
-            <Text className="text-[#364153]">✏</Text>
+            <Ionicons name="create-outline" size={20} color="#364153" />
           </Pressable>
           <Pressable
             onPress={() => onDelete(task.id)}
             className="w-8 h-8 rounded-full items-center justify-center"
           >
-            <Text className="text-[#364153]">🗑</Text>
+            <Ionicons name="trash-outline" size={20} color="#364153" />
           </Pressable>
         </View>
       </View>
@@ -72,7 +73,7 @@ export const AllTasksSheet = forwardRef<BottomSheet, Props>(
         <View className="flex-row items-center justify-between px-6 pt-6 pb-4">
           <Text className="text-lg font-medium text-[#1e2939]">All Tasks</Text>
           <Pressable onPress={onClose}>
-            <Text className="text-[#364153] text-lg">✕</Text>
+            <Ionicons name="close" size={24} color="#364153" />
           </Pressable>
         </View>
         <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}>

@@ -1,4 +1,4 @@
-import { View, Text } from "react-native";
+import { View } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -7,6 +7,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { Text } from "react-native";
 import { UserProgress, xpPercent } from "../lib/points";
 import { SPRING_XP_BAR, SPRING_BOUNCY } from "../animations/springs";
 
@@ -54,7 +56,7 @@ export function XPBar({ progress }: Props) {
                 end={{ x: 0, y: 1 }}
                 style={{ width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" }}
               >
-                <Text style={{ fontSize: 18 }}>🏆</Text>
+                <Ionicons name="trophy" size={18} color="#fff" />
               </LinearGradient>
             </View>
           </Animated.View>

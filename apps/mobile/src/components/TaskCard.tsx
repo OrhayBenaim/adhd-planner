@@ -1,4 +1,5 @@
 import { View, Text, Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -68,7 +69,8 @@ export function TaskCard({ task, onComplete, onLater }: Props) {
             onPress={handleComplete}
             className="bg-[#a2d2ff] rounded-3xl py-3 items-center flex-row justify-center gap-2"
           >
-            <Text className="text-base font-medium text-[#0a0a0a]">✓ Complete</Text>
+            <Ionicons name="checkmark" size={18} color="#0a0a0a" />
+            <Text className="text-base font-medium text-[#0a0a0a]"> Complete</Text>
           </Pressable>
         </Animated.View>
 
