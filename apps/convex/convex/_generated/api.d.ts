@@ -14,6 +14,7 @@ import type * as http from "../http.js";
 import type * as migration from "../migration.js";
 import type * as preferences from "../preferences.js";
 import type * as progress from "../progress.js";
+import type * as settings from "../settings.js";
 import type * as tasks from "../tasks.js";
 
 import type {
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   migration: typeof migration;
   preferences: typeof preferences;
   progress: typeof progress;
+  settings: typeof settings;
   tasks: typeof tasks;
 }>;
 
