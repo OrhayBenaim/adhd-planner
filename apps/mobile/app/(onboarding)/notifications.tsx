@@ -10,8 +10,12 @@ export default function NotificationsStep() {
   const { updateField } = useOnboarding();
 
   const handleEnable = async () => {
-    const { status } = await Notifications.requestPermissionsAsync();
-    updateField("notificationsEnabled", status === "granted");
+    try {
+      const { status } = await Notifications.requestPermissionsAsync();
+      updateField("notificationsEnabled", status === "granted");
+    } catch {
+      updateField("notificationsEnabled", false);
+    }
     router.push("/(onboarding)/sign-in");
   };
 
