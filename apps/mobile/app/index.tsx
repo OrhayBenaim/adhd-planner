@@ -170,9 +170,8 @@ export default function HomeScreen() {
   }));
 
   return (
-    <SafeAreaView className="flex-1 bg-[#f5f7fa]">
-      {/* Card container */}
-      <View className="flex-1 mx-4 mt-5 bg-white rounded-[48px] shadow-2xl overflow-hidden">
+    <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 bg-white">
         <ScrollView
           className="flex-1"
           contentContainerStyle={{ paddingBottom: 130 }}
