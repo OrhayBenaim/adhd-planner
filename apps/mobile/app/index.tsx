@@ -204,7 +204,7 @@ export default function HomeScreen() {
           <View className="items-center pb-6">
             <Animated.View style={aiAnimStyle}>
               <Pressable onPress={handleAIPick}>
-                <View style={{ width: 128, height: 128, borderRadius: 64, shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.15, shadowRadius: 15, elevation: 10 }}>
+                <View style={{ width: 128, height: 128, borderRadius: 64, shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 15, elevation: 8 }}>
                   <LinearGradient
                     colors={["#a2d2ff", "#cdb4db"]}
                     start={{ x: 0, y: 0 }}
