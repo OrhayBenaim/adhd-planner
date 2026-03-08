@@ -4,7 +4,7 @@ import { convex } from "@convex-dev/better-auth/plugins";
 import { betterAuth } from "better-auth/minimal";
 import { expo } from "@better-auth/expo";
 import { anonymous } from "better-auth/plugins";
-import { components } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
@@ -43,6 +43,15 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
           ],
         },
       }),
-      anonymous(),
+      anonymous({
+        onLinkAccount: async ({ anonymousUser, newUser }) => {
+          if ("runMutation" in ctx) {
+            await ctx.runMutation(internal.migration.migrateUserData, {
+              oldUserId: anonymousUser.id,
+              newUserId: newUser.id,
+            });
+          }
+        },
+      }),
     ],
   });
