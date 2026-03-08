@@ -12,8 +12,10 @@ export interface Task {
   userId: string;
   title: string;
   description?: string;
+  difficulty: number;
   completed: boolean;
   dueDate?: string;
+  dueTime?: string;
   createdAt: string;
   updatedAt: string;
 }
