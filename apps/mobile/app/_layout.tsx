@@ -1,9 +1,9 @@
 import "../global.css";
 import { useEffect } from "react";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { ConvexProviderWithAuth } from "convex/react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Stack } from "expo-router";
-import { queryClient } from "../src/lib/queryClient";
+import { convex, useConvexAuth } from "../src/lib/convexClient";
 import { authClient } from "../src/lib/authClient";
 
 export default function RootLayout() {
@@ -17,9 +17,9 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView className="flex-1">
-      <QueryClientProvider client={queryClient}>
+      <ConvexProviderWithAuth client={convex} useAuth={useConvexAuth}>
         <Stack screenOptions={{ headerShown: false }} />
-      </QueryClientProvider>
+      </ConvexProviderWithAuth>
     </GestureHandlerRootView>
   );
 }
