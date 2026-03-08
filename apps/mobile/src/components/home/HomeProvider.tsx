@@ -15,7 +15,8 @@ export type ActiveSheet =
   | "selectDay"
   | "selectTime"
   | "allTasks"
-  | "settings";
+  | "settings"
+  | "taskSummary";
 
 type SheetEntry = { name: ActiveSheet; ref: React.RefObject<BottomSheet | null> };
 
@@ -37,6 +38,8 @@ interface HomeContextValue {
   createTask: (args: { title: string; dueDate: string; dueTime: string }) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => Promise<void>;
+
+  adminAiEnabled: boolean;
 
   // Sheet nav
   openSheet: (sheet: ActiveSheet) => void;
@@ -65,7 +68,7 @@ export function HomeProvider({ children }: { children: ReactNode }) {
   const completeTaskMutation = useCompleteTask();
   const deleteTaskMutation = useDeleteTask();
   const { progress } = useUserProgress();
-  const { settings, updateSetting } = useSettings();
+  const { settings, updateSetting, adminAiEnabled } = useSettings();
 
   // Sheet registry — SheetManager registers its refs here
   const sheetsRef = useRef<Map<ActiveSheet, React.RefObject<BottomSheet | null>>>(new Map());
@@ -118,6 +121,7 @@ export function HomeProvider({ children }: { children: ReactNode }) {
         tasks,
         progress,
         settings,
+        adminAiEnabled,
         moodLevel,
         selectedTask,
         toast,
