@@ -4,9 +4,9 @@ import { useCallback } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withSequence,
   withTiming,
+  Easing,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
@@ -38,25 +38,45 @@ export function MainContent() {
   const aiRotate = useSharedValue(0);
 
   const handleAIPick = useCallback(() => {
-    const incomplete = tasks.filter((t) => !t.completed);
-    if (!incomplete.length) return;
+    const now = new Date();
+    const maxDaysAhead = 3; // Mirrors Convex env MAX_DUE_DATE_RANGE_DAYS
+
+    const cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() + maxDaysAhead);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    const todayStr = now.toISOString().slice(0, 10);
+
+    const eligible = tasks
+      .filter(
+        (t) =>
+          !t.completed &&
+          t.difficulty >= 0 &&
+          t.dueDate >= todayStr &&
+          t.dueDate <= cutoffStr
+      )
+      .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+
+    if (!eligible.length) return;
+
+    const ease = { duration: 300, easing: Easing.out(Easing.quad) };
+    const settle = { duration: 400, easing: Easing.inOut(Easing.quad) };
 
     aiRotate.value = withSequence(
-      withTiming(0.1, { duration: 100 }),
-      withTiming(-0.1, { duration: 100 }),
-      withTiming(0, { duration: 100 })
+      withTiming(0.04, ease),
+      withTiming(-0.04, ease),
+      withTiming(0, settle)
     );
     aiScale.value = withSequence(
-      withSpring(1.1, { damping: 8 }),
-      withSpring(1, { damping: 12 })
+      withTiming(1.06, ease),
+      withTiming(1, settle)
     );
 
-    const best = incomplete.reduce((prev, curr) =>
+    const best = eligible.reduce((prev, curr) =>
       Math.abs(curr.difficulty - moodLevel) < Math.abs(prev.difficulty - moodLevel)
         ? curr
         : prev
     );
-    setTimeout(() => setSelectedTask(best), 300);
+    setTimeout(() => setSelectedTask(best), 500);
   }, [tasks, moodLevel, setSelectedTask, aiRotate, aiScale]);
 
   const handleComplete = useCallback(
