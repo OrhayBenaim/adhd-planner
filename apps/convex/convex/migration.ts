@@ -7,12 +7,15 @@ export const migrateUserData = internalMutation({
     newUserId: v.string(),
   },
   handler: async (ctx, { oldUserId, newUserId }) => {
+    console.log(`[migration] migrating user data: ${oldUserId} → ${newUserId}`);
+
     // Migrate userPreferences
     const prefs = await ctx.db
       .query("userPreferences")
       .withIndex("by_user", (q) => q.eq("userId", oldUserId))
       .first();
     if (prefs) {
+      console.log(`[migration] found preferences for old user, migrating`);
       // Check if new user already has preferences
       const existing = await ctx.db
         .query("userPreferences")
@@ -30,6 +33,7 @@ export const migrateUserData = internalMutation({
       .query("tasks")
       .withIndex("by_user", (q) => q.eq("userId", oldUserId))
       .collect();
+    console.log(`[migration] migrating ${tasks.length} tasks`);
     for (const task of tasks) {
       await ctx.db.patch(task._id, { userId: newUserId });
     }
