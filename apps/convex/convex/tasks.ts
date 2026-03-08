@@ -1,6 +1,7 @@
 // apps/convex/convex/tasks.ts
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { ConvexError } from "convex/values";
 
 async function requireAuth(ctx: { auth: { getUserIdentity(): Promise<{ subject: string } | null> } }) {
@@ -36,17 +37,26 @@ export const create = mutation({
   args: {
     title: v.string(),
     description: v.optional(v.string()),
-    difficulty: v.number(),
-    dueDate: v.optional(v.string()),
-    dueTime: v.optional(v.string()),
+    dueDate: v.string(),
+    dueTime: v.string(),
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
-    return ctx.db.insert("tasks", {
+    const taskId = await ctx.db.insert("tasks", {
       ...args,
       userId,
+      difficulty: -1,
       completed: false,
     });
+
+    // Schedule AI difficulty scoring in the background
+    await ctx.scheduler.runAfter(0, internal.ai.scoreTaskDifficulty, {
+      taskId,
+      userId,
+      title: args.title,
+    });
+
+    return taskId;
   },
 });
 
