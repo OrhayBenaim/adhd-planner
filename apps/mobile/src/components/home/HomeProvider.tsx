@@ -34,7 +34,7 @@ interface HomeContextValue {
   showToast: (points: number) => void;
   hideToast: () => void;
   completeTask: (id: string) => Promise<{ earned: number; leveledUp: boolean } | undefined>;
-  createTask: (args: { title: string; difficulty: number; dueDate?: string; dueTime?: string }) => Promise<void>;
+  createTask: (args: { title: string; dueDate: string; dueTime: string }) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => Promise<void>;
 
@@ -99,7 +99,7 @@ export function HomeProvider({ children }: { children: ReactNode }) {
   );
 
   const createTask = useCallback(
-    async (args: { title: string; difficulty: number; dueDate?: string; dueTime?: string }) => {
+    async (args: { title: string; dueDate: string; dueTime: string }) => {
       await createTaskMutation(args);
     },
     [createTaskMutation]
