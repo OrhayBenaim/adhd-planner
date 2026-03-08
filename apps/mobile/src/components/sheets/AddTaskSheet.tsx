@@ -41,7 +41,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
       <BottomSheet
         ref={ref}
         index={-1}
-        snapPoints={["45%"]}
+        snapPoints={["38%"]}
         enablePanDownToClose
         onClose={onClose}
         keyboardBehavior="interactive"
