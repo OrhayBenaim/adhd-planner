@@ -1,6 +1,6 @@
 // apps/mobile/src/lib/convexClient.ts
 import { ConvexReactClient } from "convex/react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { authClient } from "./authClient";
 
 export const convex = new ConvexReactClient(
@@ -9,17 +9,13 @@ export const convex = new ConvexReactClient(
 
 export function useConvexAuth() {
   const { data: session, isPending } = authClient.useSession();
-  const [isSigningIn, setIsSigningIn] = useState(false);
 
+  // Trigger anonymous sign-in as a side effect — no state needed
   useEffect(() => {
-    if (!isPending && !session && !isSigningIn) {
-      setIsSigningIn(true);
-      authClient.signIn
-        .anonymous()
-        .catch(console.error)
-        .finally(() => setIsSigningIn(false));
+    if (!isPending && !session) {
+      authClient.signIn.anonymous().catch(console.error);
     }
-  }, [session, isPending, isSigningIn]);
+  }, [session, isPending]);
 
   const fetchAccessToken = useCallback(
     async (_opts: { forceRefreshToken: boolean }) => {
@@ -35,8 +31,14 @@ export function useConvexAuth() {
     [session]
   );
 
+  // Treat "no session yet" as loading — prevents Convex from firing
+  // unauthenticated queries during the sign-in window.
+  // useEffect runs after render, so we can't use state for this — it
+  // would create a one-render gap where isLoading is briefly false.
+  const needsSignIn = !isPending && !session;
+
   return {
-    isLoading: isPending || isSigningIn,
+    isLoading: isPending || needsSignIn,
     isAuthenticated: !!session,
     fetchAccessToken,
   };
