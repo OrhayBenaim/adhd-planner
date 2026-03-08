@@ -170,8 +170,8 @@ export default function HomeScreen() {
   }));
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-1 bg-white">
+    <SafeAreaView className="flex-1 bg-[#f5f7fa]">
+      <View className="flex-1 bg-[#f5f7fa]">
         <ScrollView
           className="flex-1"
           contentContainerStyle={{ paddingBottom: 130 }}
@@ -184,7 +184,7 @@ export default function HomeScreen() {
           </View>
 
           {/* XP bar */}
-          <View className="pb-8">
+          <View className="py-6">
             <View className="relative">
               <XPBar progress={progress} />
               <PointsToast
@@ -196,7 +196,7 @@ export default function HomeScreen() {
           </View>
 
           {/* Mood slider */}
-          <View className="px-6 pb-8">
+          <View className="px-6 pt-2 pb-8">
             <MoodSlider value={moodLevel} onChange={setMoodLevel} />
           </View>
 

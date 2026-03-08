@@ -35,7 +35,7 @@ export function XPBar({ progress }: Props) {
   return (
     <View
       className="mx-6 rounded-3xl px-4 pt-4 pb-3"
-      style={{ backgroundColor: "rgba(189,224,254,0.2)" }}
+      style={{ backgroundColor: "#fff", shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.08, shadowRadius: 12, elevation: 4 }}
     >
       {/* Row: trophy + level info + next level */}
       <View className="flex-row items-center justify-between mb-3">
