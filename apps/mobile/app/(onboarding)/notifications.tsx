@@ -1,6 +1,7 @@
 import { View, Text, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
+import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
@@ -9,10 +10,8 @@ export default function NotificationsStep() {
   const { updateField } = useOnboarding();
 
   const handleEnable = async () => {
-    // TODO: Request expo-notifications permission here
-    // const { status } = await Notifications.requestPermissionsAsync();
-    // updateField("notificationsEnabled", status === "granted");
-    updateField("notificationsEnabled", true);
+    const { status } = await Notifications.requestPermissionsAsync();
+    updateField("notificationsEnabled", status === "granted");
     router.push("/(onboarding)/sign-in");
   };
 
