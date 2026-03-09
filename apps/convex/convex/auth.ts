@@ -9,8 +9,23 @@ import type { DataModel } from "./_generated/dataModel";
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
-export const createAuth = (ctx: GenericCtx<DataModel>) =>
-  betterAuth({
+export const createAuth = (ctx: GenericCtx<DataModel>) => {
+  const required = [
+    "BETTER_AUTH_SECRET",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET",
+    "APPLE_CLIENT_ID",
+    "APPLE_CLIENT_SECRET",
+    "CONVEX_SITE_URL",
+  ] as const;
+
+  for (const key of required) {
+    if (!process.env[key]) {
+      throw new Error(`Missing required environment variable: ${key}`);
+    }
+  }
+
+  return betterAuth({
     secret: process.env.BETTER_AUTH_SECRET!,
     trustedOrigins: ["adhd-planner://"],
     database: authComponent.adapter(ctx),
@@ -62,3 +77,4 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
       }),
     ],
   });
+};
