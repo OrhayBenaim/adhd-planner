@@ -3,6 +3,9 @@ import { internalAction, internalMutation, internalQuery } from "./_generated/se
 import { internal } from "./_generated/api";
 import { sanitizeForPrompt, MAX_TITLE } from "./lib/validation";
 
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const MAX_SCORES_PER_WINDOW = 10;
+
 export const updateTaskDifficulty = internalMutation({
   args: {
     taskId: v.id("tasks"),
@@ -72,13 +75,13 @@ export const scoreTaskDifficulty = internalAction({
       return;
     }
 
-    // Per-user rate limit: max 10 AI scores per minute
-    const oneMinuteAgo = Date.now() - 60_000;
+    // Per-user rate limit
+    const windowStart = Date.now() - RATE_LIMIT_WINDOW_MS;
     const recentCount = await ctx.runQuery(internal.ai.countRecentScores, {
       userId,
-      since: oneMinuteAgo,
+      since: windowStart,
     });
-    if (recentCount >= 10) {
+    if (recentCount >= MAX_SCORES_PER_WINDOW) {
       await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
       console.warn(`[AI] rate limit exceeded for user ${userId}, task ${taskId} set to 0`);
       return;
