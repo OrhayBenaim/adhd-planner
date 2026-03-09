@@ -1,10 +1,14 @@
-import { forwardRef } from "react";
+import { forwardRef, useCallback } from "react";
 import { View, Text, Switch } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { useHome } from "../home/HomeProvider";
-import { VoiceLanguages } from "../settings/VoiceLanguages";
+import {
+  useVoiceLanguages,
+  VoiceLanguagesHeader,
+  VoiceLocaleRow,
+} from "../settings/VoiceLanguages";
 
 interface SettingRowProps {
   icon: React.ComponentProps<typeof Ionicons>["name"];
@@ -52,17 +56,11 @@ interface Props {
 export const SettingsSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const { settings, updateSetting, adminAiEnabled, closeSheet } = useHome();
-    return (
-      <BottomSheet
-        ref={ref}
-        index={-1}
-        snapPoints={["65%"]}
-        enablePanDownToClose
-        onClose={onClose}
-        backgroundStyle={{ borderTopLeftRadius: 24, borderTopRightRadius: 24 }}
-        handleIndicatorStyle={{ display: "none" }}
-      >
-        <BottomSheetScrollView className="px-6 pt-6">
+    const voice = useVoiceLanguages();
+
+    const header = useCallback(
+      () => (
+        <View className="px-6 pt-6">
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-lg font-medium text-[#1e2939]">Settings</Text>
             <Pressable onPress={closeSheet}>
@@ -76,8 +74,36 @@ export const SettingsSheet = forwardRef<BottomSheet, Props>(
           <SettingRow icon="flash-outline" color="#bde0fe" title="Smart Scheduling" subtitle="AI-powered task scoring"
             value={settings.smartScheduling} onChange={(v) => updateSetting("smartScheduling", v)}
             disabled={!adminAiEnabled} />
-          <VoiceLanguages />
-        </BottomSheetScrollView>
+          <VoiceLanguagesHeader expanded={voice.expanded} onToggle={voice.toggleExpanded} />
+        </View>
+      ),
+      [settings, adminAiEnabled, closeSheet, updateSetting, voice.expanded, voice.toggleExpanded],
+    );
+
+    return (
+      <BottomSheet
+        ref={ref}
+        index={-1}
+        snapPoints={["65%"]}
+        enablePanDownToClose
+        onClose={onClose}
+        backgroundStyle={{ borderTopLeftRadius: 24, borderTopRightRadius: 24 }}
+        handleIndicatorStyle={{ display: "none" }}
+      >
+        <BottomSheetFlatList
+          data={voice.locales}
+          keyExtractor={(item) => item}
+          ListHeaderComponent={header}
+          contentContainerStyle={{ paddingBottom: 24 }}
+          renderItem={({ item: locale }) => (
+            <VoiceLocaleRow
+              locale={locale}
+              installed={voice.installedLocales.has(locale)}
+              isDownloading={voice.downloading.has(locale)}
+              onPress={() => voice.handleLocalePress(locale)}
+            />
+          )}
+        />
       </BottomSheet>
     );
   }

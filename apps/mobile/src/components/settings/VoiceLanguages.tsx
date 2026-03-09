@@ -9,16 +9,51 @@ import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 
-function getLocaleName(code: string): string {
-  try {
-    const display = new Intl.DisplayNames([code], { type: "language" });
-    return display.of(code) ?? code;
-  } catch {
-    return code;
-  }
+const LANGUAGES: Record<string, string> = {
+  af: "Afrikaans", am: "Amharic", ar: "Arabic", az: "Azerbaijani",
+  be: "Belarusian", bg: "Bulgarian", bn: "Bengali", bs: "Bosnian",
+  ca: "Catalan", cs: "Czech", cy: "Welsh", da: "Danish", de: "German",
+  el: "Greek", en: "English", es: "Spanish", et: "Estonian", eu: "Basque",
+  fa: "Persian", fi: "Finnish", fil: "Filipino", fr: "French", gl: "Galician",
+  gu: "Gujarati", he: "Hebrew", hi: "Hindi", hr: "Croatian", hu: "Hungarian",
+  hy: "Armenian", id: "Indonesian", is: "Icelandic", it: "Italian",
+  ja: "Japanese", jv: "Javanese", ka: "Georgian", kk: "Kazakh", km: "Khmer",
+  kn: "Kannada", ko: "Korean", lo: "Lao", lt: "Lithuanian", lv: "Latvian",
+  mk: "Macedonian", ml: "Malayalam", mn: "Mongolian", mr: "Marathi",
+  ms: "Malay", my: "Burmese", nb: "Norwegian", ne: "Nepali", nl: "Dutch",
+  no: "Norwegian", pl: "Polish", pt: "Portuguese", ro: "Romanian",
+  ru: "Russian", si: "Sinhala", sk: "Slovak", sl: "Slovenian", sq: "Albanian",
+  sr: "Serbian", su: "Sundanese", sv: "Swedish", sw: "Swahili", ta: "Tamil",
+  te: "Telugu", th: "Thai", tr: "Turkish", uk: "Ukrainian", ur: "Urdu",
+  uz: "Uzbek", vi: "Vietnamese", yue: "Cantonese", zh: "Chinese",
+  zu: "Zulu",
+};
+
+const REGIONS: Record<string, string> = {
+  AR: "Argentina", AU: "Australia", AT: "Austria", BD: "Bangladesh",
+  BE: "Belgium", BR: "Brazil", CA: "Canada", CL: "Chile", CN: "China",
+  CO: "Colombia", CZ: "Czechia", DE: "Germany", DK: "Denmark", EG: "Egypt",
+  ES: "Spain", FI: "Finland", FR: "France", GB: "UK", GH: "Ghana",
+  GR: "Greece", HK: "Hong Kong", ID: "Indonesia", IE: "Ireland",
+  IL: "Israel", IN: "India", IQ: "Iraq", IT: "Italy", JP: "Japan",
+  KE: "Kenya", KR: "South Korea", MX: "Mexico", MY: "Malaysia",
+  NG: "Nigeria", NL: "Netherlands", NO: "Norway", NZ: "New Zealand",
+  PE: "Peru", PH: "Philippines", PK: "Pakistan", PL: "Poland",
+  PT: "Portugal", RO: "Romania", RU: "Russia", SA: "Saudi Arabia",
+  SE: "Sweden", SG: "Singapore", TH: "Thailand", TR: "Turkey",
+  TW: "Taiwan", TZ: "Tanzania", UA: "Ukraine", US: "US", VE: "Venezuela",
+  VN: "Vietnam", ZA: "South Africa",
+};
+
+export function getLocaleName(code: string): string {
+  const [lang, region] = code.split("-");
+  const langName = LANGUAGES[lang] ?? lang;
+  if (!region) return langName;
+  const regionName = REGIONS[region] ?? region;
+  return `${langName} (${regionName})`;
 }
 
-export function VoiceLanguages() {
+export function useVoiceLanguages() {
   const [expanded, setExpanded] = useState(false);
   const [locales, setLocales] = useState<string[]>([]);
   const [installedLocales, setInstalledLocales] = useState<Set<string>>(
@@ -50,7 +85,6 @@ export function VoiceLanguages() {
 
       setDownloading((prev) => new Set(prev).add(locale));
       try {
-        // The system shows its own confirmation dialog
         const result =
           await ExpoSpeechRecognitionModule.androidTriggerOfflineModelDownload({
             locale,
@@ -66,20 +100,37 @@ export function VoiceLanguages() {
           next.delete(locale);
           return next;
         });
-        // Refresh the list to get accurate installed state
         fetchLocales();
       }
     },
     [installedLocales, downloading, fetchLocales],
   );
 
+  const toggleExpanded = useCallback(() => setExpanded((v) => !v), []);
+
+  return {
+    expanded,
+    toggleExpanded,
+    locales: expanded ? locales : [],
+    installedLocales,
+    downloading,
+    handleLocalePress,
+  };
+}
+
+export function VoiceLanguagesHeader({
+  expanded,
+  onToggle,
+}: {
+  expanded: boolean;
+  onToggle: () => void;
+}) {
   if (Platform.OS !== "android") return null;
 
   return (
     <View className="mb-3">
-      {/* Header row */}
       <Pressable
-        onPress={() => setExpanded((v) => !v)}
+        onPress={onToggle}
         className="bg-[#f5f7fa] rounded-3xl px-4 py-4 flex-row items-center justify-between"
       >
         <View className="flex-row items-center gap-3">
@@ -104,38 +155,35 @@ export function VoiceLanguages() {
           color="#6a7282"
         />
       </Pressable>
-
-      {/* Expandable locale list */}
-      {expanded && (
-        <View className="bg-[#f5f7fa] rounded-2xl mt-1 px-2 py-2 max-h-64">
-          {locales.map((locale) => {
-            const installed = installedLocales.has(locale);
-            const isDownloading = downloading.has(locale);
-
-            return (
-              <Pressable
-                key={locale}
-                onPress={() => handleLocalePress(locale)}
-                className="flex-row items-center justify-between px-3 py-2.5 rounded-xl"
-                style={{ opacity: isDownloading ? 0.5 : 1 }}
-              >
-                <Text className="text-sm text-[#1e2939]">
-                  {getLocaleName(locale)}
-                </Text>
-                {isDownloading ? (
-                  <ActivityIndicator size="small" color="#a2d2ff" />
-                ) : installed ? (
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={18}
-                    color="#86efac"
-                  />
-                ) : null}
-              </Pressable>
-            );
-          })}
-        </View>
-      )}
     </View>
+  );
+}
+
+export function VoiceLocaleRow({
+  locale,
+  installed,
+  isDownloading,
+  onPress,
+}: {
+  locale: string;
+  installed: boolean;
+  isDownloading: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="flex-row items-center justify-between px-3 py-2.5 mx-2 rounded-xl"
+      style={{ opacity: isDownloading ? 0.5 : 1 }}
+    >
+      <Text className="text-sm text-[#1e2939]">
+        {getLocaleName(locale)}
+      </Text>
+      {isDownloading ? (
+        <ActivityIndicator size="small" color="#a2d2ff" />
+      ) : installed ? (
+        <Ionicons name="checkmark-circle" size={18} color="#86efac" />
+      ) : null}
+    </Pressable>
   );
 }
