@@ -62,7 +62,7 @@ export function HomeProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<{ points: number; visible: boolean }>({
     points: 0,
     visible: false,
-  });
+  }); 
 
   const tasks = useTasks();
   const createTaskMutation = useCreateTask();

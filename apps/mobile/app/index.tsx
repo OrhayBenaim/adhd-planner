@@ -1,6 +1,6 @@
 import { ActivityIndicator, View } from "react-native";
 import { useEffect } from "react";
-import { router } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { authClient } from "../src/lib/authClient";
 import { useNeedsOnboarding } from "../src/hooks/usePreferences";
 import { HomeScreen } from "../src/components/home/HomeScreen";
@@ -18,15 +18,10 @@ export default function IndexPage() {
     }
   }, [session, isPending]);
 
-  // Redirect to onboarding if needed
-  useEffect(() => {
-    if (session && needsOnboarding === true) {
-      router.replace("/(onboarding)/welcome");
-    }
-  }, [session, needsOnboarding]);
-
+  
+  if(needsOnboarding) return <Redirect href={"/(onboarding)/welcome"}/>
   // Show loader until session is ready and onboarding check is loaded
-  if (isPending || !session || needsOnboarding === undefined) {
+  if (isPending || !session) {
     return (
       <View className="flex-1 bg-[#f5f7fa] items-center justify-center">
         <ActivityIndicator size="large" color="#a2d2ff" />
@@ -34,14 +29,6 @@ export default function IndexPage() {
     );
   }
 
-  // If onboarding needed, show loader (redirect is happening)
-  if (needsOnboarding) {
-    return (
-      <View className="flex-1 bg-[#f5f7fa] items-center justify-center">
-        <ActivityIndicator size="large" color="#a2d2ff" />
-      </View>
-    );
-  }
 
   return <HomeScreen />;
 }

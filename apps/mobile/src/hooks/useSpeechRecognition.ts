@@ -80,7 +80,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
     setVolume(0);
 
     ExpoSpeechRecognitionModule.start({
-      lang: resolveLocale(locale),
+      lang: "en-US",
       interimResults: true,
       continuous: false,
       requiresOnDeviceRecognition: Platform.OS === "ios",

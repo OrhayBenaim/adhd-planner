@@ -1,11 +1,17 @@
 import "../global.css";
-import { ConvexProviderWithAuth } from "convex/react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { Stack } from "expo-router";
-import { convex, useConvexAuth } from "../src/lib/convexClient";
 import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
 import { ActivityIndicator, View } from "react-native";
+import { ConvexReactClient } from "convex/react";
+import { authClient } from "../src/lib/authClient";
+
+
+export const convex = new ConvexReactClient(
+  process.env.EXPO_PUBLIC_CONVEX_URL!
+);
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -22,9 +28,9 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView className="flex-1">
-      <ConvexProviderWithAuth client={convex} useAuth={useConvexAuth}>
+      <ConvexBetterAuthProvider  client={convex} authClient={authClient} >
         <Stack screenOptions={{ headerShown: false }} />
-      </ConvexProviderWithAuth>
+      </ConvexBetterAuthProvider >
     </GestureHandlerRootView>
   );
 }
