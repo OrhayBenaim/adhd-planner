@@ -48,6 +48,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
       start: startRecording,
       stop: stopRecording,
       cancel: cancelRecording,
+      error: recodingError
     } = useSpeechRecognition();
 
     useEffect(() => {
@@ -62,6 +63,12 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
     useEffect(() => {
       if (isEditing) setMode("text");
     }, [isEditing]);
+
+    useEffect(() =>{
+      if(recodingError){
+        setMode('text')
+      }
+    } , [recodingError])
 
     const micScale = useSharedValue(1);
     const confirmScale = useSharedValue(1);
@@ -232,7 +239,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
                     }}
                   >
                     <Ionicons
-                      name={mode === "recording" ? "close" : "mic-outline"}
+                      name={mode === "recording"  ? "close" : "mic-outline"}
                       size={28}
                       color="#fff"
                     />

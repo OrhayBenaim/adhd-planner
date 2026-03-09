@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import {
+  ExpoSpeechRecognitionErrorCode,
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from "expo-speech-recognition";
@@ -10,17 +11,20 @@ interface UseSpeechRecognitionResult {
   state: SpeechState;
   transcript: string;
   volume: number;
+  error: ExpoSpeechRecognitionErrorCode | null
   requestPermissions: () => Promise<boolean>;
   start: (locale?: string) => void;
   stop: () => void;
   cancel: () => void;
 }
 
-
 export function useSpeechRecognition(): UseSpeechRecognitionResult {
   const [state, setState] = useState<SpeechState>("idle");
   const [transcript, setTranscript] = useState("");
   const [volume, setVolume] = useState(0);
+  const [error, setError] = useState<ExpoSpeechRecognitionErrorCode | null>(
+    null,
+  );
   const stateRef = useRef<SpeechState>("idle");
 
   useSpeechRecognitionEvent("start", () => {
@@ -38,14 +42,13 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
   });
 
   useSpeechRecognitionEvent("result", (event) => {
-    console.log(event.results)
+    console.log({ text: event.results });
     const text = event.results[0]?.transcript ?? "";
     setTranscript(text);
   });
 
   useSpeechRecognitionEvent("volumechange", (event) => {
     // event.value ranges from -2 to 10, normalize to 0-1 with dampening
-    console.log(event.value)
     const raw = Math.max(0, Math.min(1, (event.value + 2) / 12));
     const normalized = raw * 0.6;
     setVolume(normalized);
@@ -56,6 +59,11 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
     stateRef.current = "error";
     setState("error");
     setVolume(0);
+    setError(event.error);
+    if(event.error !=='aborted'){
+    cancel();
+
+    }
   });
 
   const requestPermissions = useCallback(async () => {
@@ -66,6 +74,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
   const start = useCallback(() => {
     setTranscript("");
     setVolume(0);
+    setError(null)
 
     ExpoSpeechRecognitionModule.start({
       interimResults: true,
@@ -74,7 +83,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
       volumeChangeEventOptions: { enabled: true, intervalMillis: 100 },
       androidIntentOptions: {
         EXTRA_ENABLE_LANGUAGE_DETECTION: true,
-        EXTRA_ENABLE_LANGUAGE_SWITCH: 'balanced',
+        EXTRA_ENABLE_LANGUAGE_SWITCH: "balanced",
       },
     });
   }, []);
@@ -93,5 +102,5 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
     ExpoSpeechRecognitionModule.abort();
   }, []);
 
-  return { state, transcript, volume, requestPermissions, start, stop, cancel };
+  return { state, transcript, volume,error, requestPermissions, start, stop, cancel };
 }
