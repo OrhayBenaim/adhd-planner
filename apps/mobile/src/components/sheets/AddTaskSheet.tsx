@@ -10,15 +10,15 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { SPRING_BOUNCY } from "../../animations/springs";
+import { useSheetFlow } from "../home/SheetFlowProvider";
 
 interface Props {
-  onConfirm: (title: string) => void;
-  onMicPress: () => void;
   onClose: () => void;
 }
 
 export const AddTaskSheet = forwardRef<BottomSheet, Props>(
-  ({ onConfirm, onMicPress, onClose }, ref) => {
+  ({ onClose }, ref) => {
+    const flow = useSheetFlow();
     const [text, setText] = useState("");
     const micScale = useSharedValue(1);
     const confirmScale = useSharedValue(1);
@@ -33,7 +33,8 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
     const handleConfirm = () => {
       if (!text.trim()) return;
       Keyboard.dismiss();
-      onConfirm(text.trim());
+      flow.setTitle(text.trim());
+      flow.next();
       setText("");
     };
 
@@ -54,7 +55,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
           {/* Header */}
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-xl font-semibold text-[#1e2939]">Add New Task</Text>
-            <Pressable onPress={onClose}>
+            <Pressable onPress={() => flow.reset()}>
               <Ionicons name="close" size={24} color="#364153" />
             </Pressable>
           </View>
@@ -74,7 +75,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
           <View className="flex-row items-center justify-end gap-4 mt-4">
             <Animated.View style={micStyle}>
               <Pressable
-                onPress={onMicPress}
+                onPress={() => flow.start("recording")}
                 onPressIn={() => { micScale.value = withSpring(0.92, SPRING_BOUNCY); }}
                 onPressOut={() => { micScale.value = withSpring(1, SPRING_BOUNCY); }}
               >
