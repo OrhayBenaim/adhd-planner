@@ -45,6 +45,7 @@ interface HomeContextValue {
   // Sheet nav
   openSheet: (sheet: ActiveSheet) => void;
   closeSheet: () => void;
+  onSheetClose: () => void;
   registerSheet: (entry: SheetEntry) => void;
 }
 
@@ -74,18 +75,31 @@ export function HomeProvider({ children }: { children: ReactNode }) {
 
   // Sheet registry — SheetManager registers its refs here
   const sheetsRef = useRef<Map<ActiveSheet, React.RefObject<BottomSheet | null>>>(new Map());
+  const activeSheetRef = useRef<ActiveSheet | null>(null);
 
   const registerSheet = useCallback((entry: SheetEntry) => {
     sheetsRef.current.set(entry.name, entry.ref);
   }, []);
 
   const openSheet = useCallback((sheet: ActiveSheet) => {
+    activeSheetRef.current = sheet;
+    sheetsRef.current.forEach((ref, name) => {
+      if (name !== sheet) ref.current?.close();
+    });
     sheetsRef.current.get(sheet)?.current?.expand();
   }, []);
 
   const closeSheet = useCallback(() => {
+    activeSheetRef.current = null;
     sheetsRef.current.forEach((ref) => ref.current?.close());
   }, []);
+
+  // Guarded version for onClose callbacks — won't close a newly-opened sheet
+  const onSheetClose = useCallback(() => {
+    if (activeSheetRef.current === null) {
+      closeSheet();
+    }
+  }, [closeSheet]);
 
   const showToast = useCallback((points: number) => {
     setToast({ points, visible: true });
@@ -145,6 +159,7 @@ export function HomeProvider({ children }: { children: ReactNode }) {
         updateSetting,
         openSheet,
         closeSheet,
+        onSheetClose,
         registerSheet,
       }}
     >

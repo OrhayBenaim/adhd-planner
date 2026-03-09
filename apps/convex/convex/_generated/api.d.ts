@@ -11,6 +11,7 @@
 import type * as ai from "../ai.js";
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
+import type * as lib_levenshtein from "../lib/levenshtein.js";
 import type * as lib_validation from "../lib/validation.js";
 import type * as migration from "../migration.js";
 import type * as preferences from "../preferences.js";
@@ -28,6 +29,7 @@ declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   auth: typeof auth;
   http: typeof http;
+  "lib/levenshtein": typeof lib_levenshtein;
   "lib/validation": typeof lib_validation;
   migration: typeof migration;
   preferences: typeof preferences;

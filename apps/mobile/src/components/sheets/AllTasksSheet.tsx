@@ -60,7 +60,7 @@ interface Props {
 
 export const AllTasksSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
-    const { tasks, deleteTask } = useHome();
+    const { tasks, deleteTask, closeSheet } = useHome();
     const flow = useSheetFlow();
     return (
       <BottomSheet
@@ -74,7 +74,7 @@ export const AllTasksSheet = forwardRef<BottomSheet, Props>(
       >
         <View className="flex-row items-center justify-between px-6 pt-6 pb-4">
           <Text className="text-lg font-medium text-[#1e2939]">All Tasks</Text>
-          <Pressable onPress={onClose}>
+          <Pressable onPress={closeSheet}>
             <Ionicons name="close" size={24} color="#364153" />
           </Pressable>
         </View>
