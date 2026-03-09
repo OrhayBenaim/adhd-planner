@@ -70,8 +70,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
   });
 
   const requestPermissions = useCallback(async () => {
-    const result =
-      await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+    const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
     return result.granted;
   }, []);
 
@@ -80,11 +79,15 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
     setVolume(0);
 
     ExpoSpeechRecognitionModule.start({
-      lang: "en-US",
+      lang: resolveLocale(locale),
       interimResults: true,
       continuous: false,
-      requiresOnDeviceRecognition: Platform.OS === "ios",
+      requiresOnDeviceRecognition: true,
       volumeChangeEventOptions: { enabled: true, intervalMillis: 100 },
+      androidIntentOptions: {
+        EXTRA_ENABLE_LANGUAGE_DETECTION: true,
+        EXTRA_ENABLE_LANGUAGE_SWITCH: 'balanced',
+      },
     });
   }, []);
 
