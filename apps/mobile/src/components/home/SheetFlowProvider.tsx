@@ -17,6 +17,7 @@ interface FlowState {
   selectedTime: string;
   pendingTasks: PendingTask[];
   editingTaskId: string | null;
+  editingExistingTaskId: string | null;
 }
 
 type FlowAction =
@@ -28,6 +29,7 @@ type FlowAction =
   | { type: "SET_PENDING_TASKS"; tasks: PendingTask[] }
   | { type: "UPDATE_PENDING_TASKS"; updater: (tasks: PendingTask[]) => PendingTask[] }
   | { type: "SET_EDITING_TASK"; taskId: string | null }
+  | { type: "EDIT_EXISTING"; taskId: string; title: string; day: string; time: string }
   | { type: "RESET" };
 
 const initialState: FlowState = {
@@ -37,6 +39,7 @@ const initialState: FlowState = {
   selectedTime: "",
   pendingTasks: [],
   editingTaskId: null,
+  editingExistingTaskId: null,
 };
 
 function flowReducer(state: FlowState, action: FlowAction): FlowState {
@@ -57,6 +60,8 @@ function flowReducer(state: FlowState, action: FlowAction): FlowState {
       return { ...state, pendingTasks: action.updater(state.pendingTasks) };
     case "SET_EDITING_TASK":
       return { ...state, editingTaskId: action.taskId };
+    case "EDIT_EXISTING":
+      return { ...initialState, step: "addTask", editingExistingTaskId: action.taskId, title: action.title, selectedDay: action.day, selectedTime: action.time };
     case "RESET":
       return initialState;
   }
@@ -70,6 +75,7 @@ interface SheetFlowContextValue {
   selectedTime: string;
   pendingTasks: PendingTask[];
   editingTaskId: string | null;
+  editingExistingTaskId: string | null;
 
   // Data setters
   setTitle: (title: string) => void;
@@ -83,6 +89,7 @@ interface SheetFlowContextValue {
   next: () => Promise<void>;
   editDateTime: (taskId: string, field: "dueDate" | "dueTime") => void;
   reset: () => void;
+  editExistingTask: (task: { _id: string; title: string; dueDate: string; dueTime: string }) => void;
 }
 
 const SheetFlowContext = createContext<SheetFlowContextValue | null>(null);
@@ -94,7 +101,7 @@ export function useSheetFlow() {
 }
 
 export function SheetFlowProvider({ children }: { children: ReactNode }) {
-  const { openSheet, closeSheet, createTask } = useHome();
+  const { openSheet, closeSheet, createTask, updateTask } = useHome();
   const [state, dispatch] = useReducer(flowReducer, initialState);
 
   // Ref kept in sync so next() reads fresh state after setDay/setTime dispatches
@@ -160,6 +167,10 @@ export function SheetFlowProvider({ children }: { children: ReactNode }) {
           syncDispatch({ type: "SET_STEP", step: "taskSummary" });
           closeSheet();
           openSheet("taskSummary");
+        } else if (s.editingExistingTaskId) {
+          closeSheet();
+          await updateTask({ id: s.editingExistingTaskId, title: s.title, dueDate: s.selectedDay, dueTime: s.selectedTime });
+          syncDispatch({ type: "RESET" });
         } else {
           closeSheet();
           await createTask({ title: s.title, dueDate: s.selectedDay, dueTime: s.selectedTime });
@@ -177,7 +188,7 @@ export function SheetFlowProvider({ children }: { children: ReactNode }) {
         break;
       }
     }
-  }, [syncDispatch, closeSheet, openSheet, createTask]);
+  }, [syncDispatch, closeSheet, openSheet, createTask, updateTask]);
 
   const editDateTime = useCallback((taskId: string, field: "dueDate" | "dueTime") => {
     syncDispatch({ type: "SET_EDITING_TASK", taskId });
@@ -192,12 +203,18 @@ export function SheetFlowProvider({ children }: { children: ReactNode }) {
     closeSheet();
   }, [syncDispatch, closeSheet]);
 
+  const editExistingTask = useCallback((task: { _id: string; title: string; dueDate: string; dueTime: string }) => {
+    syncDispatch({ type: "EDIT_EXISTING", taskId: task._id, title: task.title, day: task.dueDate, time: task.dueTime });
+    closeSheet();
+    openSheet("addTask");
+  }, [syncDispatch, closeSheet, openSheet]);
+
   return (
     <SheetFlowContext.Provider value={{
       step: state.step, title: state.title, selectedDay: state.selectedDay, selectedTime: state.selectedTime,
-      pendingTasks: state.pendingTasks, editingTaskId: state.editingTaskId,
+      pendingTasks: state.pendingTasks, editingTaskId: state.editingTaskId, editingExistingTaskId: state.editingExistingTaskId,
       setTitle, setDay, setTime, setPendingTasks, updatePendingTasks,
-      start, next, editDateTime, reset,
+      start, next, editDateTime, reset, editExistingTask,
     }}>
       {children}
     </SheetFlowContext.Provider>
