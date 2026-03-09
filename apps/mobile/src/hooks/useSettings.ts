@@ -10,7 +10,6 @@ import { setSoundEnabled } from "../lib/soundStore";
   notifications: boolean;
   soundEffects: boolean;
   smartScheduling: boolean;
-  sttModel: string;
 }
 
 const LOCAL_KEY = "@adhd_settings";
@@ -23,21 +22,18 @@ interface LocalSettings {
   notificationsDesired: boolean;
   notificationsGranted: boolean;
   soundEffects: boolean;
-  sttModel: string;
 }
 
 type SettingsAction =
   | { type: "loaded"; stored: Partial<LocalSettings>; granted: boolean }
   | { type: "notifications_requested"; granted: boolean }
   | { type: "notifications_disabled" }
-  | { type: "sound"; enabled: boolean }
-  | { type: "stt_model"; model: string };
+  | { type: "sound"; enabled: boolean };
 
 const initialState: LocalSettings = {
   notificationsDesired: true,
   notificationsGranted: false,
   soundEffects: true,
-  sttModel: "default",
 };
 
 
@@ -50,7 +46,6 @@ function settingsReducer(state: LocalSettings, action: SettingsAction): LocalSet
         notificationsDesired: action.stored.notificationsDesired ?? true,
         notificationsGranted: action.granted,
         soundEffects: action.stored.soundEffects ?? true,
-        sttModel: action.stored.sttModel ?? "default",
       };
       break;
     case "notifications_requested":
@@ -61,10 +56,6 @@ function settingsReducer(state: LocalSettings, action: SettingsAction): LocalSet
       break;
     case "sound":
       changedState = { soundEffects: action.enabled };
-      break;
-    case "stt_model":
-      AsyncStorage.setItem("@adhd_stt_model", action.model);
-      changedState = { sttModel: action.model };
       break;
   }
 
@@ -108,7 +99,6 @@ export function useSettings() {
     notifications: localSettings.notificationsDesired && localSettings.notificationsGranted,
     soundEffects: localSettings.soundEffects,
     smartScheduling: adminAiEnabled && userAiEnabled,
-    sttModel: localSettings.sttModel,
   };
 
 
@@ -135,8 +125,6 @@ export function useSettings() {
       } else if (key === "soundEffects") {
         setSoundEnabled(value);
         dispatch({ type: "sound", enabled: value });
-      } else if (key === "sttModel") {
-        dispatch({ type: "stt_model", model: value });
       }
     },
     [setUserAiEnabled, setNotificationsEnabled],
