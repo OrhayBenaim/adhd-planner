@@ -10,6 +10,7 @@ import Animated, {
 } from "react-native-reanimated";
 import type { Task } from "@adhd-planner/types";
 import { getDifficultyLabel } from "../../lib/moodLabels";
+import { useHome } from "../home/HomeProvider";
 
 interface TaskItemProps {
   task: Task;
@@ -46,13 +47,12 @@ function TaskItem({ task, onDelete }: TaskItemProps) {
 }
 
 interface Props {
-  tasks: Task[];
-  onDelete: (id: string) => void;
   onClose: () => void;
 }
 
 export const AllTasksSheet = forwardRef<BottomSheet, Props>(
-  ({ tasks, onDelete, onClose }, ref) => {
+  ({ onClose }, ref) => {
+    const { tasks, deleteTask } = useHome();
     return (
       <BottomSheet
         ref={ref}
@@ -71,7 +71,7 @@ export const AllTasksSheet = forwardRef<BottomSheet, Props>(
         </View>
         <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}>
           {tasks.map((task) => (
-            <TaskItem key={task._id} task={task} onDelete={onDelete} />
+            <TaskItem key={task._id} task={task} onDelete={deleteTask} />
           ))}
           {tasks.length === 0 && (
             <Text className="text-center text-[#99a1af] mt-8">No tasks yet</Text>

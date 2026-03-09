@@ -199,11 +199,6 @@ export function SheetManager() {
     <>
       <AddTaskSheet
         ref={addSheetRef}
-        onConfirm={handleTaskConfirmed}
-        onMicPress={() => {
-          nextSheetRef.current = "recording";
-          addSheetRef.current?.close();
-        }}
         onClose={onSheetClosed(addSheetRef)}
       />
       <RecordingSheet
@@ -231,16 +226,11 @@ export function SheetManager() {
       />
       <AllTasksSheet
         ref={allTasksSheetRef}
-        tasks={tasks}
-        onDelete={(id) => deleteTask(id)}
         onClose={closeSheet}
       />
       <SettingsSheet
         ref={settingsSheetRef}
-        settings={settings}
-        onUpdate={updateSetting}
         onClose={closeSheet}
-        adminAiEnabled={adminAiEnabled}
       />
     </>
   );
