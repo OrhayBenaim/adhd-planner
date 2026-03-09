@@ -87,7 +87,6 @@ export function SheetManager() {
   // === Multi-task flow state ===
   const [pendingTasks, setPendingTasks] = useState<PendingTask[]>([]);
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-  const [editingField, setEditingField] = useState<"dueDate" | "dueTime" | null>(null);
 
   // When recording produces text, decide single vs multi flow
   const handleRecordingStop = useCallback(
@@ -143,7 +142,6 @@ export function SheetManager() {
         prev.map((t) => (t.id === editingTaskId ? { ...t, dueDate: dateStr } : t))
       );
       setEditingTaskId(null);
-      setEditingField(null);
       nextSheetRef.current = "taskSummary";
       daySheetRef.current?.close();
     } else if (pendingTasks.length > 0) {
@@ -175,7 +173,6 @@ export function SheetManager() {
           prev.map((t) => (t.id === editingTaskId ? { ...t, dueTime: timeStr } : t))
         );
         setEditingTaskId(null);
-        setEditingField(null);
         nextSheetRef.current = "taskSummary";
         timeSheetRef.current?.close();
       } else if (pendingTasks.length > 0) {
@@ -201,7 +198,6 @@ export function SheetManager() {
   const handleEditDateTime = useCallback(
     (taskId: string, field: "dueDate" | "dueTime") => {
       setEditingTaskId(taskId);
-      setEditingField(field);
       nextSheetRef.current = field === "dueDate" ? "selectDay" : "selectTime";
       taskSummaryRef.current?.close();
     },
@@ -226,7 +222,6 @@ export function SheetManager() {
   const handleSummaryClose = useCallback(() => {
     setPendingTasks([]);
     setEditingTaskId(null);
-    setEditingField(null);
     closeSheet();
   }, [closeSheet]);
 

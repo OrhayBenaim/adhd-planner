@@ -33,13 +33,6 @@
     "plugins": [
       "expo-router",
       "expo-notifications",
-      [
-        "@jamsch/expo-speech-recognition",
-        {
-          "microphonePermission": "ADHD Planner needs access to your microphone to add tasks by voice.",
-          "speechRecognitionPermission": "ADHD Planner needs speech recognition to convert your voice to text."
-        }
-      ],
       "react-native-localize"
     ]
   }
