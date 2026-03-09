@@ -9,7 +9,7 @@ import { SPRING_BOUNCY } from "../../animations/springs";
 import { useSheetFlow } from "../home/SheetFlowProvider";
 import { timeSelectionToTime } from "../../lib/dateTimeConvert";
 
-function GradientOption({ label, colors, onPress }: { label: string; colors: [string, string]; onPress: () => void }) {
+function GradientOption({ label, colors, onPress, selected }: { label: string; colors: [string, string]; onPress: () => void; selected?: boolean }) {
   const scale = useSharedValue(1);
   const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   return (
@@ -19,10 +19,23 @@ function GradientOption({ label, colors, onPress }: { label: string; colors: [st
         onPressIn={() => { scale.value = withSpring(0.94, SPRING_BOUNCY); }}
         onPressOut={() => { scale.value = withSpring(1, SPRING_BOUNCY); }}
       >
-        <LinearGradient colors={colors} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
-          style={{ borderRadius: 24, paddingVertical: 16, alignItems: "center" }}>
-          <Text style={{ color: "#fff", fontWeight: "500", fontSize: 15 }}>{label}</Text>
-        </LinearGradient>
+        <View style={{ position: "relative" }}>
+          <LinearGradient colors={colors} start={{ x: 0, y: 0 }} end={{ x: 0, y: 1 }}
+            style={{ borderRadius: 24, paddingVertical: 16, alignItems: "center" }}>
+            <Text style={{ color: "#fff", fontWeight: "500", fontSize: 15 }}>{label}</Text>
+          </LinearGradient>
+          {selected && (
+            <View style={{
+              position: "absolute", top: -4, right: -4,
+              width: 20, height: 20, borderRadius: 10,
+              backgroundColor: "#fff",
+              alignItems: "center", justifyContent: "center",
+              shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2, elevation: 3,
+            }}>
+              <Ionicons name="checkmark" size={14} color="#a2d2ff" />
+            </View>
+          )}
+        </View>
       </Pressable>
     </Animated.View>
   );
@@ -35,6 +48,10 @@ interface Props {
 export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const flow = useSheetFlow();
+    const isSelected = (time: string) => {
+      if (!flow.selectedTime) return false;
+      return timeSelectionToTime(time) === flow.selectedTime;
+    };
     const [customValue, setCustomValue] = useState("");
     const [showCustomInput, setShowCustomInput] = useState(false);
 
@@ -82,11 +99,11 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
           </View>
           <View className="gap-3">
             <View className="flex-row gap-3">
-              <GradientOption label="By Noon" colors={["#bde0fe", "#a2d2ff"]} onPress={() => handleSelect("noon")} />
-              <GradientOption label="By Afternoon" colors={["#a2d2ff", "#cdb4db"]} onPress={() => handleSelect("afternoon")} />
+              <GradientOption label="By Noon" colors={["#bde0fe", "#a2d2ff"]} onPress={() => handleSelect("noon")} selected={isSelected("noon")} />
+              <GradientOption label="By Afternoon" colors={["#a2d2ff", "#cdb4db"]} onPress={() => handleSelect("afternoon")} selected={isSelected("afternoon")} />
             </View>
             <View className="flex-row gap-3">
-              <GradientOption label="By End of Day" colors={["#cdb4db", "#ffc8dd"]} onPress={() => handleSelect("end_of_day")} />
+              <GradientOption label="By End of Day" colors={["#cdb4db", "#ffc8dd"]} onPress={() => handleSelect("end_of_day")} selected={isSelected("end_of_day")} />
               <GradientOption label="Custom" colors={["#ffc8dd", "#ffafcc"]} onPress={() => handleSelect("custom")} />
             </View>
             {showCustomInput && (
