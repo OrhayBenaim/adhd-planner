@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 
-export type SpeechState = "idle" | "listening" | "stopped" | "error";
+type SpeechState = "idle" | "listening" | "stopped" | "error";
 
 interface UseSpeechRecognitionResult {
   state: SpeechState;
@@ -9,8 +9,6 @@ interface UseSpeechRecognitionResult {
   start: () => Promise<void>;
   stop: () => void;
   cancel: () => void;
-  append: () => Promise<void>;
-  error: string | null;
 }
 
 /**
@@ -51,9 +49,5 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
     setVolume(0);
   }, []);
 
-  const append = useCallback(async () => {
-    setState("listening");
-  }, []);
-
-  return { state, transcript, volume, start, stop, cancel, append, error: null };
+  return { state, transcript, volume, start, stop, cancel };
 }
