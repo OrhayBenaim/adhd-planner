@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from "react";
 import type { Id } from "@adhd-planner/convex/convex/_generated/dataModel";
 import type { Task, UserProgress } from "@adhd-planner/types";
-import type { Settings } from "../../hooks/useSettings";
+import type {  Settings, SettingsEntry } from "../../hooks/useSettings";
 import { useTasks, useCreateTask, useCompleteTask, useDeleteTask } from "../../hooks/useTasks";
 import { useUserProgress } from "../../hooks/useUserProgress";
 import { useSettings } from "../../hooks/useSettings";
@@ -37,7 +37,7 @@ interface HomeContextValue {
   completeTask: (id: string) => Promise<{ earned: number; leveledUp: boolean } | undefined>;
   createTask: (args: { title: string; dueDate: string; dueTime: string }) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
-  updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => Promise<void>;
+  updateSetting: (...[key, value]: SettingsEntry) => Promise<void>;
 
   adminAiEnabled: boolean;
 
