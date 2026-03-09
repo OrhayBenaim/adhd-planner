@@ -16,8 +16,6 @@ export default defineSchema({
     userId: v.string(),
     aiEnabled: v.boolean(),
     userAiEnabled: v.optional(v.boolean()),
-    sttModel: v.optional(v.string()),
-    sttLocale: v.optional(v.string()),
   }).index("by_user", ["userId"]),
 
   userProgress: defineTable({
