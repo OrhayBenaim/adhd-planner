@@ -8,7 +8,8 @@ import { SelectDaySheet } from "../sheets/SelectDaySheet";
 import { SelectTimeSheet } from "../sheets/SelectTimeSheet";
 import { AllTasksSheet } from "../sheets/AllTasksSheet";
 import { SettingsSheet } from "../sheets/SettingsSheet";
-import { TaskSummarySheet, type PendingTask } from "../sheets/TaskSummarySheet";
+import { TaskSummarySheet } from "../sheets/TaskSummarySheet";
+import type { PendingTask } from "./SheetFlowProvider";
 import { useHome, type ActiveSheet } from "./HomeProvider";
 import { daySelectionToDate, timeSelectionToTime } from "../../lib/dateTimeConvert";
 import { splitTranscription } from "../../lib/taskSplitter";
@@ -215,10 +216,6 @@ export function SheetManager() {
       />
       <TaskSummarySheet
         ref={taskSummaryRef}
-        tasks={flow.pendingTasks}
-        onTasksChange={flow.setPendingTasks}
-        onCreateAll={handleCreateAll}
-        onEditDateTime={handleEditDateTime}
         onClose={handleSummaryClose}
       />
       <AllTasksSheet
