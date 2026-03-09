@@ -2,7 +2,6 @@ import { useRef, useEffect } from "react";
 import BottomSheet from "@gorhom/bottom-sheet";
 
 import { AddTaskSheet } from "../sheets/AddTaskSheet";
-import { RecordingSheet } from "../sheets/RecordingSheet";
 import { SelectDaySheet } from "../sheets/SelectDaySheet";
 import { SelectTimeSheet } from "../sheets/SelectTimeSheet";
 import { AllTasksSheet } from "../sheets/AllTasksSheet";
@@ -14,7 +13,6 @@ export function SheetManager() {
   const { onSheetClose, registerSheet } = useHome();
 
   const addSheetRef = useRef<BottomSheet>(null);
-  const recordingSheetRef = useRef<BottomSheet>(null);
   const daySheetRef = useRef<BottomSheet>(null);
   const timeSheetRef = useRef<BottomSheet>(null);
   const allTasksSheetRef = useRef<BottomSheet>(null);
@@ -23,7 +21,6 @@ export function SheetManager() {
 
   useEffect(() => {
     registerSheet({ name: "addTask", ref: addSheetRef });
-    registerSheet({ name: "recording", ref: recordingSheetRef });
     registerSheet({ name: "selectDay", ref: daySheetRef });
     registerSheet({ name: "selectTime", ref: timeSheetRef });
     registerSheet({ name: "allTasks", ref: allTasksSheetRef });
@@ -34,7 +31,6 @@ export function SheetManager() {
   return (
     <>
       <AddTaskSheet ref={addSheetRef} onClose={onSheetClose} />
-      <RecordingSheet ref={recordingSheetRef} onClose={onSheetClose} />
       <SelectDaySheet ref={daySheetRef} onClose={onSheetClose} />
       <SelectTimeSheet ref={timeSheetRef} onClose={onSheetClose} />
       <TaskSummarySheet ref={taskSummaryRef} onClose={onSheetClose} />

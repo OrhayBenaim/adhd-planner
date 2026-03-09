@@ -8,7 +8,7 @@ export interface PendingTask {
   dueTime: string;
 }
 
-type FlowStep = "idle" | "addTask" | "recording" | "selectDay" | "selectTime" | "taskSummary";
+type FlowStep = "idle" | "addTask" | "selectDay" | "selectTime" | "taskSummary";
 
 interface FlowState {
   step: FlowStep;
@@ -21,7 +21,7 @@ interface FlowState {
 }
 
 type FlowAction =
-  | { type: "START"; step: "addTask" | "recording" }
+  | { type: "START"; step: "addTask" }
   | { type: "SET_STEP"; step: FlowStep }
   | { type: "SET_TITLE"; title: string }
   | { type: "SET_DAY"; day: string }
@@ -85,7 +85,7 @@ interface SheetFlowContextValue {
   updatePendingTasks: (updater: (tasks: PendingTask[]) => PendingTask[]) => void;
 
   // Navigation
-  start: (sheet: "addTask" | "recording") => void;
+  start: (sheet: "addTask") => void;
   next: () => Promise<void>;
   editDateTime: (taskId: string, field: "dueDate" | "dueTime") => void;
   reset: () => void;
@@ -121,7 +121,7 @@ export function SheetFlowProvider({ children }: { children: ReactNode }) {
   const updatePendingTasks = useCallback((updater: (tasks: PendingTask[]) => PendingTask[]) => syncDispatch({ type: "UPDATE_PENDING_TASKS", updater }), [syncDispatch]);
 
   // Navigation
-  const start = useCallback((sheet: "addTask" | "recording") => {
+  const start = useCallback((sheet: "addTask") => {
     syncDispatch({ type: "START", step: sheet });
     openSheet(sheet);
   }, [syncDispatch, openSheet]);
@@ -130,7 +130,6 @@ export function SheetFlowProvider({ children }: { children: ReactNode }) {
     const s = stateRef.current;
     switch (s.step) {
       case "addTask":
-      case "recording":
         syncDispatch({ type: "SET_STEP", step: "selectDay" });
         closeSheet();
         openSheet("selectDay");
