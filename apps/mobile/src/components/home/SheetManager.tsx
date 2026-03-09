@@ -1,5 +1,5 @@
 // apps/mobile/src/components/home/SheetManager.tsx
-import { useRef, useState, useCallback, useEffect, type RefObject } from "react";
+import { useRef, useCallback, useEffect, type RefObject } from "react";
 import BottomSheet from "@gorhom/bottom-sheet";
 
 import { AddTaskSheet } from "../sheets/AddTaskSheet";
@@ -13,6 +13,7 @@ import { useHome, type ActiveSheet } from "./HomeProvider";
 import { daySelectionToDate, timeSelectionToTime } from "../../lib/dateTimeConvert";
 import { splitTranscription } from "../../lib/taskSplitter";
 import { getLocales } from "react-native-localize";
+import { useSheetFlow } from "../../hooks/useSheetFlow";
 
 let nextId = 0;
 function genId() {
@@ -41,6 +42,8 @@ export function SheetManager() {
     registerSheet,
   } = useHome();
 
+  const flow = useSheetFlow();
+
   // Sheet refs
   const addSheetRef = useRef<BottomSheet>(null);
   const recordingSheetRef = useRef<BottomSheet>(null);
@@ -61,7 +64,7 @@ export function SheetManager() {
     registerSheet({ name: "taskSummary", ref: taskSummaryRef });
   }, [registerSheet]);
 
-  // Queue for chaining sheets (close one → open next)
+  // Queue for chaining sheets (close one -> open next)
   const nextSheetRef = useRef<ActiveSheet | null>(null);
 
   const onSheetClosed = useCallback(
@@ -76,18 +79,6 @@ export function SheetManager() {
     [openSheet]
   );
 
-  // === Single-task flow state ===
-  const [pendingTaskTitle, setPendingTaskTitle] = useState("");
-  const [selectedDay, setSelectedDay] = useState("");
-  const [customDay, setCustomDay] = useState("");
-  const [showCustomDay, setShowCustomDay] = useState(false);
-  const [customTime, setCustomTime] = useState("");
-  const [showCustomTime, setShowCustomTime] = useState(false);
-
-  // === Multi-task flow state ===
-  const [pendingTasks, setPendingTasks] = useState<PendingTask[]>([]);
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-
   // When recording produces text, decide single vs multi flow
   const handleRecordingStop = useCallback(
     (text: string) => {
@@ -101,107 +92,87 @@ export function SheetManager() {
       const splitTasks = splitTranscription(text, locale);
 
       if (splitTasks.length <= 1) {
-        // Single task — existing flow
-        setPendingTaskTitle(splitTasks[0] || text);
+        flow.setTitle(splitTasks[0] || text);
         nextSheetRef.current = "selectDay";
         recordingSheetRef.current?.close();
       } else {
-        // Multiple tasks — go to day/time selection first, then summary
         const pending: PendingTask[] = splitTasks.map((title) => ({
           id: genId(),
           title,
           dueDate: "",
           dueTime: "",
         }));
-        setPendingTasks(pending);
-        // Go to day selection (will apply to all tasks)
+        flow.setPendingTasks(pending);
         nextSheetRef.current = "selectDay";
         recordingSheetRef.current?.close();
       }
     },
-    []
+    [flow]
   );
 
   const handleTaskConfirmed = useCallback((title: string) => {
-    setPendingTaskTitle(title);
+    flow.setTitle(title);
     nextSheetRef.current = "selectDay";
     addSheetRef.current?.close();
-  }, []);
+  }, [flow]);
 
   const handleDaySelected = useCallback((day: string) => {
-    if (day === "custom") {
-      setShowCustomDay(true);
-      return;
-    }
     const dateStr = daySelectionToDate(day);
-    setShowCustomDay(false);
 
-    if (editingTaskId) {
-      // Editing a specific task in summary
-      setPendingTasks((prev) =>
-        prev.map((t) => (t.id === editingTaskId ? { ...t, dueDate: dateStr } : t))
+    if (flow.editingTaskId) {
+      flow.updatePendingTasks((prev) =>
+        prev.map((t) => (t.id === flow.editingTaskId ? { ...t, dueDate: dateStr } : t))
       );
-      setEditingTaskId(null);
+      flow.setEditingTask(null);
       nextSheetRef.current = "taskSummary";
       daySheetRef.current?.close();
-    } else if (pendingTasks.length > 0) {
-      // Multi-task: apply same date to all, go to time
-      setPendingTasks((prev) => prev.map((t) => ({ ...t, dueDate: dateStr })));
-      setSelectedDay(dateStr);
+    } else if (flow.pendingTasks.length > 0) {
+      flow.updatePendingTasks((prev) => prev.map((t) => ({ ...t, dueDate: dateStr })));
+      flow.setDay(dateStr);
       nextSheetRef.current = "selectTime";
       daySheetRef.current?.close();
     } else {
-      // Single task flow
-      setSelectedDay(dateStr);
+      flow.setDay(dateStr);
       nextSheetRef.current = "selectTime";
       daySheetRef.current?.close();
     }
-  }, [editingTaskId, pendingTasks.length]);
+  }, [flow]);
 
   const handleTimeSelected = useCallback(
     async (time: string) => {
-      if (time === "custom") {
-        setShowCustomTime(true);
-        return;
-      }
       const timeStr = timeSelectionToTime(time);
-      setShowCustomTime(false);
 
-      if (editingTaskId) {
-        // Editing a specific task in summary
-        setPendingTasks((prev) =>
-          prev.map((t) => (t.id === editingTaskId ? { ...t, dueTime: timeStr } : t))
+      if (flow.editingTaskId) {
+        flow.updatePendingTasks((prev) =>
+          prev.map((t) => (t.id === flow.editingTaskId ? { ...t, dueTime: timeStr } : t))
         );
-        setEditingTaskId(null);
+        flow.setEditingTask(null);
         nextSheetRef.current = "taskSummary";
         timeSheetRef.current?.close();
-      } else if (pendingTasks.length > 0) {
-        // Multi-task: apply same time to all, go to summary
-        setPendingTasks((prev) => prev.map((t) => ({ ...t, dueTime: timeStr })));
+      } else if (flow.pendingTasks.length > 0) {
+        flow.updatePendingTasks((prev) => prev.map((t) => ({ ...t, dueTime: timeStr })));
         nextSheetRef.current = "taskSummary";
         timeSheetRef.current?.close();
       } else {
-        // Single task flow — create immediately
         closeSheet();
         await createTask({
-          title: pendingTaskTitle,
-          dueDate: selectedDay,
+          title: flow.pendingTaskTitle,
+          dueDate: flow.selectedDay,
           dueTime: timeStr,
         });
-        setPendingTaskTitle("");
-        setSelectedDay("");
+        flow.reset();
       }
     },
-    [closeSheet, createTask, pendingTaskTitle, selectedDay, editingTaskId, pendingTasks.length]
+    [closeSheet, createTask, flow]
   );
 
   const handleEditDateTime = useCallback(
     (taskId: string, field: "dueDate" | "dueTime") => {
-      setEditingTaskId(taskId);
+      flow.setEditingTask(taskId);
       nextSheetRef.current = field === "dueDate" ? "selectDay" : "selectTime";
       taskSummaryRef.current?.close();
     },
-    []
+    [flow]
   );
 
   const handleCreateAll = useCallback(
@@ -214,16 +185,15 @@ export function SheetManager() {
           dueTime: task.dueTime,
         });
       }
-      setPendingTasks([]);
+      flow.reset();
     },
-    [closeSheet, createTask]
+    [closeSheet, createTask, flow]
   );
 
   const handleSummaryClose = useCallback(() => {
-    setPendingTasks([]);
-    setEditingTaskId(null);
+    flow.reset();
     closeSheet();
-  }, [closeSheet]);
+  }, [closeSheet, flow]);
 
   return (
     <>
@@ -245,22 +215,16 @@ export function SheetManager() {
         ref={daySheetRef}
         onSelect={handleDaySelected}
         onClose={onSheetClosed(daySheetRef)}
-        customValue={customDay}
-        onCustomChange={setCustomDay}
-        showCustomInput={showCustomDay}
       />
       <SelectTimeSheet
         ref={timeSheetRef}
         onSelect={handleTimeSelected}
         onClose={closeSheet}
-        customValue={customTime}
-        onCustomChange={setCustomTime}
-        showCustomInput={showCustomTime}
       />
       <TaskSummarySheet
         ref={taskSummaryRef}
-        tasks={pendingTasks}
-        onTasksChange={setPendingTasks}
+        tasks={flow.pendingTasks}
+        onTasksChange={flow.setPendingTasks}
         onCreateAll={handleCreateAll}
         onEditDateTime={handleEditDateTime}
         onClose={handleSummaryClose}

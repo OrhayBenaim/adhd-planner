@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import { View, Text, Keyboard } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,13 +29,31 @@ function GradientOption({ label, colors, onPress }: { label: string; colors: [st
 interface Props {
   onSelect: (time: string) => void;
   onClose: () => void;
-  customValue: string;
-  onCustomChange: (v: string) => void;
-  showCustomInput: boolean;
 }
 
 export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
-  ({ onSelect, onClose, customValue, onCustomChange, showCustomInput }, ref) => {
+  ({ onSelect, onClose }, ref) => {
+    const [customValue, setCustomValue] = useState("");
+    const [showCustomInput, setShowCustomInput] = useState(false);
+
+    const handleSelect = (time: string) => {
+      if (time === "custom") {
+        setShowCustomInput(true);
+        return;
+      }
+      setShowCustomInput(false);
+      setCustomValue("");
+      onSelect(time);
+    };
+
+    const handleCustomSubmit = () => {
+      if (customValue.trim()) {
+        setShowCustomInput(false);
+        onSelect(customValue.trim());
+        setCustomValue("");
+      }
+    };
+
     return (
       <BottomSheet
         ref={ref}
@@ -58,12 +76,12 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
           </View>
           <View className="gap-3">
             <View className="flex-row gap-3">
-              <GradientOption label="By Noon" colors={["#bde0fe", "#a2d2ff"]} onPress={() => onSelect("noon")} />
-              <GradientOption label="By Afternoon" colors={["#a2d2ff", "#cdb4db"]} onPress={() => onSelect("afternoon")} />
+              <GradientOption label="By Noon" colors={["#bde0fe", "#a2d2ff"]} onPress={() => handleSelect("noon")} />
+              <GradientOption label="By Afternoon" colors={["#a2d2ff", "#cdb4db"]} onPress={() => handleSelect("afternoon")} />
             </View>
             <View className="flex-row gap-3">
-              <GradientOption label="By End of Day" colors={["#cdb4db", "#ffc8dd"]} onPress={() => onSelect("end_of_day")} />
-              <GradientOption label="Custom" colors={["#ffc8dd", "#ffafcc"]} onPress={() => onSelect("custom")} />
+              <GradientOption label="By End of Day" colors={["#cdb4db", "#ffc8dd"]} onPress={() => handleSelect("end_of_day")} />
+              <GradientOption label="Custom" colors={["#ffc8dd", "#ffafcc"]} onPress={() => handleSelect("custom")} />
             </View>
             {showCustomInput && (
               <View className="flex-row items-center gap-2 mt-1">
@@ -72,12 +90,12 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
                   placeholder="e.g. 14:30"
                   placeholderTextColor="#99a1af"
                   value={customValue}
-                  onChangeText={onCustomChange}
+                  onChangeText={setCustomValue}
                   returnKeyType="done"
-                  onSubmitEditing={() => customValue.trim() && onSelect(customValue.trim())}
+                  onSubmitEditing={handleCustomSubmit}
                 />
                 <Pressable
-                  onPress={() => customValue.trim() && onSelect(customValue.trim())}
+                  onPress={handleCustomSubmit}
                   style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "#a2d2ff", alignItems: "center", justifyContent: "center" }}
                 >
                   <Ionicons name="checkmark" size={22} color="#fff" />
