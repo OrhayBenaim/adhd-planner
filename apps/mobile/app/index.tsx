@@ -12,9 +12,9 @@ export default function IndexPage() {
   // Trigger anonymous sign-in when there's no session
   useEffect(() => {
     if (!isPending && !session) {
-      authClient.signIn.anonymous().catch((e) =>
-        console.error("[index] sign-in error:", e)
-      );
+      authClient.signIn.anonymous().catch((e) => {
+        if (__DEV__) console.error("[index] sign-in error:", e);
+      });
     }
   }, [session, isPending]);
 

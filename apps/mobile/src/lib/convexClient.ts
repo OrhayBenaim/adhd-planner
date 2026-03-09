@@ -47,7 +47,7 @@ export function useConvexAuth() {
         const data = await res.json();
         return data.token ?? null;
       } catch (e) {
-        console.error("[fetchAccessToken] error:", e);
+        if (__DEV__) console.error("[fetchAccessToken] error:", e);
         return null;
       }
     },

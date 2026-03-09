@@ -68,7 +68,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       });
       router.replace("/");
     } catch (error) {
-      console.error("[onboarding] save failed:", error);
+      if (__DEV__) console.error("[onboarding] save failed:", error);
       Alert.alert(
         "Something went wrong",
         "We couldn't save your preferences. Please try again.",
