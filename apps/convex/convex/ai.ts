@@ -114,7 +114,7 @@ export const scoreTaskDifficulty = internalAction({
         if (response.status === 401 || response.status === 403) {
           throw new Error(`OpenRouter HTTP ${response.status}: [response redacted]`);
         }
-        throw new Error(`OpenRouter HTTP ${response.status}: ${await response.text()}`);
+        throw new Error(`OpenRouter HTTP ${response.status}: ${(await response.text()).slice(0, 200)}`);
       }
 
       const data = await response.json();
@@ -147,7 +147,7 @@ export const scoreTaskDifficulty = internalAction({
         userId,
         taskTitle: title,
         score,
-        reason,
+        reason: reason.slice(0, 1000),
         model,
       });
     } catch (error) {
@@ -157,7 +157,7 @@ export const scoreTaskDifficulty = internalAction({
         userId,
         taskTitle: title,
         score: 0,
-        reason: `Error: ${error instanceof Error ? error.message : String(error)}`,
+        reason: `Error: ${(error instanceof Error ? error.message : String(error)).slice(0, 1000)}`,
       });
       console.error(`[AI] scoring failed for task ${taskId}:`, error);
     }
