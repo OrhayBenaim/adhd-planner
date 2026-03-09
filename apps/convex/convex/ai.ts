@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalAction, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { sanitizeForPrompt, MAX_TITLE } from "./lib/validation";
 
 export const updateTaskDifficulty = internalMutation({
   args: {
@@ -72,15 +73,21 @@ export const scoreTaskDifficulty = internalAction({
       'Respond with JSON only: {"score": <number>, "reason": "<1-2 sentence explanation>"}';
 
     if (prefs) {
+      const difficulties = prefs.difficulties.map(sanitizeForPrompt).join(", ");
+      const strengths = prefs.strengths.map(sanitizeForPrompt).join(", ");
+      const bestWorkTimes = prefs.bestWorkTimes.map(sanitizeForPrompt).join(", ");
+
       systemPrompt +=
         "\n\nUser context:" +
-        `\n- Finds these challenging: ${prefs.difficulties.join(", ")}` +
-        `\n- Enjoys and is good at: ${prefs.strengths.join(", ")}` +
-        `\n- Most productive during: ${prefs.bestWorkTimes.join(", ")}` +
+        `\n- Finds these challenging: ${difficulties}` +
+        `\n- Enjoys and is good at: ${strengths}` +
+        `\n- Most productive during: ${bestWorkTimes}` +
         "\n\nUse this context to personalize the difficulty score. " +
         "Tasks related to their challenges should score higher. " +
         "Tasks aligned with their strengths should score lower.";
     }
+
+    const sanitizedTitle = sanitizeForPrompt(title).slice(0, MAX_TITLE);
 
     try {
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -97,13 +104,16 @@ export const scoreTaskDifficulty = internalAction({
             },
             {
               role: "user",
-              content: title,
+              content: sanitizedTitle,
             },
           ],
         }),
       });
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          throw new Error(`OpenRouter HTTP ${response.status}: [response redacted]`);
+        }
         throw new Error(`OpenRouter HTTP ${response.status}: ${await response.text()}`);
       }
 
