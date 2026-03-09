@@ -3,7 +3,7 @@ import { View, Text, Switch } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import type { Settings } from "../../hooks/useSettings";
+import { useHome } from "../home/HomeProvider";
 
 interface SettingRowProps {
   icon: React.ComponentProps<typeof Ionicons>["name"];
@@ -45,14 +45,12 @@ function SettingRow({ icon, color, title, subtitle, value, onChange, disabled }:
 }
 
 interface Props {
-  settings: Settings;
-  onUpdate: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
   onClose: () => void;
-  adminAiEnabled: boolean;
 }
 
 export const SettingsSheet = forwardRef<BottomSheet, Props>(
-  ({ settings, onUpdate, onClose, adminAiEnabled }, ref) => {
+  ({ onClose }, ref) => {
+    const { settings, updateSetting, adminAiEnabled } = useHome();
     return (
       <BottomSheet
         ref={ref}
@@ -71,11 +69,11 @@ export const SettingsSheet = forwardRef<BottomSheet, Props>(
             </Pressable>
           </View>
           <SettingRow icon="notifications-outline" color="#a2d2ff" title="Notifications" subtitle="Task reminders"
-            value={settings.notifications} onChange={(v) => onUpdate("notifications", v)} />
+            value={settings.notifications} onChange={(v) => updateSetting("notifications", v)} />
           <SettingRow icon="volume-high-outline" color="#ffc8dd" title="Sound Effects" subtitle="Haptic & sound feedback"
-            value={settings.soundEffects} onChange={(v) => onUpdate("soundEffects", v)} />
+            value={settings.soundEffects} onChange={(v) => updateSetting("soundEffects", v)} />
           <SettingRow icon="flash-outline" color="#bde0fe" title="Smart Scheduling" subtitle="AI-powered task scoring"
-            value={settings.smartScheduling} onChange={(v) => onUpdate("smartScheduling", v)}
+            value={settings.smartScheduling} onChange={(v) => updateSetting("smartScheduling", v)}
             disabled={!adminAiEnabled} />
         </BottomSheetView>
       </BottomSheet>
