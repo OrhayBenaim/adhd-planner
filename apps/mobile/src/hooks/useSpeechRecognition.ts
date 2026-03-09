@@ -1,4 +1,10 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
+import { Platform } from "react-native";
+import {
+  ExpoSpeechRecognitionModule,
+  useSpeechRecognitionEvent,
+} from "expo-speech-recognition";
+import { getLocales } from "react-native-localize";
 
 type SpeechState = "idle" | "listening" | "stopped" | "error";
 
@@ -6,47 +12,93 @@ interface UseSpeechRecognitionResult {
   state: SpeechState;
   transcript: string;
   volume: number;
-  start: () => Promise<void>;
+  start: (locale?: string) => Promise<void>;
   stop: () => void;
   cancel: () => void;
 }
 
-/**
- * Stubbed speech recognition hook.
- * TODO: Replace with a working STT library.
- */
+function resolveLocale(explicit?: string): string | undefined {
+  if (explicit) return explicit;
+  if (Platform.OS === "android") return undefined; // auto-detect
+  // iOS: use device locale
+  try {
+    const locales = getLocales();
+    return locales[0]?.languageTag ?? "en-US";
+  } catch {
+    return "en-US";
+  }
+}
+
 export function useSpeechRecognition(): UseSpeechRecognitionResult {
   const [state, setState] = useState<SpeechState>("idle");
   const [transcript, setTranscript] = useState("");
   const [volume, setVolume] = useState(0);
+  const stateRef = useRef<SpeechState>("idle");
 
-  // Animate volume while "listening"
-  useEffect(() => {
-    if (state !== "listening") return;
-    let t = 0;
-    const interval = setInterval(() => {
-      t += 1;
-      const base = 0.25 + Math.sin(t * 0.3) * 0.15;
-      const jitter = Math.random() * 0.15;
-      setVolume(base + jitter);
-    }, 100);
-    return () => clearInterval(interval);
-  }, [state]);
-
-  const start = useCallback(async () => {
+  useSpeechRecognitionEvent("start", () => {
+    stateRef.current = "listening";
     setState("listening");
+  });
+
+  useSpeechRecognitionEvent("end", () => {
+    // Only go to "stopped" if we weren't cancelled (reset to idle)
+    if (stateRef.current === "listening") {
+      stateRef.current = "stopped";
+      setState("stopped");
+    }
+    setVolume(0);
+  });
+
+  useSpeechRecognitionEvent("result", (event) => {
+    const text = event.results[0]?.transcript ?? "";
+    setTranscript(text);
+  });
+
+  useSpeechRecognitionEvent("volumechange", (event) => {
+    // event.value ranges from -2 to 10, normalize to 0-1
+    const normalized = Math.max(0, Math.min(1, event.value / 10));
+    setVolume(normalized);
+  });
+
+  useSpeechRecognitionEvent("error", (event) => {
+    console.warn("Speech recognition error:", event.error, event.message);
+    stateRef.current = "error";
+    setState("error");
+    setVolume(0);
+  });
+
+  const start = useCallback(async (locale?: string) => {
+    const result =
+      await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+    if (!result.granted) {
+      stateRef.current = "error";
+      setState("error");
+      return;
+    }
     setTranscript("");
+    setVolume(0);
+
+    ExpoSpeechRecognitionModule.start({
+      lang: resolveLocale(locale),
+      interimResults: true,
+      continuous: false,
+      requiresOnDeviceRecognition: Platform.OS === "ios",
+      volumeChangeEventOptions: { enabled: true, intervalMillis: 100 },
+    });
   }, []);
 
   const stop = useCallback(() => {
-    setState("stopped");
-    setVolume(0);
+    // stop() emits final result then fires "end"
+    ExpoSpeechRecognitionModule.stop();
   }, []);
 
   const cancel = useCallback(() => {
+    stateRef.current = "idle";
     setState("idle");
     setTranscript("");
     setVolume(0);
+    // abort() cancels without emitting a final result
+    ExpoSpeechRecognitionModule.abort();
   }, []);
 
   return { state, transcript, volume, start, stop, cancel };
