@@ -111,34 +111,43 @@ function ScrollingWaveform({ volume }: { volume: number }) {
 export const RecordingSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const {
+      state: speechState,
       transcript,
       volume,
+      requestPermissions,
       start,
       stop,
       cancel,
     } = useSpeechRecognition();
+    const isListening = speechState === "listening";
     const flow = useSheetFlow();
 
-    const stopScale = useSharedValue(1);
+    const actionScale = useSharedValue(1);
     const confirmScale = useSharedValue(1);
 
-    const stopStyle = useAnimatedStyle(() => ({
-      transform: [{ scale: stopScale.value }],
+    const actionStyle = useAnimatedStyle(() => ({
+      transform: [{ scale: actionScale.value }],
     }));
     const confirmStyle = useAnimatedStyle(() => ({
       transform: [{ scale: confirmScale.value }],
     }));
 
-    // Start recognition when sheet opens
+    // Request permissions when sheet opens (before user taps mic)
     const handleSheetChange = (index: number) => {
       if (index >= 0) {
-        start();
+        requestPermissions();
       }
     };
 
-    const handleStop = () => {
+    // Header X: cancel recording and close sheet
+    const handleClose = () => {
       cancel();
       flow.reset();
+    };
+
+    // Bottom X: stop recording, keep sheet open
+    const handleCancelRecording = () => {
+      cancel();
     };
 
     const handleConfirm = () => {
@@ -171,6 +180,7 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
         enablePanDownToClose
         onClose={() => {
           cancel();
+          flow.reset();
           onClose();
         }}
         onChange={handleSheetChange}
@@ -186,7 +196,7 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
             <Text className="text-xl font-semibold text-[#1e2939]">
               Add New Task
             </Text>
-            <Pressable onPress={handleStop}>
+            <Pressable onPress={handleClose}>
               <Ionicons name="close" size={24} color="#364153" />
             </Pressable>
           </View>
@@ -206,9 +216,9 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
             </Text>
           </View>
 
-          {/* Bottom row: [Spectrograph pill] [X stop] [Check confirm] */}
+          {/* Bottom row: [Spectrograph pill] [Mic/X] [Checkmark] */}
           <View className="flex-row items-center gap-4">
-            {/* Spectrograph pill */}
+            {/* Spectrograph pill — always mounted */}
             <View className="flex-1">
               <LinearGradient
                 colors={["rgba(162,210,255,0.2)", "rgba(205,180,219,0.2)"]}
@@ -226,15 +236,15 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
               </LinearGradient>
             </View>
 
-            {/* X stop button */}
-            <Animated.View style={stopStyle}>
+            {/* Mic / X toggle button */}
+            <Animated.View style={actionStyle}>
               <Pressable
-                onPress={handleStop}
+                onPress={isListening ? handleCancelRecording : () => start()}
                 onPressIn={() => {
-                  stopScale.value = withSpring(0.92, SPRING_BOUNCY);
+                  actionScale.value = withSpring(0.92, SPRING_BOUNCY);
                 }}
                 onPressOut={() => {
-                  stopScale.value = withSpring(1, SPRING_BOUNCY);
+                  actionScale.value = withSpring(1, SPRING_BOUNCY);
                 }}
               >
                 <LinearGradient
@@ -254,7 +264,11 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
                     elevation: 8,
                   }}
                 >
-                  <Ionicons name="close" size={28} color="#fff" />
+                  <Ionicons
+                    name={isListening ? "close" : "mic"}
+                    size={28}
+                    color="#fff"
+                  />
                 </LinearGradient>
               </Pressable>
             </Animated.View>

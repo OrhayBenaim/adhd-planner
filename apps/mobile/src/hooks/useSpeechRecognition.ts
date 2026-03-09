@@ -12,7 +12,8 @@ interface UseSpeechRecognitionResult {
   state: SpeechState;
   transcript: string;
   volume: number;
-  start: (locale?: string) => Promise<void>;
+  requestPermissions: () => Promise<boolean>;
+  start: (locale?: string) => void;
   stop: () => void;
   cancel: () => void;
 }
@@ -55,8 +56,9 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
   });
 
   useSpeechRecognitionEvent("volumechange", (event) => {
-    // event.value ranges from -2 to 10, normalize to 0-1
-    const normalized = Math.max(0, Math.min(1, event.value / 10));
+    // event.value ranges from -2 to 10, normalize to 0-1 with dampening
+    const raw = Math.max(0, Math.min(1, (event.value + 2) / 12));
+    const normalized = raw * 0.6;
     setVolume(normalized);
   });
 
@@ -67,14 +69,13 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
     setVolume(0);
   });
 
-  const start = useCallback(async (locale?: string) => {
+  const requestPermissions = useCallback(async () => {
     const result =
       await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-    if (!result.granted) {
-      stateRef.current = "error";
-      setState("error");
-      return;
-    }
+    return result.granted;
+  }, []);
+
+  const start = useCallback((locale?: string) => {
     setTranscript("");
     setVolume(0);
 
@@ -101,5 +102,5 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
     ExpoSpeechRecognitionModule.abort();
   }, []);
 
-  return { state, transcript, volume, start, stop, cancel };
+  return { state, transcript, volume, requestPermissions, start, stop, cancel };
 }
