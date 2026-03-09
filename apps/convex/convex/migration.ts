@@ -9,66 +9,73 @@ export const migrateUserData = internalMutation({
   handler: async (ctx, { oldUserId, newUserId }) => {
     console.log(`[migration] migrating user data: ${oldUserId} → ${newUserId}`);
 
-    // Migrate userPreferences
-    const prefs = await ctx.db
+    // Pre-fetch all old user data upfront
+    const oldPrefs = await ctx.db
       .query("userPreferences")
       .withIndex("by_user", (q) => q.eq("userId", oldUserId))
       .first();
-    if (prefs) {
+    const oldTasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .collect();
+    const oldSettings = await ctx.db
+      .query("userSettings")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .first();
+    const oldProgress = await ctx.db
+      .query("userProgress")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .first();
+
+    // Idempotency guard: if oldUser has no data, migration already ran
+    if (!oldPrefs && oldTasks.length === 0 && !oldSettings && !oldProgress) {
+      console.log(`[migration] no data found for ${oldUserId}, skipping (already migrated?)`);
+      return;
+    }
+
+    // Migrate userPreferences
+    if (oldPrefs) {
       console.log(`[migration] found preferences for old user, migrating`);
-      // Check if new user already has preferences
       const existing = await ctx.db
         .query("userPreferences")
         .withIndex("by_user", (q) => q.eq("userId", newUserId))
         .first();
       if (existing) {
-        await ctx.db.delete(prefs._id);
+        await ctx.db.delete(oldPrefs._id);
       } else {
-        await ctx.db.patch(prefs._id, { userId: newUserId });
+        await ctx.db.patch(oldPrefs._id, { userId: newUserId });
       }
     }
 
     // Migrate tasks
-    const tasks = await ctx.db
-      .query("tasks")
-      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
-      .collect();
-    console.log(`[migration] migrating ${tasks.length} tasks`);
-    for (const task of tasks) {
+    console.log(`[migration] migrating ${oldTasks.length} tasks`);
+    for (const task of oldTasks) {
       await ctx.db.patch(task._id, { userId: newUserId });
     }
 
     // Migrate userSettings
-    const settings = await ctx.db
-      .query("userSettings")
-      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
-      .first();
-    if (settings) {
+    if (oldSettings) {
       const existing = await ctx.db
         .query("userSettings")
         .withIndex("by_user", (q) => q.eq("userId", newUserId))
         .first();
       if (existing) {
-        await ctx.db.delete(settings._id);
+        await ctx.db.delete(oldSettings._id);
       } else {
-        await ctx.db.patch(settings._id, { userId: newUserId });
+        await ctx.db.patch(oldSettings._id, { userId: newUserId });
       }
     }
 
     // Migrate userProgress
-    const progress = await ctx.db
-      .query("userProgress")
-      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
-      .first();
-    if (progress) {
+    if (oldProgress) {
       const existing = await ctx.db
         .query("userProgress")
         .withIndex("by_user", (q) => q.eq("userId", newUserId))
         .first();
       if (existing) {
-        await ctx.db.delete(progress._id);
+        await ctx.db.delete(oldProgress._id);
       } else {
-        await ctx.db.patch(progress._id, { userId: newUserId });
+        await ctx.db.patch(oldProgress._id, { userId: newUserId });
       }
     }
   },
