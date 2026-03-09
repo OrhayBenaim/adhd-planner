@@ -11,9 +11,25 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
 import { SPRING_BOUNCY } from "../../animations/springs";
+import { useSheetFlow, type PendingTask } from "../home/SheetFlowProvider";
+import { splitTranscription } from "../../lib/taskSplitter";
+import { getLocales } from "react-native-localize";
+
+let nextId = 0;
+function genId() {
+  return `pending-${++nextId}`;
+}
+
+function getDeviceLocale(): string {
+  try {
+    const locales = getLocales();
+    return locales[0]?.languageCode ?? "en";
+  } catch {
+    return "en";
+  }
+}
 
 interface Props {
-  onStop: (transcription: string) => void;
   onClose: () => void;
 }
 
@@ -93,7 +109,7 @@ function ScrollingWaveform({ volume }: { volume: number }) {
 /* -- RecordingSheet ------------------------------------------------------- */
 
 export const RecordingSheet = forwardRef<BottomSheet, Props>(
-  ({ onStop, onClose }, ref) => {
+  ({ onClose }, ref) => {
     const {
       transcript,
       volume,
@@ -101,6 +117,7 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
       stop,
       cancel,
     } = useSpeechRecognition();
+    const flow = useSheetFlow();
 
     const stopScale = useSharedValue(1);
     const confirmScale = useSharedValue(1);
@@ -121,14 +138,29 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
 
     const handleStop = () => {
       cancel();
-      onClose();
+      flow.reset();
     };
 
     const handleConfirm = () => {
       stop();
-      if (transcript.trim()) {
-        onStop(transcript.trim());
+      const text = transcript.trim();
+      if (!text) return;
+
+      const locale = getDeviceLocale();
+      const splitTasks = splitTranscription(text, locale);
+
+      if (splitTasks.length <= 1) {
+        flow.setTitle(splitTasks[0] || text);
+      } else {
+        const pending: PendingTask[] = splitTasks.map((title) => ({
+          id: genId(),
+          title,
+          dueDate: "",
+          dueTime: "",
+        }));
+        flow.setPendingTasks(pending);
       }
+      flow.next();
     };
 
     return (

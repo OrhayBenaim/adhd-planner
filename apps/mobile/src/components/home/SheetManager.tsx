@@ -203,17 +203,14 @@ export function SheetManager() {
       />
       <RecordingSheet
         ref={recordingSheetRef}
-        onStop={handleRecordingStop}
         onClose={onSheetClosed(recordingSheetRef)}
       />
       <SelectDaySheet
         ref={daySheetRef}
-        onSelect={handleDaySelected}
         onClose={onSheetClosed(daySheetRef)}
       />
       <SelectTimeSheet
         ref={timeSheetRef}
-        onSelect={handleTimeSelected}
         onClose={closeSheet}
       />
       <TaskSummarySheet
