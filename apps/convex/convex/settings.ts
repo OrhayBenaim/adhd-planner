@@ -1,5 +1,6 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { assertMaxLength, MAX_STT_MODEL, MAX_STT_LOCALE } from "./lib/validation";
 
 export const get = query({
   args: {},
@@ -18,7 +19,7 @@ export const setUserAiEnabled = mutation({
   args: { enabled: v.boolean() },
   handler: async (ctx, { enabled }) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    if (!identity) throw new ConvexError("Unauthenticated");
 
     const userId = identity.subject;
     const existing = await ctx.db
@@ -45,7 +46,14 @@ export const setSttSettings = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    if (!identity) throw new ConvexError("Unauthenticated");
+
+    if (args.sttModel !== undefined) {
+      assertMaxLength(args.sttModel, MAX_STT_MODEL, "sttModel");
+    }
+    if (args.sttLocale !== undefined) {
+      assertMaxLength(args.sttLocale, MAX_STT_LOCALE, "sttLocale");
+    }
 
     const userId = identity.subject;
     const existing = await ctx.db
