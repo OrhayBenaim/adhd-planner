@@ -17,3 +17,7 @@ export function useCompleteTask() {
 export function useDeleteTask() {
   return useMutation(api.tasks.remove);
 }
+
+export function useUpdateTask() {
+  return useMutation(api.tasks.update);
+}
