@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -17,6 +17,8 @@ interface Props {
 export function PointsToast({ points, visible, onDone }: Props) {
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(0);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
 
   useEffect(() => {
     if (!visible) return;
@@ -25,7 +27,7 @@ export function PointsToast({ points, visible, onDone }: Props) {
       withTiming(1, { duration: 200 }),
       withTiming(1, { duration: 600 }),
       withTiming(0, { duration: 300 }, (finished) => {
-        if (finished) runOnJS(onDone)();
+        if (finished) runOnJS(() => onDoneRef.current())();
       })
     );
     translateY.value = withTiming(-40, { duration: 1100 });
