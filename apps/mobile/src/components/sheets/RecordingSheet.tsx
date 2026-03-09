@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useRef, useState, useCallback } from "react";
-import { View, Text, Alert, Linking, Platform } from "react-native";
+import { View, Text } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
@@ -97,13 +97,11 @@ function ScrollingWaveform({ volume }: { volume: number }) {
 export const RecordingSheet = forwardRef<BottomSheet, Props>(
   ({ onStop, onClose }, ref) => {
     const {
-      state,
       transcript,
       volume,
       start,
       stop,
       cancel,
-      error,
     } = useSpeechRecognition();
 
     const stopScale = useSharedValue(1);
@@ -123,29 +121,6 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
       }
     };
 
-    // Handle permission errors
-    useEffect(() => {
-      if (error === "permissions_denied") {
-        Alert.alert(
-          "Microphone Access Required",
-          "ADHD Planner needs microphone access to add tasks by voice. Please enable it in your device settings.",
-          [
-            { text: "Cancel", style: "cancel" },
-            {
-              text: "Open Settings",
-              onPress: () => {
-                if (Platform.OS === "ios") {
-                  Linking.openURL("app-settings:");
-                } else {
-                  Linking.openSettings();
-                }
-              },
-            },
-          ]
-        );
-      }
-    }, [error]);
-
     const handleStop = () => {
       cancel();
       onClose();
@@ -157,9 +132,6 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
         onStop(transcript.trim());
       }
     };
-
-    const showRetry =
-      state === "error" && error !== "permissions_denied";
 
     return (
       <BottomSheet
@@ -203,13 +175,6 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
               {transcript || "Describe your task..."}
             </Text>
           </View>
-
-          {/* Error / retry message */}
-          {showRetry && (
-            <Text className="text-sm text-[#f87171] mb-2 text-center">
-              Couldn't catch that. Tap the mic to try again.
-            </Text>
-          )}
 
           {/* Bottom row: [Spectrograph pill] [X stop] [Check confirm] */}
           <View className="flex-row items-center gap-4">
