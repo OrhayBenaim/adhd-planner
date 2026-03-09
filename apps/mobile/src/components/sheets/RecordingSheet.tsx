@@ -1,4 +1,4 @@
-import { forwardRef, useEffect } from "react";
+import { forwardRef, useEffect, useRef, useState, useCallback } from "react";
 import { View, Text, Alert, Linking, Platform } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
@@ -17,31 +17,82 @@ interface Props {
   onClose: () => void;
 }
 
-const DOT_COUNT = 50;
+/* -- WhatsApp-style scrolling waveform ----------------------------------- */
 
-function SpectroDot({ volume, index }: { volume: number; index: number }) {
-  const height = useSharedValue(4);
+const BAR_W = 3;
+const BAR_GAP = 1.5;
+const BAR_STEP = BAR_W + BAR_GAP;
+const MIN_H = 4;
+const MAX_H = 40;
 
-  const offset = Math.sin(index * 0.7) * 0.3;
+interface Bar {
+  id: number;
+  v: number;
+}
+
+function ScrollingWaveform({ volume }: { volume: number }) {
+  const [bars, setBars] = useState<Bar[]>([]);
+  const volumeRef = useRef(volume);
+  const idRef = useRef(0);
+  const maxBars = useRef(50);
+
   useEffect(() => {
-    const target = 4 + (volume + offset) * 28;
-    height.value = withSpring(Math.max(4, Math.min(32, target)), {
-      damping: 12,
-      stiffness: 180,
-    });
+    volumeRef.current = volume;
   }, [volume]);
 
-  const style = useAnimatedStyle(() => ({
-    height: height.value,
-    width: 3,
-    borderRadius: 1.5,
-    backgroundColor: "#ffafcc",
-    opacity: 0.3,
-    marginHorizontal: 1,
-  }));
+  const onLayout = useCallback(
+    (e: { nativeEvent: { layout: { width: number } } }) => {
+      maxBars.current = Math.floor(e.nativeEvent.layout.width / BAR_STEP);
+    },
+    [],
+  );
 
-  return <Animated.View style={style} />;
+  // Start scrolling immediately on mount
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const v = volumeRef.current;
+      const value = v > 0.05 ? v : 0.15 + Math.random() * 0.2;
+      const id = idRef.current++;
+      setBars((prev) => {
+        const next = [...prev, { id, v: value }];
+        return next.length > maxBars.current
+          ? next.slice(-maxBars.current)
+          : next;
+      });
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "flex-end",
+        overflow: "hidden",
+        paddingHorizontal: 8,
+      }}
+      onLayout={onLayout}
+    >
+      {bars.map((bar) => (
+        <View
+          key={bar.id}
+          style={{
+            width: BAR_W,
+            height: MIN_H + bar.v * (MAX_H - MIN_H),
+            borderRadius: BAR_W / 2,
+            backgroundColor: "#ffafcc",
+            opacity: 0.7,
+            marginHorizontal: BAR_GAP / 2,
+          }}
+        />
+      ))}
+    </View>
+  );
 }
+
+/* -- RecordingSheet ------------------------------------------------------- */
 
 export const RecordingSheet = forwardRef<BottomSheet, Props>(
   ({ onStop, onClose }, ref) => {
@@ -171,20 +222,16 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
                 style={{
                   height: 64,
                   borderRadius: 9999,
-                  justifyContent: "center",
+                  flexDirection: "row",
                   alignItems: "center",
                   overflow: "hidden",
                 }}
               >
-                <View className="flex-row items-center" style={{ gap: 0 }}>
-                  {Array.from({ length: DOT_COUNT }).map((_, i) => (
-                    <SpectroDot key={i} volume={volume} index={i} />
-                  ))}
-                </View>
+                <ScrollingWaveform volume={volume} />
               </LinearGradient>
             </View>
 
-            {/* X stop button — gradient #a2d2ff → #cdb4db */}
+            {/* X stop button */}
             <Animated.View style={stopStyle}>
               <Pressable
                 onPress={handleStop}
@@ -217,7 +264,7 @@ export const RecordingSheet = forwardRef<BottomSheet, Props>(
               </Pressable>
             </Animated.View>
 
-            {/* Check confirm button — gradient #bde0fe → #a2d2ff */}
+            {/* Check confirm button */}
             <Animated.View style={confirmStyle}>
               <Pressable
                 onPress={handleConfirm}
