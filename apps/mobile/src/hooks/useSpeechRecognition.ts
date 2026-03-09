@@ -1,10 +1,8 @@
 import { useState, useCallback, useRef } from "react";
-import { Platform } from "react-native";
 import {
   ExpoSpeechRecognitionModule,
   useSpeechRecognitionEvent,
 } from "expo-speech-recognition";
-import { getLocales } from "react-native-localize";
 
 type SpeechState = "idle" | "listening" | "stopped" | "error";
 
@@ -18,17 +16,6 @@ interface UseSpeechRecognitionResult {
   cancel: () => void;
 }
 
-function resolveLocale(explicit?: string): string | undefined {
-  if (explicit) return explicit;
-  if (Platform.OS === "android") return undefined; // auto-detect
-  // iOS: use device locale
-  try {
-    const locales = getLocales();
-    return locales[0]?.languageTag ?? "en-US";
-  } catch {
-    return "en-US";
-  }
-}
 
 export function useSpeechRecognition(): UseSpeechRecognitionResult {
   const [state, setState] = useState<SpeechState>("idle");
@@ -51,12 +38,14 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
   });
 
   useSpeechRecognitionEvent("result", (event) => {
+    console.log(event.results)
     const text = event.results[0]?.transcript ?? "";
     setTranscript(text);
   });
 
   useSpeechRecognitionEvent("volumechange", (event) => {
     // event.value ranges from -2 to 10, normalize to 0-1 with dampening
+    console.log(event.value)
     const raw = Math.max(0, Math.min(1, (event.value + 2) / 12));
     const normalized = raw * 0.6;
     setVolume(normalized);
@@ -74,12 +63,11 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
     return result.granted;
   }, []);
 
-  const start = useCallback((locale?: string) => {
+  const start = useCallback(() => {
     setTranscript("");
     setVolume(0);
 
     ExpoSpeechRecognitionModule.start({
-      lang: resolveLocale(locale),
       interimResults: true,
       continuous: false,
       requiresOnDeviceRecognition: true,
