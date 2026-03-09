@@ -9,19 +9,9 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { SPRING_BOUNCY } from "../../animations/springs";
-
-export interface PendingTask {
-  id: string;
-  title: string;
-  dueDate: string;
-  dueTime: string;
-}
+import { useSheetFlow, type PendingTask } from "../home/SheetFlowProvider";
 
 interface Props {
-  tasks: PendingTask[];
-  onTasksChange: (tasks: PendingTask[]) => void;
-  onCreateAll: (tasks: PendingTask[]) => void;
-  onEditDateTime: (taskId: string, field: "dueDate" | "dueTime") => void;
   onClose: () => void;
 }
 
@@ -81,7 +71,8 @@ function TaskCard({
 }
 
 export const TaskSummarySheet = forwardRef<BottomSheet, Props>(
-  ({ tasks, onTasksChange, onCreateAll, onEditDateTime, onClose }, ref) => {
+  ({ onClose }, ref) => {
+    const flow = useSheetFlow();
     const createScale = useSharedValue(1);
     const createStyle = useAnimatedStyle(() => ({
       transform: [{ scale: createScale.value }],
@@ -89,23 +80,23 @@ export const TaskSummarySheet = forwardRef<BottomSheet, Props>(
 
     const updateTitle = useCallback(
       (id: string, title: string) => {
-        onTasksChange(
-          tasks.map((t) => (t.id === id ? { ...t, title } : t))
+        flow.setPendingTasks(
+          flow.pendingTasks.map((t) => (t.id === id ? { ...t, title } : t))
         );
       },
-      [tasks, onTasksChange]
+      [flow]
     );
 
     const removeTask = useCallback(
       (id: string) => {
-        const updated = tasks.filter((t) => t.id !== id);
+        const updated = flow.pendingTasks.filter((t) => t.id !== id);
         if (updated.length === 0) {
-          onClose();
+          flow.reset();
         } else {
-          onTasksChange(updated);
+          flow.setPendingTasks(updated);
         }
       },
-      [tasks, onTasksChange, onClose]
+      [flow]
     );
 
     return (
@@ -125,9 +116,9 @@ export const TaskSummarySheet = forwardRef<BottomSheet, Props>(
           {/* Header */}
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-xl font-semibold text-[#1e2939]">
-              We detected {tasks.length} tasks
+              We detected {flow.pendingTasks.length} tasks
             </Text>
-            <Pressable onPress={onClose}>
+            <Pressable onPress={() => flow.reset()}>
               <Ionicons name="close" size={24} color="#364153" />
             </Pressable>
           </View>
@@ -136,14 +127,14 @@ export const TaskSummarySheet = forwardRef<BottomSheet, Props>(
           <BottomSheetScrollView
             contentContainerStyle={{ paddingBottom: 100 }}
           >
-            {tasks.map((task) => (
+            {flow.pendingTasks.map((task) => (
               <TaskCard
                 key={task.id}
                 task={task}
                 onTitleChange={(title) => updateTitle(task.id, title)}
                 onDelete={() => removeTask(task.id)}
-                onEditDate={() => onEditDateTime(task.id, "dueDate")}
-                onEditTime={() => onEditDateTime(task.id, "dueTime")}
+                onEditDate={() => flow.editDateTime(task.id, "dueDate")}
+                onEditTime={() => flow.editDateTime(task.id, "dueTime")}
               />
             ))}
           </BottomSheetScrollView>
@@ -151,7 +142,7 @@ export const TaskSummarySheet = forwardRef<BottomSheet, Props>(
           {/* Bottom buttons */}
           <View className="flex-row gap-3 pb-6 pt-3">
             <Pressable
-              onPress={onClose}
+              onPress={() => flow.reset()}
               className="flex-1 py-4 rounded-full items-center"
               style={{ backgroundColor: "#f5f7fa" }}
             >
@@ -160,7 +151,7 @@ export const TaskSummarySheet = forwardRef<BottomSheet, Props>(
 
             <Animated.View style={[createStyle, { flex: 1 }]}>
               <Pressable
-                onPress={() => onCreateAll(tasks)}
+                onPress={() => flow.next()}
                 onPressIn={() => {
                   createScale.value = withSpring(0.95, SPRING_BOUNCY);
                 }}
@@ -171,7 +162,7 @@ export const TaskSummarySheet = forwardRef<BottomSheet, Props>(
                 style={{ backgroundColor: "#a2d2ff" }}
               >
                 <Text className="text-white font-semibold">
-                  Create All ({tasks.length})
+                  Create All ({flow.pendingTasks.length})
                 </Text>
               </Pressable>
             </Animated.View>

@@ -1,5 +1,5 @@
 import { useReducer, useCallback } from "react";
-import type { PendingTask } from "../components/sheets/TaskSummarySheet";
+import type { PendingTask } from "../components/home/SheetFlowProvider";
 
 interface SheetFlowState {
   pendingTaskTitle: string;
