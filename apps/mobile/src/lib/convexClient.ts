@@ -1,6 +1,6 @@
 // apps/mobile/src/lib/convexClient.ts
 import { ConvexReactClient } from "convex/react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { AppState } from "react-native";
 import { authClient } from "./authClient";
 
@@ -12,18 +12,16 @@ const CONVEX_TOKEN_URL = `${process.env.EXPO_PUBLIC_CONVEX_SITE_URL}/api/auth/co
 
 export function useConvexAuth() {
   const { data: session, isPending } = authClient.useSession();
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const appState = useRef(AppState.currentState);
 
-  // When app returns to foreground, block Convex queries until session is refreshed
+  // Pre-warm the session cache on resume so fetchAccessToken has a fresh token
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState) => {
       if (
-        appState.current.match(/inactive|background/) &&
+        appState.current === "background" &&
         nextState === "active"
       ) {
-        setIsRefreshing(true);
-        authClient.getSession().finally(() => setIsRefreshing(false));
+        authClient.getSession();
       }
       appState.current = nextState;
     });
@@ -55,7 +53,7 @@ export function useConvexAuth() {
   );
 
   return {
-    isLoading: isPending || isRefreshing,
+    isLoading: isPending,
     isAuthenticated: !!session,
     fetchAccessToken,
   };
