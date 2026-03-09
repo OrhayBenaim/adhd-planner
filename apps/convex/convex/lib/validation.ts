@@ -52,6 +52,7 @@ export function assertTimeFormat(value: string): void {
  */
 export function sanitizeForPrompt(value: string): string {
   return value
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // control chars
+    .replace(/[\r\n]+/g, " ") // collapse newlines to spaces
     .slice(0, MAX_PREF_ITEM);
 }
