@@ -1,11 +1,10 @@
 import { View } from "react-native";
 import Animated, {
   useAnimatedStyle,
-  useSharedValue,
+  useDerivedValue,
   withTiming,
   Easing,
 } from "react-native-reanimated";
-import { useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { Text } from "react-native";
@@ -17,19 +16,13 @@ interface Props {
 
 export function XPBar({ progress }: Props) {
   const percent = Math.min(progress.points / progress.pointsToNextLevel, 1);
-  const barWidth = useSharedValue(percent);
-  const trophyScale = useSharedValue(1);
 
-  useEffect(() => {
-    barWidth.value = withTiming(percent, { duration: 600, easing: Easing.out(Easing.quad) });
-  }, [percent]);
+  const barWidth = useDerivedValue(() =>
+    withTiming(percent, { duration: 600, easing: Easing.out(Easing.quad) })
+  );
 
   const barStyle = useAnimatedStyle(() => ({
     width: `${barWidth.value * 100}%` as any,
-  }));
-
-  const trophyStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: trophyScale.value }],
   }));
 
   return (
@@ -42,7 +35,7 @@ export function XPBar({ progress }: Props) {
       {/* Row: trophy + level info + next level */}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Animated.View style={trophyStyle}>
+          <View>
             <View
               style={{
                 width: 40, height: 40, borderRadius: 20,
@@ -58,7 +51,7 @@ export function XPBar({ progress }: Props) {
                 <Ionicons name="trophy" size={18} color="#fff" />
               </LinearGradient>
             </View>
-          </Animated.View>
+          </View>
           <View>
             <Text style={{ fontSize: 14, fontWeight: "600", color: "#1e2939" }}>Level {progress.level}</Text>
             <Text style={{ fontSize: 12, color: "#6a7282" }}>{progress.points} points</Text>

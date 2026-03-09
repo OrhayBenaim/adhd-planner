@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useReducer, useState, useCallback, type ReactNode } from "react";
 import { Alert } from "react-native";
 import { useSavePreferences } from "../../hooks/usePreferences";
 import { router } from "expo-router";
@@ -19,6 +19,39 @@ interface OnboardingContextValue {
   isSubmitting: boolean;
 }
 
+type ArrayKey = "bestWorkTimes" | "difficulties" | "strengths";
+
+type OnboardingAction =
+  | { type: "set_name"; name: string }
+  | { type: "set_notifications"; enabled: boolean }
+  | { type: "toggle_array_item"; key: ArrayKey; item: string };
+
+const initialState: OnboardingState = {
+  name: "",
+  bestWorkTimes: [],
+  difficulties: [],
+  strengths: [],
+  notificationsEnabled: false,
+};
+
+function onboardingReducer(state: OnboardingState, action: OnboardingAction): OnboardingState {
+  switch (action.type) {
+    case "set_name":
+      return { ...state, name: action.name };
+    case "set_notifications":
+      return { ...state, notificationsEnabled: action.enabled };
+    case "toggle_array_item": {
+      const arr = state[action.key];
+      return {
+        ...state,
+        [action.key]: arr.includes(action.item)
+          ? arr.filter((i) => i !== action.item)
+          : [...arr, action.item],
+      };
+    }
+  }
+}
+
 const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 
 export function useOnboarding() {
@@ -30,28 +63,19 @@ export function useOnboarding() {
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const savePreferences = useSavePreferences();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [state, setState] = useState<OnboardingState>({
-    name: "",
-    bestWorkTimes: [],
-    difficulties: [],
-    strengths: [],
-    notificationsEnabled: false,
-  });
+  const [state, dispatch] = useReducer(onboardingReducer, initialState);
 
   const updateField = useCallback(
     <K extends keyof OnboardingState>(key: K, value: OnboardingState[K]) => {
-      setState((prev) => ({ ...prev, [key]: value }));
+      if (key === "name") dispatch({ type: "set_name", name: value as string });
+      else if (key === "notificationsEnabled") dispatch({ type: "set_notifications", enabled: value as boolean });
     },
     []
   );
 
   const toggleArrayItem = useCallback(
-    (key: "bestWorkTimes" | "difficulties" | "strengths", item: string) => {
-      setState((prev) => {
-        const arr = prev[key];
-        const next = arr.includes(item) ? arr.filter((i) => i !== item) : [...arr, item];
-        return { ...prev, [key]: next };
-      });
+    (key: ArrayKey, item: string) => {
+      dispatch({ type: "toggle_array_item", key, item });
     },
     []
   );

@@ -11,6 +11,7 @@
 import type * as ai from "../ai.js";
 import type * as auth from "../auth.js";
 import type * as http from "../http.js";
+import type * as lib_validation from "../lib/validation.js";
 import type * as migration from "../migration.js";
 import type * as preferences from "../preferences.js";
 import type * as progress from "../progress.js";
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   ai: typeof ai;
   auth: typeof auth;
   http: typeof http;
+  "lib/validation": typeof lib_validation;
   migration: typeof migration;
   preferences: typeof preferences;
   progress: typeof progress;

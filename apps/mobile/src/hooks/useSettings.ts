@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useReducer, useEffect, useCallback } from "react";
 import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
@@ -6,7 +6,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { setSoundEnabled } from "../lib/soundStore";
 
-export interface Settings {
+ export interface Settings {
   notifications: boolean;
   soundEffects: boolean;
   smartScheduling: boolean;
@@ -15,13 +15,70 @@ export interface Settings {
 
 const LOCAL_KEY = "@adhd_settings";
 
+export type SettingsEntry = {
+  [K in keyof Settings]: [key: K, value: Settings[K]];
+}[keyof Settings];
+
+interface LocalSettings {
+  notificationsDesired: boolean;
+  notificationsGranted: boolean;
+  soundEffects: boolean;
+  sttModel: string;
+}
+
+type SettingsAction =
+  | { type: "loaded"; stored: Partial<LocalSettings>; granted: boolean }
+  | { type: "notifications_requested"; granted: boolean }
+  | { type: "notifications_disabled" }
+  | { type: "sound"; enabled: boolean }
+  | { type: "stt_model"; model: string };
+
+const initialState: LocalSettings = {
+  notificationsDesired: true,
+  notificationsGranted: false,
+  soundEffects: true,
+  sttModel: "default",
+};
+
+
+
+function settingsReducer(state: LocalSettings, action: SettingsAction): LocalSettings {
+  let changedState = {}
+  switch (action.type) {
+    case "loaded":
+      changedState = {
+        notificationsDesired: action.stored.notificationsDesired ?? true,
+        notificationsGranted: action.granted,
+        soundEffects: action.stored.soundEffects ?? true,
+        sttModel: action.stored.sttModel ?? "default",
+      };
+      break;
+    case "notifications_requested":
+      changedState = { notificationsDesired: true, notificationsGranted: action.granted };
+      break;
+    case "notifications_disabled":
+      changedState = { notificationsDesired: false };
+      break;
+    case "sound":
+      changedState = { soundEffects: action.enabled };
+      break;
+    case "stt_model":
+      AsyncStorage.setItem("@adhd_stt_model", action.model);
+      changedState = { sttModel: action.model };
+      break;
+  }
+
+  const newState = {...state, ...changedState}
+      AsyncStorage.setItem(LOCAL_KEY, JSON.stringify(newState));
+
+      return newState
+}
+
+
+
+
 export function useSettings() {
-  const [localSettings, setLocalSettings] = useState({
-    notificationsDesired: true,
-    notificationsGranted: false,
-    soundEffects: true,
-    sttModel: "default",
-  });
+  const [localSettings, dispatch] = useReducer(settingsReducer, initialState);
 
   const convexSettings = useQuery(api.settings.get);
   const setUserAiEnabled = useMutation(api.settings.setUserAiEnabled);
@@ -40,12 +97,7 @@ export function useSettings() {
     ]).then(([raw, { status }]) => {
       if (!mounted) return;
       const stored = raw ? JSON.parse(raw) : {};
-      setLocalSettings({
-        notificationsDesired: stored.notificationsDesired ?? true,
-        notificationsGranted: status === "granted",
-        soundEffects: stored.soundEffects ?? true,
-        sttModel: stored.sttModel ?? "default",
-      });
+      dispatch({ type: "loaded", stored, granted: status === "granted" });
     }).catch(() => {
       // Settings load failure is non-fatal — defaults are already set
     });
@@ -59,8 +111,9 @@ export function useSettings() {
     sttModel: localSettings.sttModel,
   };
 
+
   const updateSetting = useCallback(
-    async <K extends keyof Settings>(key: K, value: Settings[K]) => {
+    async (...[key, value]: SettingsEntry) => {
       if (key === "notifications") {
         if (value) {
           const { status } = await Notifications.requestPermissionsAsync();
@@ -71,36 +124,19 @@ export function useSettings() {
               "Please enable notifications in your device settings.",
             );
           }
-          setLocalSettings((prev) => {
-            const next = { ...prev, notificationsDesired: true, notificationsGranted: granted };
-            AsyncStorage.setItem(LOCAL_KEY, JSON.stringify(next));
-            return next;
-          });
+          dispatch({ type: "notifications_requested", granted });
           await setNotificationsEnabled({ enabled: granted });
         } else {
-          setLocalSettings((prev) => {
-            const next = { ...prev, notificationsDesired: false };
-            AsyncStorage.setItem(LOCAL_KEY, JSON.stringify(next));
-            return next;
-          });
+          dispatch({ type: "notifications_disabled" });
           await setNotificationsEnabled({ enabled: false });
         }
       } else if (key === "smartScheduling") {
-        await setUserAiEnabled({ enabled: value as boolean });
+        await setUserAiEnabled({ enabled: value });
       } else if (key === "soundEffects") {
-        setSoundEnabled(value as boolean);
-        setLocalSettings((prev) => {
-          const next = { ...prev, soundEffects: value as boolean };
-          AsyncStorage.setItem(LOCAL_KEY, JSON.stringify(next));
-          return next;
-        });
+        setSoundEnabled(value);
+        dispatch({ type: "sound", enabled: value });
       } else if (key === "sttModel") {
-        setLocalSettings((prev) => {
-          const next = { ...prev, sttModel: value as string };
-          AsyncStorage.setItem(LOCAL_KEY, JSON.stringify(next));
-          AsyncStorage.setItem("@adhd_stt_model", value as string);
-          return next;
-        });
+        dispatch({ type: "stt_model", model: value });
       }
     },
     [setUserAiEnabled, setNotificationsEnabled],
