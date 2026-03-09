@@ -1,5 +1,12 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { mutation, query, internalQuery } from "./_generated/server";
+import {
+  assertMaxLength,
+  assertArrayLimits,
+  MAX_NAME,
+  MAX_PREF_ITEM,
+  MAX_PREF_ARRAY,
+} from "./lib/validation";
 
 export const get = query({
   args: {},
@@ -51,7 +58,7 @@ export const setNotificationsEnabled = mutation({
   args: { enabled: v.boolean() },
   handler: async (ctx, { enabled }) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    if (!identity) throw new ConvexError("Unauthenticated");
 
     const userId = identity.subject;
     const existing = await ctx.db
@@ -85,7 +92,12 @@ export const save = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new Error("Not authenticated");
+    if (!identity) throw new ConvexError("Unauthenticated");
+
+    assertMaxLength(args.name, MAX_NAME, "name");
+    assertArrayLimits(args.difficulties, MAX_PREF_ARRAY, MAX_PREF_ITEM, "difficulties");
+    assertArrayLimits(args.strengths, MAX_PREF_ARRAY, MAX_PREF_ITEM, "strengths");
+    assertArrayLimits(args.bestWorkTimes, MAX_PREF_ARRAY, MAX_PREF_ITEM, "bestWorkTimes");
 
     const userId = identity.subject;
     const existing = await ctx.db
