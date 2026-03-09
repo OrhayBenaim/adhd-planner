@@ -33,10 +33,12 @@ export function useSettings() {
 
   // Load stored preferences and OS permission status in a single effect
   useEffect(() => {
+    let mounted = true;
     Promise.all([
       AsyncStorage.getItem(LOCAL_KEY),
       Notifications.getPermissionsAsync(),
     ]).then(([raw, { status }]) => {
+      if (!mounted) return;
       const stored = raw ? JSON.parse(raw) : {};
       setLocalSettings({
         notificationsDesired: stored.notificationsDesired ?? true,
@@ -44,7 +46,10 @@ export function useSettings() {
         soundEffects: stored.soundEffects ?? true,
         sttModel: stored.sttModel ?? "default",
       });
+    }).catch(() => {
+      // Settings load failure is non-fatal — defaults are already set
     });
+    return () => { mounted = false; };
   }, []);
 
   const settings: Settings = {

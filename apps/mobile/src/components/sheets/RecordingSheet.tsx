@@ -36,9 +36,7 @@ function ScrollingWaveform({ volume }: { volume: number }) {
   const idRef = useRef(0);
   const maxBars = useRef(50);
 
-  useEffect(() => {
-    volumeRef.current = volume;
-  }, [volume]);
+  volumeRef.current = volume;
 
   const onLayout = useCallback(
     (e: { nativeEvent: { layout: { width: number } } }) => {
