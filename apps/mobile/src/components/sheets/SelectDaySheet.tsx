@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useState } from "react";
 import { View, Text, Keyboard } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
@@ -51,13 +51,31 @@ function GradientOption({
 interface Props {
   onSelect: (day: string) => void;
   onClose: () => void;
-  customValue: string;
-  onCustomChange: (v: string) => void;
-  showCustomInput: boolean;
 }
 
 export const SelectDaySheet = forwardRef<BottomSheet, Props>(
-  ({ onSelect, onClose, customValue, onCustomChange, showCustomInput }, ref) => {
+  ({ onSelect, onClose }, ref) => {
+    const [customValue, setCustomValue] = useState("");
+    const [showCustomInput, setShowCustomInput] = useState(false);
+
+    const handleSelect = (day: string) => {
+      if (day === "custom") {
+        setShowCustomInput(true);
+        return;
+      }
+      setShowCustomInput(false);
+      setCustomValue("");
+      onSelect(day);
+    };
+
+    const handleCustomSubmit = () => {
+      if (customValue.trim()) {
+        setShowCustomInput(false);
+        onSelect(customValue.trim());
+        setCustomValue("");
+      }
+    };
+
     return (
       <BottomSheet
         ref={ref}
@@ -81,12 +99,12 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
 
           <View className="gap-3">
             <View className="flex-row gap-3">
-              <GradientOption label="Today" colors={DAY_GRADIENTS[0]} onPress={() => onSelect("today")} />
-              <GradientOption label="Tomorrow" colors={DAY_GRADIENTS[1]} onPress={() => onSelect("tomorrow")} />
+              <GradientOption label="Today" colors={DAY_GRADIENTS[0]} onPress={() => handleSelect("today")} />
+              <GradientOption label="Tomorrow" colors={DAY_GRADIENTS[1]} onPress={() => handleSelect("tomorrow")} />
             </View>
             <View className="flex-row gap-3">
-              <GradientOption label="End of Week" colors={DAY_GRADIENTS[2]} onPress={() => onSelect("end_of_week")} />
-              <GradientOption label="Custom" colors={DAY_GRADIENTS[3]} onPress={() => onSelect("custom")} />
+              <GradientOption label="End of Week" colors={DAY_GRADIENTS[2]} onPress={() => handleSelect("end_of_week")} />
+              <GradientOption label="Custom" colors={DAY_GRADIENTS[3]} onPress={() => handleSelect("custom")} />
             </View>
             {showCustomInput && (
               <View className="flex-row items-center gap-2 mt-1">
@@ -95,12 +113,12 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
                   placeholder="e.g. March 15"
                   placeholderTextColor="#99a1af"
                   value={customValue}
-                  onChangeText={onCustomChange}
+                  onChangeText={setCustomValue}
                   returnKeyType="done"
-                  onSubmitEditing={() => customValue.trim() && onSelect(customValue.trim())}
+                  onSubmitEditing={handleCustomSubmit}
                 />
                 <Pressable
-                  onPress={() => customValue.trim() && onSelect(customValue.trim())}
+                  onPress={handleCustomSubmit}
                   style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "#a2d2ff", alignItems: "center", justifyContent: "center" }}
                 >
                   <Ionicons name="checkmark" size={22} color="#fff" />
