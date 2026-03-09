@@ -18,6 +18,7 @@ import { TaskCard } from "../TaskCard";
 import { BottomNav } from "../BottomNav";
 import { PointsToast } from "../PointsToast";
 import { useHome } from "./HomeProvider";
+import { useSheetFlow } from "./SheetFlowProvider";
 
 export function MainContent() {
   const {
@@ -33,6 +34,7 @@ export function MainContent() {
     showToast,
     openSheet,
   } = useHome();
+  const flow = useSheetFlow();
 
   // AI button animation — local to this component
   const aiScale = useSharedValue(1);
@@ -160,7 +162,7 @@ export function MainContent() {
       {/* Bottom nav */}
       <BottomNav
         onListPress={() => openSheet("allTasks")}
-        onAddPress={() => openSheet("addTask")}
+        onAddPress={() => flow.start("addTask")}
         onSettingsPress={() => openSheet("settings")}
       />
     </View>
