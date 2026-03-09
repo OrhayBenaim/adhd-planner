@@ -35,10 +35,10 @@ export const createAuth = (ctx: GenericCtx<DataModel>) =>
           providers: [
             {
               type: "customJwt",
-              issuer: "https://affable-tiger-74.eu-west-1.convex.site",
+              issuer: process.env.CONVEX_SITE_URL!,
               applicationID: "convex",
               algorithm: "RS256",
-              jwks: "https://affable-tiger-74.eu-west-1.convex.site/api/auth/convex/jwks",
+              jwks: `${process.env.CONVEX_SITE_URL!}/api/auth/convex/jwks`,
             },
           ],
         },
