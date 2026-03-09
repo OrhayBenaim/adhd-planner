@@ -68,6 +68,16 @@ export const setNotificationsEnabled = mutation({
 
     if (existing) {
       await ctx.db.patch(existing._id, { notificationsEnabled: enabled });
+    } else {
+      await ctx.db.insert("userPreferences", {
+        userId,
+        name: "",
+        bestWorkTimes: [],
+        difficulties: [],
+        strengths: [],
+        notificationsEnabled: enabled,
+        onboardingCompleted: false,
+      });
     }
   },
 });
