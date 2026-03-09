@@ -11,7 +11,6 @@ import type BottomSheet from "@gorhom/bottom-sheet";
 export type ActiveSheet =
   | "none"
   | "addTask"
-  | "recording"
   | "selectDay"
   | "selectTime"
   | "allTasks"
