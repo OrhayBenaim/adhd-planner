@@ -6,6 +6,8 @@ import BottomSheet, { BottomSheetView, BottomSheetTextInput } from "@gorhom/bott
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 import { SPRING_BOUNCY } from "../../animations/springs";
+import { useSheetFlow } from "../home/SheetFlowProvider";
+import { daySelectionToDate } from "../../lib/dateTimeConvert";
 
 type GradientPair = [string, string];
 
@@ -49,12 +51,12 @@ function GradientOption({
 }
 
 interface Props {
-  onSelect: (day: string) => void;
   onClose: () => void;
 }
 
 export const SelectDaySheet = forwardRef<BottomSheet, Props>(
-  ({ onSelect, onClose }, ref) => {
+  ({ onClose }, ref) => {
+    const flow = useSheetFlow();
     const [customValue, setCustomValue] = useState("");
     const [showCustomInput, setShowCustomInput] = useState(false);
 
@@ -65,13 +67,17 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
       }
       setShowCustomInput(false);
       setCustomValue("");
-      onSelect(day);
+      const dateStr = daySelectionToDate(day);
+      flow.setDay(dateStr);
+      flow.next();
     };
 
     const handleCustomSubmit = () => {
       if (customValue.trim()) {
         setShowCustomInput(false);
-        onSelect(customValue.trim());
+        const dateStr = daySelectionToDate(customValue.trim());
+        flow.setDay(dateStr);
+        flow.next();
         setCustomValue("");
       }
     };
