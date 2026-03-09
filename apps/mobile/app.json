@@ -33,7 +33,8 @@
     "plugins": [
       "expo-router",
       "expo-notifications",
-      "react-native-localize"
+      "react-native-localize",
+      "expo-speech-recognition"
     ]
   }
 }
