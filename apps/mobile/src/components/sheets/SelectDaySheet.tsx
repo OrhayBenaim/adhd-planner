@@ -54,7 +54,7 @@ function GradientOption({
               width: 20, height: 20, borderRadius: 10,
               backgroundColor: "#fff",
               alignItems: "center", justifyContent: "center",
-              shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2, elevation: 3,
+              boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.15)",
             }}>
               <Ionicons name="checkmark" size={14} color="#a2d2ff" />
             </View>
@@ -73,7 +73,7 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const flow = useSheetFlow();
     const isSelected = (day: string) => {
-      if (!flow.selectedDay) return false;
+      if (!flow.editingExistingTaskId || !flow.selectedDay) return false;
       return daySelectionToDate(day) === flow.selectedDay;
     };
     const [customValue, setCustomValue] = useState("");

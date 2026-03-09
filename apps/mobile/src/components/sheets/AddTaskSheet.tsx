@@ -25,6 +25,8 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
     useEffect(() => {
       if (flow.editingExistingTaskId && flow.title) {
         setText(flow.title);
+      } else if (!flow.editingExistingTaskId) {
+        setText("");
       }
     }, [flow.editingExistingTaskId, flow.title]);
     const micScale = useSharedValue(1);

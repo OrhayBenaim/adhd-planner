@@ -30,7 +30,7 @@ function GradientOption({ label, colors, onPress, selected }: { label: string; c
               width: 20, height: 20, borderRadius: 10,
               backgroundColor: "#fff",
               alignItems: "center", justifyContent: "center",
-              shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2, elevation: 3,
+              boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.15)",
             }}>
               <Ionicons name="checkmark" size={14} color="#a2d2ff" />
             </View>
@@ -49,7 +49,7 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const flow = useSheetFlow();
     const isSelected = (time: string) => {
-      if (!flow.selectedTime) return false;
+      if (!flow.editingExistingTaskId || !flow.selectedTime) return false;
       return timeSelectionToTime(time) === flow.selectedTime;
     };
     const [customValue, setCustomValue] = useState("");
