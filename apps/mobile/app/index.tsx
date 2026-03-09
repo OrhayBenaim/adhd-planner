@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { router } from "expo-router";
 import { authClient } from "../src/lib/authClient";
 import { useNeedsOnboarding } from "../src/hooks/usePreferences";
-import { HomeScreen } from "../src/components/home";
+import { HomeScreen } from "../src/components/home/HomeScreen";
 
 export default function IndexPage() {
   const { data: session, isPending } = authClient.useSession();

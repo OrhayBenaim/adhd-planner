@@ -1,11 +1,11 @@
-export type MoodLabel =
+type MoodLabel =
   | "Exhausted"
   | "Low Energy"
   | "Focused"
   | "Motivated"
   | "Super Motivated";
 
-export type DifficultyLabel =
+type DifficultyLabel =
   | "Very Easy"
   | "Easy"
   | "Medium"
