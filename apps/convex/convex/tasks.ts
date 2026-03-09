@@ -10,6 +10,9 @@ import {
   MAX_TITLE,
   MAX_DESCRIPTION,
 } from "./lib/validation";
+import { normalizedLevenshtein } from "./lib/levenshtein";
+
+const RESCORE_THRESHOLD = 0.3;
 
 async function requireAuth(ctx: { auth: { getUserIdentity(): Promise<{ subject: string } | null> } }) {
   const identity = await ctx.auth.getUserIdentity();
@@ -123,5 +126,41 @@ export const remove = mutation({
     const task = await ctx.db.get(id);
     if (!task || task.userId !== userId) throw new ConvexError("Not found");
     await ctx.db.delete(id);
+  },
+});
+
+export const update = mutation({
+  args: {
+    id: v.id("tasks"),
+    title: v.string(),
+    dueDate: v.string(),
+    dueTime: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = await requireAuth(ctx);
+
+    const task = await ctx.db.get(args.id);
+    if (!task || task.userId !== userId) throw new ConvexError("Not found");
+
+    assertMaxLength(args.title, MAX_TITLE, "title");
+    assertDateFormat(args.dueDate);
+    assertTimeFormat(args.dueTime);
+
+    const oldTitle = task.title;
+    await ctx.db.patch(args.id, {
+      title: args.title,
+      dueDate: args.dueDate,
+      dueTime: args.dueTime,
+    });
+
+    // Re-score difficulty if title changed significantly
+    const diff = normalizedLevenshtein(oldTitle, args.title);
+    if (diff >= RESCORE_THRESHOLD) {
+      await ctx.scheduler.runAfter(0, internal.ai.scoreTaskDifficulty, {
+        taskId: args.id,
+        userId,
+        title: args.title,
+      });
+    }
   },
 });
