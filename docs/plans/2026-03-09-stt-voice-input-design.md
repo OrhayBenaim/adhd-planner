@@ -6,53 +6,73 @@ Wire speech-to-text into the ADHD planner's task creation flow. Users can speak 
 
 ## Decisions
 
-- **STT library:** `@jamsch/expo-speech-recognition` — wraps iOS SFSpeechRecognizer and Android SpeechRecognizer
+- **STT library:** `expo-speech-recognition` — wraps iOS SFSpeechRecognizer and Android SpeechRecognizer
 - **Default model:** OS built-in (zero download)
-- **Model upgrades:** Downloadable offline models available in settings (Android). iOS uses built-in on-device model only.
+- **Languages:** Android uses auto-detection; iOS and Android fallback use device locale
+- **On-device recognition:** Required on iOS (`requiresOnDeviceRecognition: Platform.OS === "ios"`)
+- **Volume events:** `volumeChangeEventOptions: { enabled: true, intervalMillis: 100 }` for spectrograph
 - **Multi-task splitting:** Heuristic-based, pluggable per-locale, future AI swap path
 - **Multi-task date/time:** AI assigns defaults if available, fallback to single date/time selection applied to all, always shows summary for editing
-- **Languages:** Multi-language via OS locale support
-- **Offline:** Critical — all STT runs on-device
+- **Offline:** Critical — all STT runs on-device (iOS always, Android when offline model downloaded)
+- **First pass scope:** No settings UI for language/model selection — just wire the hook. Settings override supported in code for later.
 
-## Section 1: STT Engine & Model Management
+## Section 1: STT Engine & Language Resolution
 
-**Library:** `@jamsch/expo-speech-recognition`
+**Library:** `expo-speech-recognition`
 
 Default behavior uses the OS speech recognizer (iOS SFSpeechRecognizer, Android SpeechRecognizer). Works immediately with no downloads.
 
-### Settings UI — Voice Recognition Model
+### Language Resolution (in `useSpeechRecognition.start()`)
 
-- New section in SettingsSheet: "Voice Recognition Model"
-- Dropdown shows current model and available options:
-  - `Default` — pre-installed, no download
-  - Per-locale offline models (Android only) — show name and estimated size
-- On iOS: shows "System (on-device)" with no download options
-- On Android: selecting an offline model shows a confirmation dialog with model name + size. User taps "Download" to trigger `androidTriggerOfflineModelDownload(locale)`. Progress indicator shown. Once downloaded, future STT calls use `requiresOnDeviceRecognition: true`.
-- Selected model saved to `userSettings.sttModel` (string — stores whatever identifier the library provides, default is `"default"`)
+Priority order:
+1. Explicit `locale` parameter (future settings override via `sttLocale`)
+2. Android: `undefined` (auto-detection — library/OS handles this natively)
+3. iOS / Android fallback: `getLocales()[0].languageTag` (e.g. `"en-US"`)
 
-### Locale
+### Key STT Options
 
-- Auto-detect from device locale
-- Optional language override in settings (`userSettings.sttLocale`)
+```typescript
+ExpoSpeechRecognitionModule.start({
+  lang: resolvedLocale,
+  interimResults: true,
+  continuous: false,
+  requiresOnDeviceRecognition: Platform.OS === "ios",
+  volumeChangeEventOptions: { enabled: true, intervalMillis: 100 },
+})
+```
+
+### Future: Settings UI (Not This Pass)
+
+- Voice Recognition Model selection in SettingsSheet
+- Language override (`sttLocale`) in SettingsSheet
+- Android offline model downloads
+- Hook already accepts optional `locale` param to support this
 
 ## Section 2: Recording Flow & RecordingSheet
 
 ### Microphone Permissions
 
-- Request on first mic button tap via `ExpoSpeechRecognitionModule.requestPermissionsAsync()`
-- If denied: alert explaining why mic is needed + link to system settings
+- Request on first `start()` call via `ExpoSpeechRecognitionModule.requestPermissionsAsync()`
+- If denied: set state to "error"
 
 ### RecordingSheet Behavior
 
-Replaces the current UI-only placeholder:
+Replaces the current stubbed hook:
 
 1. User taps mic in AddTaskSheet → RecordingSheet opens
-2. Speech recognition starts immediately (`ExpoSpeechRecognitionModule.start()`)
+2. Speech recognition starts immediately (sheet `onChange` triggers `start()`)
 3. Real-time partial results shown as text — user sees words appearing live
-4. Live spectrograph animation: pink dots driven by actual mic audio amplitude levels (via recording audio data from the library, or `expo-av` metering as fallback)
-5. Cancel (X) → stops recognition, discards text, returns to AddTaskSheet
-6. Confirm (checkmark) → stops recognition, passes final transcription forward
-7. Auto-stop after ~2s silence — sheet stays open, user reviews and confirms or taps mic to append
+4. Live spectrograph animation: pink bars driven by `volumechange` events from the library
+5. Cancel (X) → stops recognition, discards text, resets flow
+6. Confirm (checkmark) → stops recognition, passes final transcription to task splitter
+7. Auto-stop on silence — `end` event fires, state becomes "stopped", sheet stays open for review. User must click confirm to proceed.
+
+### Events Wired in Hook
+
+- `result` → updates transcript (uses final result when `isFinal`, interim otherwise)
+- `volumechange` → updates volume (normalized 0-1 for spectrograph)
+- `end` → sets state to "stopped"
+- `error` → sets state to "error"
 
 ### After Transcription
 
@@ -139,9 +159,9 @@ Splitter returns 1 task → skip TaskSummarySheet → existing wizard
 
 None. Tasks are created individually via existing `tasks.create()` mutation.
 
-### New userSettings Fields
+### New userSettings Fields (Future)
 
-- `sttModel: string` — model identifier as provided by library. Default: `"default"`
+- `sttModel: string` — model identifier. Default: `"default"`
 - `sttLocale?: string` — optional language override (defaults to device locale)
 
 ### All STT Logic is Client-Side
@@ -152,18 +172,32 @@ No new Convex functions needed. Task creation, AI scoring, and scheduler work as
 
 ### Permissions
 
-- **Microphone:** requested on first mic tap, cached
+- **Microphone:** requested on first `start()`, cached
 - **Speech recognition (iOS):** separate permission, handled by library
-- Denied → alert with system settings link
+- Denied → state set to "error"
 
 ### Error States
 
 - Recognition fails / empty → "Couldn't catch that, try again" in RecordingSheet
 - No internet + no offline model (Android) → suggest downloading offline model from settings
-- Offline model download fails → error message, retry from settings
 
 ### Edge Cases
 
 - Empty transcription confirmed → nothing happens, stay on RecordingSheet
 - Very short input (1-2 words) → single task, no splitting
 - No speech detected after timeout → prompt to tap mic to retry
+
+## Section 7: Plugin Configuration
+
+### app.json
+
+Add `"expo-speech-recognition"` to the plugins array:
+
+```json
+"plugins": [
+  "expo-router",
+  "expo-notifications",
+  "react-native-localize",
+  "expo-speech-recognition"
+]
+```
