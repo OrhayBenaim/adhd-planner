@@ -4,8 +4,6 @@ export const MAX_DESCRIPTION = 5000;
 export const MAX_NAME = 200;
 export const MAX_PREF_ITEM = 100;
 export const MAX_PREF_ARRAY = 20;
-export const MAX_STT_MODEL = 50;
-export const MAX_STT_LOCALE = 10;
 
 /** Date format: YYYY-MM-DD */
 const DATE_RE = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
