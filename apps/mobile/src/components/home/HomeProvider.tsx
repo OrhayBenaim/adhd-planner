@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useCallback, useRef, type ReactNod
 import type { Id } from "@adhd-planner/convex/convex/_generated/dataModel";
 import type { Task, UserProgress } from "@adhd-planner/types";
 import type {  Settings, SettingsEntry } from "../../hooks/useSettings";
-import { useTasks, useCreateTask, useCompleteTask, useDeleteTask } from "../../hooks/useTasks";
+import { useTasks, useCreateTask, useCompleteTask, useDeleteTask, useUpdateTask } from "../../hooks/useTasks";
 import { useUserProgress } from "../../hooks/useUserProgress";
 import { useSettings } from "../../hooks/useSettings";
 import type BottomSheet from "@gorhom/bottom-sheet";
@@ -37,6 +37,7 @@ interface HomeContextValue {
   completeTask: (id: string) => Promise<{ earned: number; leveledUp: boolean } | undefined>;
   createTask: (args: { title: string; dueDate: string; dueTime: string }) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
+  updateTask: (args: { id: string; title: string; dueDate: string; dueTime: string }) => Promise<void>;
   updateSetting: (...[key, value]: SettingsEntry) => Promise<void>;
 
   adminAiEnabled: boolean;
@@ -67,6 +68,7 @@ export function HomeProvider({ children }: { children: ReactNode }) {
   const createTaskMutation = useCreateTask();
   const completeTaskMutation = useCompleteTask();
   const deleteTaskMutation = useDeleteTask();
+  const updateTaskMutation = useUpdateTask();
   const { progress } = useUserProgress();
   const { settings, updateSetting, adminAiEnabled } = useSettings();
 
@@ -115,6 +117,13 @@ export function HomeProvider({ children }: { children: ReactNode }) {
     [deleteTaskMutation]
   );
 
+  const updateTask = useCallback(
+    async (args: { id: string; title: string; dueDate: string; dueTime: string }) => {
+      await updateTaskMutation({ id: args.id as Id<"tasks">, title: args.title, dueDate: args.dueDate, dueTime: args.dueTime });
+    },
+    [updateTaskMutation]
+  );
+
   return (
     <HomeContext.Provider
       value={{
@@ -132,6 +141,7 @@ export function HomeProvider({ children }: { children: ReactNode }) {
         completeTask,
         createTask,
         deleteTask,
+        updateTask,
         updateSetting,
         openSheet,
         closeSheet,
