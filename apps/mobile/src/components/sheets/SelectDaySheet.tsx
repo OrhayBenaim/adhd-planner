@@ -22,10 +22,12 @@ function GradientOption({
   label,
   colors,
   onPress,
+  selected,
 }: {
   label: string;
   colors: GradientPair;
   onPress: () => void;
+  selected?: boolean;
 }) {
   const scale = useSharedValue(1);
   const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
@@ -37,14 +39,27 @@ function GradientOption({
         onPressIn={() => { scale.value = withSpring(0.94, SPRING_BOUNCY); }}
         onPressOut={() => { scale.value = withSpring(1, SPRING_BOUNCY); }}
       >
-        <LinearGradient
-          colors={colors}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={{ borderRadius: 24, paddingVertical: 16, alignItems: "center" }}
-        >
-          <Text style={{ color: "#fff", fontWeight: "500", fontSize: 15 }}>{label}</Text>
-        </LinearGradient>
+        <View style={{ position: "relative" }}>
+          <LinearGradient
+            colors={colors}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={{ borderRadius: 24, paddingVertical: 16, alignItems: "center" }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "500", fontSize: 15 }}>{label}</Text>
+          </LinearGradient>
+          {selected && (
+            <View style={{
+              position: "absolute", top: -4, right: -4,
+              width: 20, height: 20, borderRadius: 10,
+              backgroundColor: "#fff",
+              alignItems: "center", justifyContent: "center",
+              shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2, elevation: 3,
+            }}>
+              <Ionicons name="checkmark" size={14} color="#a2d2ff" />
+            </View>
+          )}
+        </View>
       </Pressable>
     </Animated.View>
   );
@@ -57,6 +72,10 @@ interface Props {
 export const SelectDaySheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const flow = useSheetFlow();
+    const isSelected = (day: string) => {
+      if (!flow.selectedDay) return false;
+      return daySelectionToDate(day) === flow.selectedDay;
+    };
     const [customValue, setCustomValue] = useState("");
     const [showCustomInput, setShowCustomInput] = useState(false);
 
@@ -105,11 +124,11 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
 
           <View className="gap-3">
             <View className="flex-row gap-3">
-              <GradientOption label="Today" colors={DAY_GRADIENTS[0]} onPress={() => handleSelect("today")} />
-              <GradientOption label="Tomorrow" colors={DAY_GRADIENTS[1]} onPress={() => handleSelect("tomorrow")} />
+              <GradientOption label="Today" colors={DAY_GRADIENTS[0]} onPress={() => handleSelect("today")} selected={isSelected("today")} />
+              <GradientOption label="Tomorrow" colors={DAY_GRADIENTS[1]} onPress={() => handleSelect("tomorrow")} selected={isSelected("tomorrow")} />
             </View>
             <View className="flex-row gap-3">
-              <GradientOption label="End of Week" colors={DAY_GRADIENTS[2]} onPress={() => handleSelect("end_of_week")} />
+              <GradientOption label="End of Week" colors={DAY_GRADIENTS[2]} onPress={() => handleSelect("end_of_week")} selected={isSelected("end_of_week")} />
               <GradientOption label="Custom" colors={DAY_GRADIENTS[3]} onPress={() => handleSelect("custom")} />
             </View>
             {showCustomInput && (
