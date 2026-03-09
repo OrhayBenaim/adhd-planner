@@ -3,6 +3,13 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { ConvexError } from "convex/values";
+import {
+  assertMaxLength,
+  assertDateFormat,
+  assertTimeFormat,
+  MAX_TITLE,
+  MAX_DESCRIPTION,
+} from "./lib/validation";
 
 async function requireAuth(ctx: { auth: { getUserIdentity(): Promise<{ subject: string } | null> } }) {
   const identity = await ctx.auth.getUserIdentity();
@@ -42,6 +49,14 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     const userId = await requireAuth(ctx);
+
+    assertMaxLength(args.title, MAX_TITLE, "title");
+    if (args.description) {
+      assertMaxLength(args.description, MAX_DESCRIPTION, "description");
+    }
+    assertDateFormat(args.dueDate);
+    assertTimeFormat(args.dueTime);
+
     const taskId = await ctx.db.insert("tasks", {
       ...args,
       userId,
