@@ -6,6 +6,8 @@ import BottomSheet, { BottomSheetView, BottomSheetTextInput } from "@gorhom/bott
 import { LinearGradient } from "expo-linear-gradient";
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
 import { SPRING_BOUNCY } from "../../animations/springs";
+import { useSheetFlow } from "../home/SheetFlowProvider";
+import { timeSelectionToTime } from "../../lib/dateTimeConvert";
 
 function GradientOption({ label, colors, onPress }: { label: string; colors: [string, string]; onPress: () => void }) {
   const scale = useSharedValue(1);
@@ -27,12 +29,12 @@ function GradientOption({ label, colors, onPress }: { label: string; colors: [st
 }
 
 interface Props {
-  onSelect: (time: string) => void;
   onClose: () => void;
 }
 
 export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
-  ({ onSelect, onClose }, ref) => {
+  ({ onClose }, ref) => {
+    const flow = useSheetFlow();
     const [customValue, setCustomValue] = useState("");
     const [showCustomInput, setShowCustomInput] = useState(false);
 
@@ -43,13 +45,17 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
       }
       setShowCustomInput(false);
       setCustomValue("");
-      onSelect(time);
+      const timeStr = timeSelectionToTime(time);
+      flow.setTime(timeStr);
+      flow.next();
     };
 
     const handleCustomSubmit = () => {
       if (customValue.trim()) {
         setShowCustomInput(false);
-        onSelect(customValue.trim());
+        const timeStr = timeSelectionToTime(customValue.trim());
+        flow.setTime(timeStr);
+        flow.next();
         setCustomValue("");
       }
     };
