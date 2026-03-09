@@ -41,6 +41,22 @@ export const getUserAiEnabled = internalQuery({
   },
 });
 
+export const countRecentScores = internalQuery({
+  args: { userId: v.string(), since: v.number() },
+  handler: async (ctx, { userId, since }) => {
+    const recent = await ctx.db
+      .query("aiScoringAudit")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("userId"), userId),
+          q.gte(q.field("_creationTime"), since),
+        ),
+      )
+      .collect();
+    return recent.length;
+  },
+});
+
 export const scoreTaskDifficulty = internalAction({
   args: {
     taskId: v.id("tasks"),
@@ -53,6 +69,18 @@ export const scoreTaskDifficulty = internalAction({
     if (!settings) {
       await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
       console.warn(`[AI] aiEnabled=false for user ${userId}, task ${taskId} set to 0`);
+      return;
+    }
+
+    // Per-user rate limit: max 10 AI scores per minute
+    const oneMinuteAgo = Date.now() - 60_000;
+    const recentCount = await ctx.runQuery(internal.ai.countRecentScores, {
+      userId,
+      since: oneMinuteAgo,
+    });
+    if (recentCount >= 10) {
+      await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
+      console.warn(`[AI] rate limit exceeded for user ${userId}, task ${taskId} set to 0`);
       return;
     }
 
