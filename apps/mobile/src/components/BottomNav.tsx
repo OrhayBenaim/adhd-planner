@@ -60,7 +60,7 @@ function NavButton({
 export function BottomNav({ onListPress, onAddPress, onSettingsPress }: Props) {
   return (
     <View className="absolute bottom-0 left-0 right-0 bg-white/80 border-t border-[#f3f4f6] px-6 pt-6 pb-8">
-      <View className="flex-row items-center justify-center gap-8">
+      <View className="flex-row items-center justify-center gap-16">
         <NavButton onPress={onListPress}>
           <Ionicons name="list-outline" size={24} color="#364153" />
         </NavButton>
