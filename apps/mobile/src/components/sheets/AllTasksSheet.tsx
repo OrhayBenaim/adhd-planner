@@ -11,13 +11,15 @@ import Animated, {
 import type { Task } from "@adhd-planner/types";
 import { getDifficultyLabel } from "../../lib/moodLabels";
 import { useHome } from "../home/HomeProvider";
+import { useSheetFlow } from "../home/SheetFlowProvider";
 
 interface TaskItemProps {
   task: Task;
   onDelete: (id: string) => void;
+  onEdit: (task: Task) => void;
 }
 
-function TaskItem({ task, onDelete }: TaskItemProps) {
+function TaskItem({ task, onDelete, onEdit }: TaskItemProps) {
   return (
     <Animated.View
       entering={FadeInRight.springify().damping(18)}
@@ -34,6 +36,12 @@ function TaskItem({ task, onDelete }: TaskItemProps) {
           <Text className="text-xs text-[#6a7282]">{getDifficultyLabel(task.difficulty)}</Text>
         </View>
         <View className="flex-row gap-2">
+          <Pressable
+            onPress={() => onEdit(task)}
+            className="w-8 h-8 rounded-full items-center justify-center"
+          >
+            <Ionicons name="create-outline" size={20} color="#364153" />
+          </Pressable>
           <Pressable
             onPress={() => onDelete(task._id)}
             className="w-8 h-8 rounded-full items-center justify-center"
@@ -53,6 +61,7 @@ interface Props {
 export const AllTasksSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const { tasks, deleteTask } = useHome();
+    const flow = useSheetFlow();
     return (
       <BottomSheet
         ref={ref}
@@ -71,7 +80,7 @@ export const AllTasksSheet = forwardRef<BottomSheet, Props>(
         </View>
         <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}>
           {tasks.map((task) => (
-            <TaskItem key={task._id} task={task} onDelete={deleteTask} />
+            <TaskItem key={task._id} task={task} onDelete={deleteTask} onEdit={(t) => flow.editExistingTask(t)} />
           ))}
           {tasks.length === 0 && (
             <Text className="text-center text-[#99a1af] mt-8">No tasks yet</Text>
