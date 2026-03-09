@@ -4,9 +4,9 @@ import Animated, {
   FadeOut,
   useSharedValue,
   useAnimatedStyle,
-  runOnJS,
   clamp,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { LinearGradient } from "expo-linear-gradient";
 import { getMoodLabel } from "../lib/moodLabels";
@@ -36,14 +36,14 @@ export function MoodSlider({ value, onChange }: Props) {
     .onChange((e) => {
       const max = trackWidth - THUMB_SIZE;
       thumbX.value = clamp(thumbX.value + e.changeX, 0, max);
-      runOnJS(notifyChange)(thumbX.value);
+      scheduleOnRN(notifyChange, thumbX.value);
     });
 
   const tap = Gesture.Tap().onEnd((e) => {
     const max = trackWidth - THUMB_SIZE;
     const x = clamp(e.x - THUMB_SIZE / 2, 0, max);
     thumbX.value = x;
-    runOnJS(notifyChange)(x);
+    scheduleOnRN(notifyChange, x);
   });
 
   const thumbStyle = useAnimatedStyle(() => ({

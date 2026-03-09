@@ -1,11 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSequence,
   withTiming,
-  runOnJS,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { Text } from "react-native";
 
 interface Props {
@@ -20,6 +20,10 @@ export function PointsToast({ points, visible, onDone }: Props) {
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
 
+  const handleDone = useCallback(() => {
+    onDoneRef.current();
+  }, []);
+
   useEffect(() => {
     if (!visible) return;
     translateY.value = 0;
@@ -27,11 +31,11 @@ export function PointsToast({ points, visible, onDone }: Props) {
       withTiming(1, { duration: 200 }),
       withTiming(1, { duration: 600 }),
       withTiming(0, { duration: 300 }, (finished) => {
-        if (finished) runOnJS(() => onDoneRef.current())();
+        if (finished) scheduleOnRN(handleDone);
       })
     );
     translateY.value = withTiming(-40, { duration: 1100 });
-  }, [visible]);
+  }, [visible, handleDone]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,

@@ -11,7 +11,7 @@ import { TaskSummarySheet } from "../sheets/TaskSummarySheet";
 import { useHome } from "./HomeProvider";
 
 export function SheetManager() {
-  const { closeSheet, registerSheet } = useHome();
+  const { onSheetClose, registerSheet } = useHome();
 
   const addSheetRef = useRef<BottomSheet>(null);
   const recordingSheetRef = useRef<BottomSheet>(null);
@@ -33,13 +33,13 @@ export function SheetManager() {
 
   return (
     <>
-      <AddTaskSheet ref={addSheetRef} onClose={closeSheet} />
-      <RecordingSheet ref={recordingSheetRef} onClose={closeSheet} />
-      <SelectDaySheet ref={daySheetRef} onClose={closeSheet} />
-      <SelectTimeSheet ref={timeSheetRef} onClose={closeSheet} />
-      <TaskSummarySheet ref={taskSummaryRef} onClose={closeSheet} />
-      <AllTasksSheet ref={allTasksSheetRef} onClose={closeSheet} />
-      <SettingsSheet ref={settingsSheetRef} onClose={closeSheet} />
+      <AddTaskSheet ref={addSheetRef} onClose={onSheetClose} />
+      <RecordingSheet ref={recordingSheetRef} onClose={onSheetClose} />
+      <SelectDaySheet ref={daySheetRef} onClose={onSheetClose} />
+      <SelectTimeSheet ref={timeSheetRef} onClose={onSheetClose} />
+      <TaskSummarySheet ref={taskSummaryRef} onClose={onSheetClose} />
+      <AllTasksSheet ref={allTasksSheetRef} onClose={onSheetClose} />
+      <SettingsSheet ref={settingsSheetRef} onClose={onSheetClose} />
     </>
   );
 }

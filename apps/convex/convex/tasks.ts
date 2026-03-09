@@ -36,10 +36,11 @@ export const list = query({
   args: {},
   handler: async (ctx) => {
     const userId = await requireAuth(ctx);
-    return ctx.db
+    const all = await ctx.db
       .query("tasks")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .collect();
+    return all.filter((t) => !t.completed);
   },
 });
 

@@ -50,7 +50,7 @@ interface Props {
 
 export const SettingsSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
-    const { settings, updateSetting, adminAiEnabled } = useHome();
+    const { settings, updateSetting, adminAiEnabled, closeSheet } = useHome();
     return (
       <BottomSheet
         ref={ref}
@@ -64,7 +64,7 @@ export const SettingsSheet = forwardRef<BottomSheet, Props>(
         <BottomSheetView className="px-6 pt-6">
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-lg font-medium text-[#1e2939]">Settings</Text>
-            <Pressable onPress={onClose}>
+            <Pressable onPress={closeSheet}>
               <Ionicons name="close" size={24} color="#364153" />
             </Pressable>
           </View>
