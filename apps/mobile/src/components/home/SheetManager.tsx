@@ -268,7 +268,6 @@ export function SheetManager() {
       <AllTasksSheet
         ref={allTasksSheetRef}
         tasks={tasks}
-        onEdit={() => {}}
         onDelete={(id) => deleteTask(id)}
         onClose={closeSheet}
       />
