@@ -12,7 +12,7 @@ export const get = query({
   args: {},
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity) return null;
+    if (!identity) throw new ConvexError("Unauthenticated");
 
     return await ctx.db
       .query("userPreferences")
