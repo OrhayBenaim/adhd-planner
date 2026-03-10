@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lullio — Get things done, one task at a time</title>
+  <meta name="description" content="Lullio — Smart task management that adapts to your mood. Get things done, one task at a time.">
+  <meta property="og:title" content="Lullio — Get things done, one task at a time">
+  <meta property="og:description" content="Smart task management that adapts to your mood. Get things done, one task at a time.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="Main.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --blue: #a2d2ff;
+      --light-blue: #bde0fe;
+      --purple: #cdb4db;
+      --pink: #ffc8dd;
+      --light-pink: #ffafcc;
+      --bg: #f5f7fa;
+      --text-dark: #1e2939;
+      --text-secondary: #364153;
+      --text-gray: #6a7282;
+      --white: #ffffff;
+      --radius: 24px;
+      --max-width: 1100px;
+    }
+
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      color: var(--text-dark);
+      background: var(--white);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ===================== */
+    /* HERO SECTION           */
+    /* ===================== */
+    .hero {
+      background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
+      padding: 80px 0 100px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -40%;
+      right: -20%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255, 200, 221, 0.3) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(189, 224, 254, 0.3) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-content {
+      flex: 1;
+      max-width: 500px;
+    }
+
+    .hero-image-wrapper {
+      flex: 0 0 auto;
+    }
+
+    .wordmark {
+      font-size: 56px;
+      font-weight: 700;
+      color: var(--text-dark);
+      letter-spacing: -1.5px;
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+
+    .hero-tagline {
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+
+    .hero-subtitle {
+      font-size: 18px;
+      color: var(--text-secondary);
+      margin-bottom: 36px;
+      line-height: 1.5;
+    }
+
+    .store-badges {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .store-badge-link {
+      display: inline-block;
+      text-decoration: none;
+      transition: transform 0.2s ease;
+    }
+
+    .store-badge-link:hover {
+      transform: scale(1.05);
+    }
+
+    .apple-badge-wrapper {
+      position: relative;
+      display: inline-block;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .apple-badge-wrapper .store-badge-link {
+      pointer-events: none;
+    }
+
+    .apple-badge-wrapper .store-badge-link:hover {
+      transform: none;
+    }
+
+    .coming-soon-label {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      z-index: 2;
+      background: linear-gradient(135deg, var(--pink), var(--light-pink));
+      color: var(--text-dark);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .phone-frame {
+      width: 250px;
+      height: 560px;
+      background: linear-gradient(160deg, var(--light-blue), var(--pink));
+      border-radius: 36px;
+      padding:5px;
+      box-shadow:
+        0 25px 60px rgba(30, 41, 57, 0.2),
+        0 8px 20px rgba(30, 41, 57, 0.1),
+        inset 0 1px 0 rgba(255,255,255,0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .phone-frame-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 34px;
+      overflow: hidden;
+      background: linear-gradient(180deg, var(--blue), var(--purple));
+      position: relative;
+    }
+
+    .phone-frame-inner img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+
+    .phone-frame-inner img[data-hidden] {
+      display: none;
+    }
+
+
+    /* ===================== */
+    /* FEATURES SECTION       */
+    /* ===================== */
+    .features {
+      background: var(--bg);
+      position: relative;
+    }
+
+    .features-scroll-area {
+      height: 300vh;
+      position: relative;
+    }
+
+    .features-sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .features-sticky > .container {
+      width: 100%;
+    }
+
+    .section-heading {
+      text-align: center;
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 60px;
+      letter-spacing: -0.5px;
+    }
+
+    .features-layout {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 80px;
+      width: 100%;
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .features-text-side {
+      flex: 1 1 50%;
+      max-width: 480px;
+      position: relative;
+      min-height: 240px;
+    }
+
+    .feature-slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+
+    .feature-slide.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .feature-slide-number {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--purple);
+      margin-bottom: 16px;
+      white-space: nowrap;
+    }
+
+    .feature-slide h3 {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 16px;
+      line-height: 1.2;
+      letter-spacing: -0.5px;
+    }
+
+    .feature-slide p {
+      font-size: 17px;
+      color: var(--text-gray);
+      line-height: 1.7;
+      max-width: 400px;
+    }
+
+    .feature-icon-inline {
+      width: 52px;
+      height: 52px;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .feature-icon-inline svg {
+      width: 26px;
+      height: 26px;
+    }
+
+    .features-image-side {
+      flex: 0 0 auto;
+      position: relative;
+      width: 260px;
+      height: 520px;
+    }
+
+    .features-phone {
+      width: 250px;
+      height: 520px;
+      background: linear-gradient(160deg, var(--light-blue), var(--pink));
+      border-radius: 30px;
+      padding: 6px;
+      box-shadow:
+        0 25px 60px rgba(30, 41, 57, 0.15),
+        0 8px 20px rgba(30, 41, 57, 0.08),
+        inset 0 1px 0 rgba(255,255,255,0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .features-phone-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 28px;
+      overflow: hidden;
+      background: linear-gradient(180deg, var(--blue), var(--purple));
+      position: relative;
+    }
+
+    .features-phone-inner img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: 0;
+      transform: scale(1.05);
+      transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .features-phone-inner img.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .features-progress {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: absolute;
+      right: calc(100% + 20px);
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .features-progress-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--purple);
+      opacity: 0.25;
+      transition: opacity 0.4s ease, transform 0.4s ease, height 0.4s ease;
+    }
+
+    .features-progress-dot.active {
+      opacity: 1;
+      height: 24px;
+      border-radius: 4px;
+      background: linear-gradient(180deg, var(--blue), var(--purple));
+    }
+
+    /* ===================== */
+    /* HOW IT WORKS SECTION   */
+    /* ===================== */
+    .how-it-works {
+      background: linear-gradient(180deg, var(--white) 0%, var(--bg) 100%);
+      padding: 100px 0 120px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .how-it-works::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px;
+      height: 800px;
+      background: radial-gradient(circle, rgba(162, 210, 255, 0.12) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .steps-row {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      align-items: stretch;
+      position: relative;
+    }
+
+    .steps-row::before {
+      content: '';
+      position: absolute;
+      top: 50px;
+      left: calc(50% - 300px);
+      width: 600px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--blue), var(--purple), transparent);
+      opacity: 0.3;
+    }
+
+    .step {
+      text-align: center;
+      flex: 1;
+      max-width: 320px;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 40px 28px 36px;
+      box-shadow: 0 4px 24px rgba(30, 41, 57, 0.06), 0 1px 4px rgba(30, 41, 57, 0.04);
+      position: relative;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .step:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(30, 41, 57, 0.1), 0 4px 12px rgba(30, 41, 57, 0.06);
+    }
+
+    .step-number {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      color: var(--white);
+      font-size: 22px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 24px rgba(162, 210, 255, 0.4);
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-emoji {
+      font-size: 36px;
+      margin-bottom: 16px;
+      display: block;
+      line-height: 1;
+    }
+
+    .step h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 10px;
+    }
+
+    .step p {
+      font-size: 15px;
+      color: var(--text-gray);
+      line-height: 1.6;
+    }
+
+    .step-tag {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .step-tag--blue {
+      background: rgba(162, 210, 255, 0.2);
+      color: #4a8ec9;
+    }
+
+    .step-tag--purple {
+      background: rgba(205, 180, 219, 0.2);
+      color: #9b7bb0;
+    }
+
+    .step-tag--pink {
+      background: rgba(255, 200, 221, 0.2);
+      color: #c97a9b;
+    }
+
+    /* ===================== */
+    /* FOOTER                 */
+    /* ===================== */
+    .footer {
+      background: var(--text-dark);
+      color: var(--white);
+      padding: 60px 0 40px;
+    }
+
+    .footer .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .footer-wordmark {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .footer-links a {
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s ease;
+    }
+
+    .footer-links a:hover {
+      color: var(--white);
+    }
+
+    .footer .store-badges {
+      justify-content: center;
+    }
+
+    .footer-copyright {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+      margin-top: 8px;
+    }
+
+    /* ===================== */
+    /* GSAP INITIAL STATES    */
+    /* ===================== */
+    .hero-anim {
+      opacity: 0;
+      will-change: opacity, transform;
+    }
+
+    .step-anim {
+      opacity: 0;
+      will-change: opacity, transform;
+    }
+
+    .footer-anim {
+      opacity: 0;
+      will-change: opacity, transform;
+    }
+
+    /* ===================== */
+    /* RESPONSIVE             */
+    /* ===================== */
+    @media (max-width: 1199px) {
+      .hero .container {
+        gap: 40px;
+      }
+
+      .phone-frame {
+        width: 240px;
+        height: 480px;
+      }
+
+      .features-layout {
+        gap: 48px;
+      }
+
+      .features-image-side,
+      .features-phone {
+        width: 220px;
+        height: 440px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .hero {
+        padding: 60px 0 80px;
+      }
+
+      .hero .container {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .hero-content {
+        max-width: 100%;
+      }
+
+      .store-badges {
+        justify-content: center;
+      }
+
+      .wordmark {
+        font-size: 42px;
+      }
+
+      .hero-tagline {
+        font-size: 22px;
+      }
+
+      .hero-subtitle {
+        font-size: 16px;
+      }
+
+      .phone-frame {
+        width: 220px;
+        height: 440px;
+        border-radius: 30px;
+      }
+
+      .phone-frame-inner {
+        border-radius: 28px;
+      }
+
+      .features-scroll-area {
+        height: auto;
+      }
+
+      .features-sticky {
+        position: relative;
+        height: auto;
+        padding: 60px 0;
+      }
+
+      .features-layout {
+        flex-direction: column;
+        gap: 40px;
+      }
+
+      .features-text-side {
+        max-width: 100%;
+        min-height: auto;
+        text-align: center;
+      }
+
+      .feature-slide {
+        position: relative;
+        opacity: 1;
+        transform: none;
+        margin-bottom: 48px;
+      }
+
+      .feature-slide:last-child {
+        margin-bottom: 0;
+      }
+
+      .feature-icon-inline {
+        margin: 0 auto 20px;
+      }
+
+      .feature-slide h3 {
+        font-size: 24px;
+      }
+
+      .features-image-side,
+      .features-phone {
+        width: 220px;
+        height: 440px;
+      }
+
+      .features-image-side {
+        margin: 0 auto;
+      }
+
+      .features-progress {
+        display: none;
+      }
+
+      .features-phone-inner img {
+        opacity: 1;
+        transform: none;
+      }
+
+      .features-phone-inner img:not(:first-child) {
+        display: none;
+      }
+
+      .section-heading {
+        font-size: 28px;
+        margin-bottom: 40px;
+      }
+
+      .how-it-works {
+        padding: 60px 0 80px;
+      }
+
+      .steps-row {
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .steps-row::before {
+        display: none;
+      }
+
+      .step {
+        max-width: 400px;
+        width: 100%;
+      }
+
+      .footer {
+        padding: 40px 0 32px;
+      }
+
+      .footer .store-badges {
+        flex-direction: column;
+        gap: 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .store-badges {
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== -->
+  <!-- HERO SECTION          -->
+  <!-- ==================== -->
+  <section class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <div class="wordmark hero-anim">Lullio</div>
+        <h1 class="hero-tagline hero-anim">Get things done, one task at a time</h1>
+        <p class="hero-subtitle hero-anim">Smart scheduling that adapts to your mood</p>
+        <div class="store-badges hero-anim">
+          <!-- Google Play Badge -->
+          <a href="#" class="store-badge-link" aria-label="Get it on Google Play">
+            <svg width="160" height="48" viewBox="0 0 160 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="160" height="48" rx="8" fill="#000"/>
+              <rect x="0.5" y="0.5" width="159" height="47" rx="7.5" stroke="#A6A6A6" stroke-opacity="0.3"/>
+              <!-- Play triangle icon -->
+              <path d="M17 12.5L17 35.5L32 24L17 12.5Z" fill="url(#playGrad)"/>
+              <defs>
+                <linearGradient id="playGrad" x1="17" y1="12" x2="32" y2="24" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#00C3FF"/>
+                  <stop offset="0.35" stop-color="#00E87E"/>
+                  <stop offset="0.65" stop-color="#FFDE00"/>
+                  <stop offset="1" stop-color="#FF3A44"/>
+                </linearGradient>
+              </defs>
+              <text x="42" y="19" fill="#fff" font-family="Inter, sans-serif" font-size="8.5" font-weight="400" letter-spacing="0.5">GET IT ON</text>
+              <text x="42" y="34" fill="#fff" font-family="Inter, sans-serif" font-size="16" font-weight="600" letter-spacing="0.3">Google Play</text>
+            </svg>
+          </a>
+          <!-- Apple App Store Badge -->
+          <div class="apple-badge-wrapper">
+            <span class="coming-soon-label">Coming Soon</span>
+            <a href="#" class="store-badge-link" aria-label="Download on the App Store">
+              <svg width="160" height="48" viewBox="0 0 160 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="160" height="48" rx="8" fill="#000"/>
+                <rect x="0.5" y="0.5" width="159" height="47" rx="7.5" stroke="#A6A6A6" stroke-opacity="0.3"/>
+                <!-- Apple logo -->
+                <g transform="translate(14, 9)" fill="#fff">
+                  <path d="M15.5 10.2c-.1-2.1 1.7-3.2 1.8-3.2-1-1.5-2.5-1.7-3.1-1.7-1.3-.1-2.6.8-3.2.8-.7 0-1.7-.8-2.8-.7-1.4 0-2.7.8-3.5 2.1-1.5 2.6-.4 6.4 1.1 8.5.7 1 1.5 2.2 2.7 2.1 1.1 0 1.5-.7 2.8-.7 1.3 0 1.6.7 2.8.7 1.2 0 1.8-1 2.6-2.1.8-1.2 1.2-2.3 1.2-2.4-.1 0-2.2-.8-2.4-3.4z"/>
+                  <path d="M13.3 3.8c.6-.7 1-1.8.9-2.8-0.9 0-1.9.6-2.6 1.3-.5.6-1.1 1.7-.9 2.7 1 .1 2-.5 2.6-1.2z"/>
+                </g>
+                <text x="42" y="18" fill="#fff" font-family="Inter, sans-serif" font-size="8" font-weight="400" letter-spacing="0.3">Download on the</text>
+                <text x="42" y="34" fill="#fff" font-family="Inter, sans-serif" font-size="17" font-weight="600" letter-spacing="0.3">App Store</text>
+              </svg>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="hero-image-wrapper hero-anim">
+        <div class="phone-frame">
+          <div class="phone-frame-inner">
+            <img src="Main.png" alt="Lullio app showing mood-based task scheduling" loading="eager">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== -->
+  <!-- FEATURES SECTION      -->
+  <!-- ==================== -->
+  <section class="features" id="features">
+    <div class="features-scroll-area">
+      <div class="features-sticky">
+        <div class="container">
+          <div class="features-layout">
+
+            <!-- Left: Text slides -->
+            <div class="features-text-side">
+              <div class="feature-slide active" data-feature="0">
+                <div class="feature-icon-inline">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                  </svg>
+                </div>
+                <div class="feature-slide-number">01 / 03</div>
+                <h3>Mood-Based Scheduling</h3>
+                <p>Tell us how you're feeling. We'll match the perfect task to your energy level. No guesswork, just the right task at the right time.</p>
+              </div>
+              <div class="feature-slide" data-feature="1">
+                <div class="feature-icon-inline">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" y1="19" x2="12" y2="23"/>
+                    <line x1="8" y1="23" x2="16" y2="23"/>
+                  </svg>
+                </div>
+                <div class="feature-slide-number">02 / 03</div>
+                <h3>Voice-to-Task</h3>
+                <p>Just speak. Smart speech-to-text breaks your words into actionable tasks. No typing, no friction, just say what's on your mind.</p>
+              </div>
+              <div class="feature-slide" data-feature="2">
+                <div class="feature-icon-inline">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <div class="feature-slide-number">03 / 03</div>
+                <h3>One Task at a Time</h3>
+                <p>No overwhelming lists. Just what matters right now. Focus on one thing, complete it, and move forward with confidence.</p>
+              </div>
+            </div>
+
+            <!-- Right: Phone with image stack -->
+            <div class="features-image-side">
+              <div class="features-progress">
+                <div class="features-progress-dot active" data-dot="0"></div>
+                <div class="features-progress-dot" data-dot="1"></div>
+                <div class="features-progress-dot" data-dot="2"></div>
+              </div>
+              <div class="features-phone">
+                <div class="features-phone-inner">
+                  <img src="Main.png" alt="Mood slider interface" data-feature-img="0" class="active">
+                  <img src="Recording audio.png" alt="Voice-to-task creation" data-feature-img="1">
+                  <img src="Task.png" alt="Single task card" data-feature-img="2">
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== -->
+  <!-- HOW IT WORKS SECTION  -->
+  <!-- ==================== -->
+  <section class="how-it-works">
+    <div class="container">
+      <h2 class="section-heading">How It Works</h2>
+      <p style="text-align:center; color: var(--text-gray); font-size: 17px; max-width: 500px; margin: -40px auto 48px; line-height: 1.6;">Three simple steps. No setup, no overwhelm.</p>
+      <div class="steps-row">
+        <div class="step step-anim">
+          <div class="step-number">1</div>
+          <h3>Set your mood</h3>
+          <p>Slide to tell us how you're feeling. High energy? Low motivation? We adapt to you.</p>
+          <span class="step-tag step-tag--blue">Takes 2 seconds</span>
+        </div>
+        <div class="step step-anim">
+          <div class="step-number">2</div>
+          <h3>Get a matched task</h3>
+          <p>We pick the perfect task for your current energy. One task, no decision fatigue.</p>
+          <span class="step-tag step-tag--purple">AI-powered</span>
+        </div>
+        <div class="step step-anim">
+          <div class="step-number">3</div>
+          <h3>Complete & level up</h3>
+          <p>Finish it, earn points, and watch your streak grow. Small wins build momentum.</p>
+          <span class="step-tag step-tag--pink">Gamified</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== -->
+  <!-- FOOTER                -->
+  <!-- ==================== -->
+  <footer class="footer">
+    <div class="container footer-anim">
+      <div class="footer-wordmark">Lullio</div>
+      <div class="footer-links">
+        <a href="/privacy.html">Privacy Policy</a>
+        <a href="/terms.html">Terms of Service</a>
+      </div>
+      <div class="store-badges">
+        <!-- Google Play Badge -->
+        <a href="#" class="store-badge-link" aria-label="Get it on Google Play">
+          <svg width="160" height="48" viewBox="0 0 160 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="160" height="48" rx="8" fill="#000"/>
+            <rect x="0.5" y="0.5" width="159" height="47" rx="7.5" stroke="#A6A6A6" stroke-opacity="0.3"/>
+            <path d="M17 12.5L17 35.5L32 24L17 12.5Z" fill="url(#playGrad2)"/>
+            <defs>
+              <linearGradient id="playGrad2" x1="17" y1="12" x2="32" y2="24" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#00C3FF"/>
+                <stop offset="0.35" stop-color="#00E87E"/>
+                <stop offset="0.65" stop-color="#FFDE00"/>
+                <stop offset="1" stop-color="#FF3A44"/>
+              </linearGradient>
+            </defs>
+            <text x="42" y="19" fill="#fff" font-family="Inter, sans-serif" font-size="8.5" font-weight="400" letter-spacing="0.5">GET IT ON</text>
+            <text x="42" y="34" fill="#fff" font-family="Inter, sans-serif" font-size="16" font-weight="600" letter-spacing="0.3">Google Play</text>
+          </svg>
+        </a>
+        <!-- Apple App Store Badge -->
+        <div class="apple-badge-wrapper">
+          <span class="coming-soon-label">Coming Soon</span>
+          <a href="#" class="store-badge-link" aria-label="Download on the App Store">
+            <svg width="160" height="48" viewBox="0 0 160 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="160" height="48" rx="8" fill="#000"/>
+              <rect x="0.5" y="0.5" width="159" height="47" rx="7.5" stroke="#A6A6A6" stroke-opacity="0.3"/>
+              <g transform="translate(14, 9)" fill="#fff">
+                <path d="M15.5 10.2c-.1-2.1 1.7-3.2 1.8-3.2-1-1.5-2.5-1.7-3.1-1.7-1.3-.1-2.6.8-3.2.8-.7 0-1.7-.8-2.8-.7-1.4 0-2.7.8-3.5 2.1-1.5 2.6-.4 6.4 1.1 8.5.7 1 1.5 2.2 2.7 2.1 1.1 0 1.5-.7 2.8-.7 1.3 0 1.6.7 2.8.7 1.2 0 1.8-1 2.6-2.1.8-1.2 1.2-2.3 1.2-2.4-.1 0-2.2-.8-2.4-3.4z"/>
+                <path d="M13.3 3.8c.6-.7 1-1.8.9-2.8-0.9 0-1.9.6-2.6 1.3-.5.6-1.1 1.7-.9 2.7 1 .1 2-.5 2.6-1.2z"/>
+              </g>
+              <text x="42" y="18" fill="#fff" font-family="Inter, sans-serif" font-size="8" font-weight="400" letter-spacing="0.3">Download on the</text>
+              <text x="42" y="34" fill="#fff" font-family="Inter, sans-serif" font-size="17" font-weight="600" letter-spacing="0.3">App Store</text>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <p class="footer-copyright">&copy; 2026 Lullio. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- GSAP + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Hero: staggered fade-up on page load
+    gsap.fromTo('.hero-anim',
+      { opacity: 0, y: 40 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        stagger: 0.15,
+        ease: 'power2.out',
+        delay: 0.1
+      }
+    );
+
+    // Features: scroll-driven slide transitions (desktop only)
+    if (window.innerWidth > 768) {
+      var featureSlides = document.querySelectorAll('.feature-slide');
+      var featureImgs = document.querySelectorAll('[data-feature-img]');
+      var progressDots = document.querySelectorAll('.features-progress-dot');
+      var totalFeatures = featureSlides.length;
+      var currentFeature = 0;
+
+      ScrollTrigger.create({
+        trigger: '.features-scroll-area',
+        start: 'top top',
+        end: 'bottom bottom',
+        onUpdate: function(self) {
+          var progress = self.progress;
+          // Map scroll progress to feature index (0, 1, 2)
+          var raw = progress * totalFeatures;
+          var index = Math.min(Math.floor(raw), totalFeatures - 1);
+
+          if (index !== currentFeature) {
+            // Deactivate old
+            featureSlides[currentFeature].classList.remove('active');
+            featureImgs[currentFeature] && featureImgs[currentFeature].classList.remove('active');
+            progressDots[currentFeature] && progressDots[currentFeature].classList.remove('active');
+
+            // Activate new
+            featureSlides[index].classList.add('active');
+            featureImgs[index] && featureImgs[index].classList.add('active');
+            progressDots[index] && progressDots[index].classList.add('active');
+
+            currentFeature = index;
+          }
+        }
+      });
+    }
+
+    // How-it-works steps: fade-up on scroll
+    gsap.utils.toArray('.step-anim').forEach(function(step, i) {
+      gsap.fromTo(step,
+        { opacity: 0, y: 40 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.8,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: step,
+            start: 'top 85%',
+            toggleActions: 'play none none none'
+          },
+          delay: i * 0.15
+        }
+      );
+    });
+
+    // Footer: fade-in on scroll
+    gsap.fromTo('.footer-anim',
+      { opacity: 0, y: 30 },
+      {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: 'power2.out',
+        scrollTrigger: {
+          trigger: '.footer',
+          start: 'top 85%',
+          toggleActions: 'play none none none'
+        }
+      }
+    );
+  </script>
+</body>
+</html>
