@@ -2,6 +2,7 @@ import { createContext, useContext, useReducer, useState, useCallback, type Reac
 import { Alert } from "react-native";
 import { useSavePreferences } from "../../hooks/usePreferences";
 import { router } from "expo-router";
+import { posthog } from "../../lib/posthog";
 
 interface OnboardingState {
   name: string;
@@ -90,6 +91,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         strengths: state.strengths,
         notificationsEnabled: state.notificationsEnabled,
       });
+      posthog.capture("onboarding_completed");
       router.replace("/");
     } catch (error) {
       if (__DEV__) console.error("[onboarding] save failed:", error);

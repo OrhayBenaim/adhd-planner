@@ -19,6 +19,7 @@ import { BottomNav } from "../BottomNav";
 import { PointsToast } from "../PointsToast";
 import { useHome } from "./HomeProvider";
 import { useSheetFlow } from "./SheetFlowProvider";
+import { posthog } from "../../lib/posthog";
 
 export function MainContent() {
   const {
@@ -86,6 +87,7 @@ export function MainContent() {
     async (task: typeof selectedTask) => {
       if (!task) return;
       const result = await completeTask(task._id);
+      posthog.capture("task_completed");
       setSelectedTask(null);
       showToast(result?.earned ?? 0);
     },

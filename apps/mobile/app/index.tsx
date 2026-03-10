@@ -4,6 +4,7 @@ import { Redirect, router } from "expo-router";
 import { authClient } from "../src/lib/authClient";
 import { useNeedsOnboarding } from "../src/hooks/usePreferences";
 import { HomeScreen } from "../src/components/home/HomeScreen";
+import { posthog } from "../src/lib/posthog";
 
 export default function IndexPage() {
   const { data: session, isPending } = authClient.useSession();
@@ -17,6 +18,13 @@ export default function IndexPage() {
       });
     }
   }, [session, isPending]);
+
+  // Identify user in PostHog when session is available
+  useEffect(() => {
+    if (session?.user?.id) {
+      posthog.identify(session.user.id);
+    }
+  }, [session?.user?.id]);
 
   
   if(needsOnboarding) return <Redirect href={"/(onboarding)/welcome"}/>
