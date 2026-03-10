@@ -13,6 +13,7 @@ import { SPRING_BOUNCY } from "../../animations/springs";
 import { useSheetFlow, type PendingTask } from "../home/SheetFlowProvider";
 import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
 import { splitTranscription } from "../../lib/taskSplitter";
+import { posthog } from "../../lib/posthog";
 import { getLocales } from "react-native-localize";
 import { ScrollingWaveform } from "../ScrollingWaveform";
 
@@ -88,6 +89,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
     const handleMicPress = async () => {
       Keyboard.dismiss();
       await requestPermissions();
+      posthog.capture("voice_input_used");
       setMode("recording");
       startRecording();
     };

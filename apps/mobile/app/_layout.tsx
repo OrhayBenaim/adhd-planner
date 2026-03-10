@@ -9,6 +9,8 @@ import { ActivityIndicator, View } from "react-native";
 import { ConvexReactClient } from "convex/react";
 import { authClient } from "../src/lib/authClient";
 import * as Sentry from "@sentry/react-native";
+import { PostHogProvider } from "posthog-react-native";
+import { posthog } from "../src/lib/posthog";
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN!,
@@ -38,7 +40,9 @@ function RootLayout() {
     <GestureHandlerRootView className="flex-1">
       <ReducedMotionConfig mode={ReduceMotion.Never} />
       <ConvexBetterAuthProvider  client={convex} authClient={authClient} >
-        <Stack screenOptions={{ headerShown: false }} />
+        <PostHogProvider client={posthog}>
+          <Stack screenOptions={{ headerShown: false }} />
+        </PostHogProvider>
       </ConvexBetterAuthProvider >
     </GestureHandlerRootView>
   );

@@ -1,5 +1,6 @@
 import { createContext, useContext, useReducer, useCallback, useRef, type ReactNode } from "react";
 import { useHome } from "./HomeProvider";
+import { posthog } from "../../lib/posthog";
 
 export interface PendingTask {
   id: string;
@@ -172,6 +173,7 @@ export function SheetFlowProvider({ children }: { children: ReactNode }) {
           syncDispatch({ type: "RESET" });
         } else {
           closeSheet();
+          posthog.capture("task_created", { source: "text" });
           await createTask({ title: s.title, dueDate: s.selectedDay, dueTime: s.selectedTime });
           syncDispatch({ type: "RESET" });
         }
@@ -181,6 +183,7 @@ export function SheetFlowProvider({ children }: { children: ReactNode }) {
         const tasks = stateRef.current.pendingTasks;
         closeSheet();
         for (const task of tasks) {
+          posthog.capture("task_created", { source: "voice" });
           await createTask({ title: task.title, dueDate: task.dueDate, dueTime: task.dueTime });
         }
         syncDispatch({ type: "RESET" });
