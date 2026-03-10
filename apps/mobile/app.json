@@ -54,8 +54,8 @@
       [
         "@sentry/react-native/expo",
         {
-          "organization": "lullio-io",
-          "project": "adhd-planner",
+          "organization": "lullio",
+          "project": "react-native",
           "url": "https://sentry.io/"
         }
       ]
