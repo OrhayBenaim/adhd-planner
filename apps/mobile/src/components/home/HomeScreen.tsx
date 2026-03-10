@@ -4,8 +4,10 @@ import { HomeProvider } from "./HomeProvider";
 import { SheetFlowProvider } from "./SheetFlowProvider";
 import { MainContent } from "./MainContent";
 import { SheetManager } from "./SheetManager";
+import { usePushToken } from "../../hooks/usePushToken";
 
 export function HomeScreen() {
+  usePushToken();
   return (
     <HomeProvider>
       <SheetFlowProvider>
