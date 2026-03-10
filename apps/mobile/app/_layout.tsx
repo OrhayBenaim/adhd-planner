@@ -1,5 +1,6 @@
 import "../global.css";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { ReducedMotionConfig, ReduceMotion } from "react-native-reanimated";
 import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
@@ -7,13 +8,20 @@ import { Ionicons } from "@expo/vector-icons";
 import { ActivityIndicator, View } from "react-native";
 import { ConvexReactClient } from "convex/react";
 import { authClient } from "../src/lib/authClient";
+import * as Sentry from "@sentry/react-native";
 
+Sentry.init({
+  dsn: process.env.EXPO_PUBLIC_SENTRY_DSN!,
+  tracesSampleRate: 0.2,
+  sendDefaultPii: false,
+  enabled: !__DEV__,
+});
 
 export const convex = new ConvexReactClient(
   process.env.EXPO_PUBLIC_CONVEX_URL!
 );
 
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded] = useFonts({
     ...Ionicons.font,
   });
@@ -28,9 +36,12 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView className="flex-1">
+      <ReducedMotionConfig mode={ReduceMotion.Never} />
       <ConvexBetterAuthProvider  client={convex} authClient={authClient} >
         <Stack screenOptions={{ headerShown: false }} />
       </ConvexBetterAuthProvider >
     </GestureHandlerRootView>
   );
 }
+
+export default Sentry.wrap(RootLayout);
