@@ -13,7 +13,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSSpeechRecognitionUsageDescription": "Allow $(PRODUCT_NAME) to use speech recognition.",
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to use the microphone."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,7 +28,10 @@
       },
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "adjustResize",
-      "package": "com.orhaybenaim.adhdplanner"
+      "package": "com.orhaybenaim.adhdplanner",
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png",
@@ -52,6 +59,13 @@
           "url": "https://sentry.io/"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3b6e3c6a-2379-4aa5-be18-9848f5e92154"
+      }
+    },
+    "owner": "orhaybenaim"
   }
 }
