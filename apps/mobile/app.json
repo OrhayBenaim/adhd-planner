@@ -56,7 +56,8 @@
         {
           "organization": "lullio",
           "project": "react-native",
-          "url": "https://sentry.io/"
+          "url": "https://sentry.io/",
+          "disableAutoUploadSourceMaps": true
         }
       ]
     ],
