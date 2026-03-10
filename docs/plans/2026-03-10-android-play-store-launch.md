@@ -4,7 +4,7 @@
 
 **Goal:** Ship ADHD Planner to Android Play Store ASAP with analytics, crash reporting, AI cost management, and privacy policy.
 
-**Architecture:** PostHog + Sentry initialize at app root (`_layout.tsx`). AI cost tracking extends existing `aiScoringAudit` table and adds `userCosts` accumulator. Privacy policy served as static HTML from Convex HTTP route. EAS handles build + submit to Play Store.
+**Architecture:** PostHog + Sentry initialize at app root (`_layout.tsx`). AI cost tracking extends existing `aiScoringAudit` table and adds `userCosts` accumulator. Privacy policy hosted on Lullio portfolio site (Cloudflare Pages). EAS handles build + submit to Play Store.
 
 **Tech Stack:** Expo/React Native, Convex, PostHog React Native SDK, Sentry React Native SDK, EAS Build/Submit
 
@@ -533,117 +533,27 @@ git commit -m "feat: register push notification tokens on app launch"
 
 ---
 
-## Task 7: Privacy Policy (Convex HTTP Route)
+## Task 7: Privacy Policy & Terms of Service (Portfolio Site)
 
-**Files:**
-- Modify: `apps/convex/convex/http.ts` (add `/privacy` route)
-- Create: `apps/convex/convex/privacyPolicy.ts` (HTML content)
+**Status: DONE** — Privacy policy and Terms of Service already created at:
+- `apps/portfolio/privacy.html`
+- `apps/portfolio/terms.html`
+- Footer links updated in `apps/portfolio/index.html`
 
-**Step 1: Create privacy policy content**
+**Step 1: Deploy the portfolio site**
 
-Create `apps/convex/convex/privacyPolicy.ts`:
-```typescript
-export const PRIVACY_POLICY_HTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ADHD Planner - Privacy Policy</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 720px; margin: 0 auto; padding: 20px; line-height: 1.6; color: #333; }
-    h1 { color: #1e2939; } h2 { color: #4a5565; margin-top: 2em; }
-  </style>
-</head>
-<body>
-<h1>Privacy Policy</h1>
-<p><strong>Last updated:</strong> March 10, 2026</p>
-<p>ADHD Planner ("we", "our", "the app") is committed to protecting your privacy. This policy explains what data we collect, how we use it, and your rights.</p>
-
-<h2>1. Data We Collect</h2>
-<ul>
-  <li><strong>Account data:</strong> Email address (if you sign up with email), or OAuth profile info (Google/Apple sign-in). You may also use the app anonymously.</li>
-  <li><strong>Task data:</strong> Task titles, descriptions, due dates, difficulty scores, and completion status you create in the app.</li>
-  <li><strong>User preferences:</strong> Onboarding responses including work time preferences, personal challenges, and strengths — used to personalize AI scoring.</li>
-  <li><strong>Usage analytics:</strong> Anonymous event data (e.g., features used, session frequency) collected via PostHog to improve the app.</li>
-  <li><strong>Crash reports:</strong> Anonymous error data collected via Sentry to fix bugs.</li>
-  <li><strong>Push notification tokens:</strong> Device tokens for delivering notifications (if you enable notifications).</li>
-</ul>
-
-<h2>2. How We Use Your Data</h2>
-<ul>
-  <li><strong>Core functionality:</strong> Store and display your tasks, track progress, and calculate gamification scores.</li>
-  <li><strong>AI difficulty scoring:</strong> Task titles and your preferences are sent to OpenRouter (a third-party AI API) to generate difficulty scores. No other personal data is sent.</li>
-  <li><strong>Analytics:</strong> Understand usage patterns to improve the app experience.</li>
-  <li><strong>Crash reporting:</strong> Identify and fix technical issues.</li>
-</ul>
-
-<h2>3. Third-Party Services</h2>
-<ul>
-  <li><strong>Convex</strong> — serverless database and backend (stores all app data)</li>
-  <li><strong>OpenRouter</strong> — AI API for task difficulty scoring (receives task titles only)</li>
-  <li><strong>PostHog</strong> — analytics (anonymous usage events)</li>
-  <li><strong>Sentry</strong> — crash reporting (anonymous error data)</li>
-  <li><strong>Google / Apple</strong> — OAuth sign-in (if you choose social login)</li>
-</ul>
-
-<h2>4. Data Retention</h2>
-<p>Your data is retained as long as your account exists. If you delete your account, all associated data (tasks, preferences, progress) is permanently deleted.</p>
-
-<h2>5. Data Security</h2>
-<p>Authentication tokens are stored in your device's secure enclave (Keychain/Keystore). All data is transmitted over HTTPS. We do not sell or share your personal data with third parties for advertising purposes.</p>
-
-<h2>6. Your Rights</h2>
-<p>You can request deletion of your data at any time by contacting us. You can disable AI scoring, notifications, and analytics within the app settings.</p>
-
-<h2>7. Children's Privacy</h2>
-<p>The app is not directed at children under 13. We do not knowingly collect data from children under 13.</p>
-
-<h2>8. Changes</h2>
-<p>We may update this policy. Continued use of the app after changes constitutes acceptance.</p>
-
-<h2>9. Contact</h2>
-<p>For questions about this policy, contact: <strong>[YOUR_EMAIL]</strong></p>
-</body>
-</html>`;
-```
-
-**Step 2: Add HTTP route**
-
-In `apps/convex/convex/http.ts`:
-```typescript
-import { httpRouter } from "convex/server";
-import { authComponent, createAuth } from "./auth";
-import { httpAction } from "./_generated/server";
-import { PRIVACY_POLICY_HTML } from "./privacyPolicy";
-
-const http = httpRouter();
-
-authComponent.registerRoutes(http, createAuth);
-
-http.route({
-  path: "/privacy",
-  method: "GET",
-  handler: httpAction(async () => {
-    return new Response(PRIVACY_POLICY_HTML, {
-      headers: { "Content-Type": "text/html; charset=utf-8" },
-    });
-  }),
-});
-
-export default http;
-```
-
-**Step 3: Deploy and verify**
-
-Run: `cd apps/convex && npx convex dev --once`
-Then visit: `<your-convex-site-url>/privacy` in a browser
-
-**Step 4: Commit**
-
+Run:
 ```bash
-git add apps/convex/convex/http.ts apps/convex/convex/privacyPolicy.ts
-git commit -m "feat: add privacy policy hosted at /privacy HTTP route"
+cd apps/portfolio && npx wrangler pages deploy . --project-name lullio
 ```
+
+**Step 2: Verify pages are live**
+
+Visit:
+- `https://lullio.pages.dev/privacy.html`
+- `https://lullio.pages.dev/terms.html`
+
+Use the privacy policy URL for the Play Store listing.
 
 ---
 
