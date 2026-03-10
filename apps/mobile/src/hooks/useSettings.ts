@@ -1,6 +1,6 @@
 import { useReducer, useEffect, useCallback } from "react";
 import { Alert } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 import * as Notifications from "expo-notifications";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
@@ -60,7 +60,7 @@ function settingsReducer(state: LocalSettings, action: SettingsAction): LocalSet
   }
 
   const newState = {...state, ...changedState}
-      AsyncStorage.setItem(LOCAL_KEY, JSON.stringify(newState));
+      SecureStore.setItemAsync(LOCAL_KEY, JSON.stringify(newState));
 
       return newState
 }
@@ -83,7 +83,7 @@ export function useSettings() {
   useEffect(() => {
     let mounted = true;
     Promise.all([
-      AsyncStorage.getItem(LOCAL_KEY),
+      SecureStore.getItemAsync(LOCAL_KEY),
       Notifications.getPermissionsAsync(),
     ]).then(([raw, { status }]) => {
       if (!mounted) return;
