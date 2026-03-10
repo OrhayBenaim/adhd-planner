@@ -41,6 +41,12 @@ export default defineSchema({
     totalCost: v.number(),
   }).index("by_user", ["userId"]),
 
+  pushTokens: defineTable({
+    userId: v.string(),
+    token: v.string(),
+    platform: v.string(),
+  }).index("by_user", ["userId"]),
+
   userPreferences: defineTable({
     userId: v.string(),
     name: v.string(),
