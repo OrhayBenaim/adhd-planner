@@ -14,8 +14,8 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
     "BETTER_AUTH_SECRET",
     "GOOGLE_CLIENT_ID",
     "GOOGLE_CLIENT_SECRET",
-    "APPLE_CLIENT_ID",
-    "APPLE_CLIENT_SECRET",
+    // "APPLE_CLIENT_ID",    // TODO: enable when Apple Developer account is set up
+    // "APPLE_CLIENT_SECRET",
     "CONVEX_SITE_URL",
   ] as const;
 
@@ -38,10 +38,14 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
         clientId: process.env.GOOGLE_CLIENT_ID!,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       },
-      apple: {
-        clientId: process.env.APPLE_CLIENT_ID!,
-        clientSecret: process.env.APPLE_CLIENT_SECRET!,
-      },
+      ...(process.env.APPLE_CLIENT_ID && process.env.APPLE_CLIENT_SECRET
+        ? {
+            apple: {
+              clientId: process.env.APPLE_CLIENT_ID,
+              clientSecret: process.env.APPLE_CLIENT_SECRET,
+            },
+          }
+        : {}),
     },
     plugins: [
       expo(),
