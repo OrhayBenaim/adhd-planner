@@ -24,9 +24,41 @@ export const logScoringAudit = internalMutation({
     score: v.number(),
     reason: v.string(),
     model: v.optional(v.string()),
+    cost: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     await ctx.db.insert("aiScoringAudit", args);
+  },
+});
+
+export const getUserModelOverride = internalQuery({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    const settings = await ctx.db
+      .query("userSettings")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    return settings?.modelOverride ?? undefined;
+  },
+});
+
+export const accumulateUserCost = internalMutation({
+  args: { userId: v.string(), cost: v.number() },
+  handler: async (ctx, { userId, cost }) => {
+    const existing = await ctx.db
+      .query("userCosts")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        totalCost: existing.totalCost + cost,
+      });
+      return existing.totalCost + cost;
+    } else {
+      await ctx.db.insert("userCosts", { userId, totalCost: cost });
+      return cost;
+    }
   },
 });
 
@@ -120,6 +152,19 @@ export const scoreTaskDifficulty = internalAction({
 
     const sanitizedTitle = sanitizeForPrompt(title).slice(0, MAX_TITLE);
 
+    // Read model override for this user
+    const modelOverride = await ctx.runQuery(internal.ai.getUserModelOverride, { userId });
+
+    const requestBody: Record<string, unknown> = {
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: sanitizedTitle },
+      ],
+    };
+    if (modelOverride) {
+      requestBody.model = modelOverride;
+    }
+
     try {
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
@@ -127,18 +172,7 @@ export const scoreTaskDifficulty = internalAction({
           "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          messages: [
-            {
-              role: "system",
-              content: systemPrompt,
-            },
-            {
-              role: "user",
-              content: sanitizedTitle,
-            },
-          ],
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -151,6 +185,7 @@ export const scoreTaskDifficulty = internalAction({
       const data = await response.json();
       let raw = data.choices?.[0]?.message?.content?.trim() ?? "";
       const model = data.model ?? undefined;
+      const costFromResponse = data.usage?.total_cost ?? data.usage?.cost ?? 0;
 
       // Strip markdown code blocks if present
       raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
@@ -180,7 +215,21 @@ export const scoreTaskDifficulty = internalAction({
         score,
         reason: reason.slice(0, 1000),
         model,
+        cost: costFromResponse,
       });
+
+      if (costFromResponse > 0) {
+        const newTotal = await ctx.runMutation(internal.ai.accumulateUserCost, {
+          userId, cost: costFromResponse,
+        });
+
+        const threshold = parseFloat(process.env.COST_ALERT_THRESHOLD ?? "20");
+        if (newTotal >= threshold) {
+          console.error(
+            `[COST ALERT] User ${userId} total cost $${newTotal.toFixed(4)} exceeds threshold $${threshold}`,
+          );
+        }
+      }
     } catch (error) {
       await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
       await ctx.runMutation(internal.ai.logScoringAudit, {
