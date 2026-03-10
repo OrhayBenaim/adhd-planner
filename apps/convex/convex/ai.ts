@@ -6,6 +6,36 @@ import { sanitizeForPrompt, MAX_TITLE } from "./lib/validation";
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const MAX_SCORES_PER_WINDOW = 10;
 
+/** Send an event to Sentry via HTTP Store API (for use in Convex actions). */
+async function sentryCaptureEvent(
+  level: "error" | "warning",
+  message: string,
+  extra?: Record<string, unknown>,
+) {
+  const dsn = process.env.SENTRY_DSN;
+  if (!dsn) return;
+
+  const match = dsn.match(/^https:\/\/(.+?)@(.+?)\/(.+)$/);
+  if (!match) return;
+  const [, publicKey, host, projectId] = match;
+
+  const url = `https://${host}/api/${projectId}/store/?sentry_key=${publicKey}&sentry_version=7`;
+  await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      event_id: crypto.randomUUID().replace(/-/g, ""),
+      timestamp: new Date().toISOString(),
+      level,
+      logger: "convex.ai",
+      message: { formatted: message },
+      extra,
+    }),
+  }).catch(() => {
+    // Non-fatal — don't let Sentry failures affect the main flow
+  });
+}
+
 export const updateTaskDifficulty = internalMutation({
   args: {
     taskId: v.id("tasks"),
@@ -225,8 +255,10 @@ export const scoreTaskDifficulty = internalAction({
 
         const threshold = parseFloat(process.env.COST_ALERT_THRESHOLD ?? "20");
         if (newTotal >= threshold) {
-          console.error(
+          await sentryCaptureEvent(
+            "error",
             `[COST ALERT] User ${userId} total cost $${newTotal.toFixed(4)} exceeds threshold $${threshold}`,
+            { userId, totalCost: newTotal, threshold },
           );
         }
       }
