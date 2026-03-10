@@ -16,6 +16,7 @@ export default defineSchema({
     userId: v.string(),
     aiEnabled: v.boolean(),
     userAiEnabled: v.optional(v.boolean()),
+    modelOverride: v.optional(v.string()),
   }).index("by_user", ["userId"]),
 
   userProgress: defineTable({
@@ -32,7 +33,13 @@ export default defineSchema({
     score: v.number(),
     reason: v.string(),
     model: v.optional(v.string()),
+    cost: v.optional(v.number()),
   }).index("by_task", ["taskId"]).index("by_user", ["userId"]),
+
+  userCosts: defineTable({
+    userId: v.string(),
+    totalCost: v.number(),
+  }).index("by_user", ["userId"]),
 
   userPreferences: defineTable({
     userId: v.string(),
