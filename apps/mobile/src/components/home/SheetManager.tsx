@@ -6,6 +6,7 @@ import { SelectDaySheet } from "../sheets/SelectDaySheet";
 import { SelectTimeSheet } from "../sheets/SelectTimeSheet";
 import { AllTasksSheet } from "../sheets/AllTasksSheet";
 import { SettingsSheet } from "../sheets/SettingsSheet";
+import { PreferencesSheet } from "../sheets/PreferencesSheet";
 import { TaskSummarySheet } from "../sheets/TaskSummarySheet";
 import { useHome } from "./HomeProvider";
 
@@ -17,6 +18,7 @@ export function SheetManager() {
   const timeSheetRef = useRef<BottomSheet>(null);
   const allTasksSheetRef = useRef<BottomSheet>(null);
   const settingsSheetRef = useRef<BottomSheet>(null);
+  const preferencesSheetRef = useRef<BottomSheet>(null);
   const taskSummaryRef = useRef<BottomSheet>(null);
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export function SheetManager() {
     registerSheet({ name: "selectTime", ref: timeSheetRef });
     registerSheet({ name: "allTasks", ref: allTasksSheetRef });
     registerSheet({ name: "settings", ref: settingsSheetRef });
+    registerSheet({ name: "preferences", ref: preferencesSheetRef });
     registerSheet({ name: "taskSummary", ref: taskSummaryRef });
   }, [registerSheet]);
 
@@ -36,6 +39,7 @@ export function SheetManager() {
       <TaskSummarySheet ref={taskSummaryRef} onClose={onSheetClose} />
       <AllTasksSheet ref={allTasksSheetRef} onClose={onSheetClose} />
       <SettingsSheet ref={settingsSheetRef} onClose={onSheetClose} />
+      <PreferencesSheet ref={preferencesSheetRef} onClose={onSheetClose} />
     </>
   );
 }
