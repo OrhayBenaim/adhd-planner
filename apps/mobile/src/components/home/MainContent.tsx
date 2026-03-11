@@ -166,6 +166,7 @@ export function MainContent() {
         onListPress={() => openSheet("allTasks")}
         onAddPress={() => flow.start("addTask")}
         onSettingsPress={() => openSheet("settings")}
+        onProfilePress={() => openSheet("profile")}
       />
     </View>
   );
