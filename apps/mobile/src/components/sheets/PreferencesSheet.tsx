@@ -1,4 +1,4 @@
-import { forwardRef, useState, useCallback, useEffect, useRef } from "react";
+import { forwardRef, useState, useCallback, useReducer, useRef } from "react";
 import { View, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -16,6 +16,26 @@ const SEGMENTS = [
   { label: "Strengths", color: "#a2d2ff" },
 ];
 
+type EditsState = {
+  bestWorkTimes: string[];
+  difficulties: string[];
+  strengths: string[];
+} | null;
+
+type PrefsFields = { bestWorkTimes: string[]; difficulties: string[]; strengths: string[] };
+type EditsAction = { field: "bestWorkTimes" | "difficulties" | "strengths"; label: string; base: PrefsFields };
+
+function editsReducer(state: EditsState, action: EditsAction): EditsState {
+  const current = state ?? action.base;
+  const list = current[action.field];
+  return {
+    ...current,
+    [action.field]: list.includes(action.label)
+      ? list.filter((v) => v !== action.label)
+      : [...list, action.label],
+  };
+}
+
 interface Props {
   onClose: () => void;
 }
@@ -27,44 +47,45 @@ export const PreferencesSheet = forwardRef<BottomSheet, Props>(
     const updatePreferences = useUpdatePreferences();
 
     const [activeTab, setActiveTab] = useState(0);
-    const [bestWorkTimes, setBestWorkTimes] = useState<string[]>([]);
-    const [difficulties, setDifficulties] = useState<string[]>([]);
-    const [strengths, setStrengths] = useState<string[]>([]);
+    const [localEdits, dispatch] = useReducer(editsReducer, null);
+
+    // Current values: local edits take priority, then server, then empty
+    const bestWorkTimes = localEdits?.bestWorkTimes ?? preferences?.bestWorkTimes ?? [];
+    const difficulties = localEdits?.difficulties ?? preferences?.difficulties ?? [];
+    const strengths = localEdits?.strengths ?? preferences?.strengths ?? [];
 
     // Track what was last saved to avoid unnecessary mutations
-    const savedRef = useRef({ bestWorkTimes: [] as string[], difficulties: [] as string[], strengths: [] as string[] });
+    const savedRef = useRef<{ bestWorkTimes: string[]; difficulties: string[]; strengths: string[] } | null>(null);
 
-    // Populate local state when preferences load
-    useEffect(() => {
-      if (preferences) {
-        setBestWorkTimes(preferences.bestWorkTimes);
-        setDifficulties(preferences.difficulties);
-        setStrengths(preferences.strengths);
+    // Snapshot server state into savedRef on first toggle
+    const ensureSaved = useCallback(() => {
+      if (!savedRef.current) {
         savedRef.current = {
-          bestWorkTimes: preferences.bestWorkTimes,
-          difficulties: preferences.difficulties,
-          strengths: preferences.strengths,
+          bestWorkTimes: preferences?.bestWorkTimes ?? [],
+          difficulties: preferences?.difficulties ?? [],
+          strengths: preferences?.strengths ?? [],
         };
       }
     }, [preferences]);
 
     // Auto-save: compare current state with saved state and patch if changed
     const autoSave = useCallback(() => {
-      const saved = savedRef.current;
+      if (!localEdits) return;
+      const saved = savedRef.current ?? { bestWorkTimes: [], difficulties: [], strengths: [] };
       const patch: Record<string, unknown> = {};
 
-      if (JSON.stringify(bestWorkTimes) !== JSON.stringify(saved.bestWorkTimes))
-        patch.bestWorkTimes = bestWorkTimes;
-      if (JSON.stringify(difficulties) !== JSON.stringify(saved.difficulties))
-        patch.difficulties = difficulties;
-      if (JSON.stringify(strengths) !== JSON.stringify(saved.strengths))
-        patch.strengths = strengths;
+      if (JSON.stringify(localEdits.bestWorkTimes) !== JSON.stringify(saved.bestWorkTimes))
+        patch.bestWorkTimes = localEdits.bestWorkTimes;
+      if (JSON.stringify(localEdits.difficulties) !== JSON.stringify(saved.difficulties))
+        patch.difficulties = localEdits.difficulties;
+      if (JSON.stringify(localEdits.strengths) !== JSON.stringify(saved.strengths))
+        patch.strengths = localEdits.strengths;
 
       if (Object.keys(patch).length > 0) {
         updatePreferences(patch);
-        savedRef.current = { bestWorkTimes, difficulties, strengths };
+        savedRef.current = { ...localEdits };
       }
-    }, [bestWorkTimes, difficulties, strengths, updatePreferences]);
+    }, [localEdits, updatePreferences]);
 
     // Auto-save on tab switch
     const handleTabChange = useCallback(
@@ -81,23 +102,26 @@ export const PreferencesSheet = forwardRef<BottomSheet, Props>(
       onClose();
     }, [autoSave, onClose]);
 
+    const base: PrefsFields = {
+      bestWorkTimes: preferences?.bestWorkTimes ?? [],
+      difficulties: preferences?.difficulties ?? [],
+      strengths: preferences?.strengths ?? [],
+    };
+
     const toggleWorkTime = useCallback((label: string) => {
-      setBestWorkTimes((prev) =>
-        prev.includes(label) ? prev.filter((t) => t !== label) : [...prev, label]
-      );
-    }, []);
+      ensureSaved();
+      dispatch({ field: "bestWorkTimes", label, base });
+    }, [ensureSaved, base]);
 
     const toggleDifficulty = useCallback((label: string) => {
-      setDifficulties((prev) =>
-        prev.includes(label) ? prev.filter((d) => d !== label) : [...prev, label]
-      );
-    }, []);
+      ensureSaved();
+      dispatch({ field: "difficulties", label, base });
+    }, [ensureSaved, base]);
 
     const toggleStrength = useCallback((label: string) => {
-      setStrengths((prev) =>
-        prev.includes(label) ? prev.filter((s) => s !== label) : [...prev, label]
-      );
-    }, []);
+      ensureSaved();
+      dispatch({ field: "strengths", label, base });
+    }, [ensureSaved, base]);
 
     return (
       <BottomSheet
