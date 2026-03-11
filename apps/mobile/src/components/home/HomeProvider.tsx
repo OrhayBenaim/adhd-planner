@@ -8,7 +8,7 @@ import { useUserProgress } from "../../hooks/useUserProgress";
 import { useSettings } from "../../hooks/useSettings";
 import type BottomSheet from "@gorhom/bottom-sheet";
 
-export type ActiveSheet =
+ type ActiveSheet =
   | "none"
   | "addTask"
   | "selectDay"
