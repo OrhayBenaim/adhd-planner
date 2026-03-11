@@ -41,7 +41,7 @@ export function TaskCard({ task, onComplete, onLater }: Props) {
 
   if (!task) {
     return (
-      <View className="bg-white border border-[#f3f4f6] rounded-3xl px-6 py-6 items-center" style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2 }}>
+      <View className="bg-white border border-[#f3f4f6] rounded-3xl px-6 py-6 items-center" style={{ boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)" }}>
         <Text className="text-[#99a1af] text-base text-center">
           No task selected yet
         </Text>
@@ -54,7 +54,7 @@ export function TaskCard({ task, onComplete, onLater }: Props) {
       entering={FadeInRight.duration(300)}
       exiting={FadeOutLeft.duration(250)}
       className="bg-white border border-[#f3f4f6] rounded-3xl p-6"
-      style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 3, elevation: 2 }}
+      style={{ boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)" }}
     >
       <Text className="text-lg font-medium text-[#1e2939] mb-1">{task.title}</Text>
       {task.description ? (

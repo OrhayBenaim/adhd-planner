@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { View, Text, type TextInputProps } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import * as Sentry from "@sentry/react-native";
@@ -29,10 +29,6 @@ export function SignInWithEmail({
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    return () => setPassword("");
-  }, []);
 
   const handleSubmit = useCallback(async () => {
     setError(null);

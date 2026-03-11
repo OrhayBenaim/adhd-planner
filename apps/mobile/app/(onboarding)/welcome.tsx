@@ -39,7 +39,6 @@ export default function WelcomeStep() {
               placeholder="Enter your name"
               placeholderTextColor="#99a1af"
               className="w-full border border-[#e5e7eb] rounded-3xl px-5 py-5 text-lg text-[#1e2939]"
-              autoFocus
             />
           </View>
         </ScrollView>

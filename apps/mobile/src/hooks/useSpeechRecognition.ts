@@ -19,7 +19,7 @@ interface UseSpeechRecognitionResult {
   cancel: () => void;
 }
 
-export function useSpeechRecognition(): UseSpeechRecognitionResult {
+export function useSpeechRecognition(onError?: (code: ExpoSpeechRecognitionErrorCode) => void): UseSpeechRecognitionResult {
   const [state, setState] = useState<SpeechState>("idle");
   const [transcript, setTranscript] = useState("");
   const [volume, setVolume] = useState(0);
@@ -60,6 +60,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
     setState("error");
     setVolume(0);
     setError(event.error);
+    onError?.(event.error);
     if(event.error !=='aborted'){
     cancel();
 
