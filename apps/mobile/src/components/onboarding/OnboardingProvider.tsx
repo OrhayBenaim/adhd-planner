@@ -16,6 +16,7 @@ interface OnboardingContextValue {
   state: OnboardingState;
   updateField: <K extends keyof OnboardingState>(key: K, value: OnboardingState[K]) => void;
   toggleArrayItem: (key: "bestWorkTimes" | "difficulties" | "strengths", item: string) => void;
+  saveOnboardingData: () => Promise<void>;
   submitOnboarding: () => Promise<void>;
   isSubmitting: boolean;
 }
@@ -81,28 +82,32 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const saveOnboardingData = useCallback(async () => {
+    await savePreferences({
+      name: state.name,
+      bestWorkTimes: state.bestWorkTimes,
+      difficulties: state.difficulties,
+      strengths: state.strengths,
+      notificationsEnabled: state.notificationsEnabled,
+    });
+    posthog.capture("onboarding_completed");
+  }, [state, savePreferences]);
+
   const submitOnboarding = useCallback(async () => {
     setIsSubmitting(true);
     try {
-      await savePreferences({
-        name: state.name,
-        bestWorkTimes: state.bestWorkTimes,
-        difficulties: state.difficulties,
-        strengths: state.strengths,
-        notificationsEnabled: state.notificationsEnabled,
-      });
-      posthog.capture("onboarding_completed");
+      await saveOnboardingData();
       router.replace("/");
     } catch (error) {
       Sentry.captureException(error);
     } finally {
       setIsSubmitting(false);
     }
-  }, [state, savePreferences]);
+  }, [saveOnboardingData]);
 
   return (
     <OnboardingContext.Provider
-      value={{ state, updateField, toggleArrayItem, submitOnboarding, isSubmitting }}
+      value={{ state, updateField, toggleArrayItem, saveOnboardingData, submitOnboarding, isSubmitting }}
     >
       {children}
     </OnboardingContext.Provider>

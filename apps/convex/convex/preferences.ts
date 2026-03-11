@@ -116,6 +116,7 @@ export const save = mutation({
       await ctx.db.insert("userSettings", {
         userId,
         aiEnabled: true,
+        userAiEnabled: true,
         notificationsEnabled,
       });
     }

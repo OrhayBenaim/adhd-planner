@@ -27,16 +27,17 @@ export default function IndexPage() {
     }
   }, [session?.user?.id]);
 
-  
-  if(needsOnboarding) return <Redirect href={"/(onboarding)/welcome"}/>
-  // Show loader until session is ready and onboarding check is loaded
-  if (isPending || !session) {
+  // Show loader until session is ready
+  if ((isPending && !session) || needsOnboarding === undefined) {
     return (
       <View className="flex-1 bg-[#f5f7fa] items-center justify-center">
         <ActivityIndicator size="large" color="#a2d2ff" />
       </View>
     );
   }
+
+  // Only check onboarding after session is stable (undefined = still loading)
+  if (needsOnboarding === true) return <Redirect href={"/(onboarding)/welcome"} />;
 
 
   return <HomeScreen />;
