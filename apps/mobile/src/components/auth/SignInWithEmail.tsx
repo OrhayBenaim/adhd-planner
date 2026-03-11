@@ -11,6 +11,8 @@ interface SignInWithEmailProps {
   onBeforeAuth?: () => Promise<void>;
   onSwitchToSignUp?: () => void;
   InputComponent?: ComponentType<TextInputProps>;
+  title?: string;
+  subtitle?: string;
 }
 
 export function SignInWithEmail({
@@ -18,6 +20,8 @@ export function SignInWithEmail({
   onBeforeAuth,
   onSwitchToSignUp,
   InputComponent,
+  title = "Sign in",
+  subtitle = "Sign in to your existing account",
 }: SignInWithEmailProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -50,10 +54,10 @@ export function SignInWithEmail({
   return (
     <View>
       <Text className="text-xl font-semibold text-[#1e2939] mb-2">
-        Sign in
+        {title}
       </Text>
       <Text className="text-sm text-[#6a7282] mb-6">
-        Sign in to your existing account
+        {subtitle}
       </Text>
       <EmailForm
         email={email}

@@ -79,12 +79,16 @@ export default function SignInStep() {
                 onBeforeAuth={saveOnboardingData}
                 name={state.name.trim() || ""}
                 onSwitchToSignIn={() => setSubView("signInEmail")}
+                title="Create your account"
+                subtitle="Enter your details to get started"
               />
             ) : (
               <SignInWithEmail
                 onSuccess={() => {}}
                 onBeforeAuth={saveOnboardingData}
                 onSwitchToSignUp={() => setSubView("signUpEmail")}
+                title="Welcome back"
+                subtitle="Sign in to your account"
               />
             )}
           </ScrollView>
@@ -131,6 +135,8 @@ export default function SignInStep() {
             onSocial={handleSocialSignIn}
             onEmail={() => setSubView("signUpEmail")}
             busy={busy}
+            labelPrefix="Sign in with"
+            showShadow
           />
 
           {/* Don't have an account? */}

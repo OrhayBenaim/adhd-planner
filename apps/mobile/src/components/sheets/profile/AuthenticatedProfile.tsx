@@ -8,8 +8,14 @@ import { useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { authClient } from "../../../lib/authClient";
 
+interface SessionUser {
+  name?: string | null;
+  email?: string | null;
+  image?: string | null;
+}
+
 interface AuthenticatedProfileProps {
-  session: any;
+  session: { user?: SessionUser } | null;
   editName: string;
   onEditNameChange: (text: string) => void;
   onClose: () => void;
