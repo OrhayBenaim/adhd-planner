@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 
 const DEFAULTS = {
   aiEnabled: true,
+  userAiEnabled: true,
   notificationsEnabled: false,
 } as const;
 

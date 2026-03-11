@@ -24,7 +24,7 @@ export function SegmentedControl({ segments, activeIndex, onPress }: Props) {
             style={isActive ? { backgroundColor: seg.color } : undefined}
           >
             <Text
-              className="text-xs font-semibold"
+              className="text-sm font-semibold"
               style={{ color: isActive ? "#fff" : "#6a7282" }}
             >
               {seg.label}

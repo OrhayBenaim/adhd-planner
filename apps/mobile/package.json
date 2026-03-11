@@ -12,6 +12,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+     "better-auth": "1.4.9",
+    "@convex-dev/better-auth": "0.10.13",
+    "convex": "1.32.0",
+    "@better-auth/expo":"1.4.9",
     "@adhd-planner/convex": "*",
     "@adhd-planner/types": "*",
     "@expo/vector-icons": "^15.0.2",

@@ -123,7 +123,7 @@ export const PreferencesSheet = forwardRef<BottomSheet, Props>(
           />
         </View>
 
-        <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}>
+        <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, flexGrow: 1 }}>
           {activeTab === 0 && (
             <View className="pt-4 gap-3">
               {PRODUCTIVE_TIMES.map((time) => {
