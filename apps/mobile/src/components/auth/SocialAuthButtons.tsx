@@ -6,13 +6,27 @@ interface SocialAuthButtonsProps {
   onSocial: (provider: "google" | "apple") => void;
   onEmail: () => void;
   busy: boolean;
+  labelPrefix?: string;
+  showShadow?: boolean;
 }
 
 export function SocialAuthButtons({
   onSocial,
   onEmail,
   busy,
+  labelPrefix = "Continue with",
+  showShadow = false,
 }: SocialAuthButtonsProps) {
+  const shadowStyle = showShadow
+    ? {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 3,
+        elevation: 2,
+      }
+    : {};
+
   return (
     <View style={{ gap: 12 }}>
       {Platform.OS === "android" && (
@@ -28,11 +42,12 @@ export function SocialAuthButtons({
             borderWidth: 1.5,
             borderColor: "#e5e7eb",
             opacity: busy ? 0.5 : 1,
+            ...shadowStyle,
           }}
         >
           <Ionicons name="logo-google" size={24} color="#4285F4" />
           <Text className="text-base font-medium text-[#364153]">
-            {busy ? "Please wait..." : "Continue with Google"}
+            {busy ? "Please wait..." : `${labelPrefix} Google`}
           </Text>
         </Pressable>
       )}
@@ -49,11 +64,12 @@ export function SocialAuthButtons({
             borderWidth: 1.5,
             borderColor: "#e5e7eb",
             opacity: busy ? 0.5 : 1,
+            ...shadowStyle,
           }}
         >
           <Ionicons name="logo-apple" size={24} color="#000" />
           <Text className="text-base font-medium text-[#364153]">
-            {busy ? "Please wait..." : "Continue with Apple"}
+            {busy ? "Please wait..." : `${labelPrefix} Apple`}
           </Text>
         </Pressable>
       )}
@@ -69,11 +85,12 @@ export function SocialAuthButtons({
           borderWidth: 1.5,
           borderColor: "#e5e7eb",
           opacity: busy ? 0.5 : 1,
+          ...shadowStyle,
         }}
       >
         <Ionicons name="mail-outline" size={24} color="#6a7282" />
         <Text className="text-base font-medium text-[#364153]">
-          Continue with Email
+          {`${labelPrefix} Email`}
         </Text>
       </Pressable>
     </View>

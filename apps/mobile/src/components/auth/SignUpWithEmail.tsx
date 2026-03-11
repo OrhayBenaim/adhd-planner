@@ -12,6 +12,8 @@ interface SignUpWithEmailProps {
   name?: string;
   onSwitchToSignIn?: () => void;
   InputComponent?: ComponentType<TextInputProps>;
+  title?: string;
+  subtitle?: string;
 }
 
 export function SignUpWithEmail({
@@ -20,6 +22,8 @@ export function SignUpWithEmail({
   name,
   onSwitchToSignIn,
   InputComponent,
+  title = "Create your account",
+  subtitle = "Your data will be preserved",
 }: SignUpWithEmailProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,10 +57,10 @@ export function SignUpWithEmail({
   return (
     <View>
       <Text className="text-xl font-semibold text-[#1e2939] mb-2">
-        Create your account
+        {title}
       </Text>
       <Text className="text-sm text-[#6a7282] mb-6">
-        Your data will be preserved
+        {subtitle}
       </Text>
       <EmailForm
         email={email}
