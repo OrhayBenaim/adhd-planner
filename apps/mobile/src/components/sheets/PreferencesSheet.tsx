@@ -1,5 +1,5 @@
 import { forwardRef, useState, useCallback, useEffect, useRef } from "react";
-import { View, Text, TextInput, Pressable } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
@@ -11,7 +11,6 @@ import { useHome } from "../home/HomeProvider";
 import { PRODUCTIVE_TIMES, DIFFICULTIES, STRENGTHS } from "../../constants/onboarding";
 
 const SEGMENTS = [
-  { label: "Name", color: "#ffc8dd" },
   { label: "Times", color: "#cdb4db" },
   { label: "Difficulties", color: "#ffafcc" },
   { label: "Strengths", color: "#a2d2ff" },
@@ -28,23 +27,20 @@ export const PreferencesSheet = forwardRef<BottomSheet, Props>(
     const updatePreferences = useUpdatePreferences();
 
     const [activeTab, setActiveTab] = useState(0);
-    const [name, setName] = useState("");
     const [bestWorkTimes, setBestWorkTimes] = useState<string[]>([]);
     const [difficulties, setDifficulties] = useState<string[]>([]);
     const [strengths, setStrengths] = useState<string[]>([]);
 
     // Track what was last saved to avoid unnecessary mutations
-    const savedRef = useRef({ name: "", bestWorkTimes: [] as string[], difficulties: [] as string[], strengths: [] as string[] });
+    const savedRef = useRef({ bestWorkTimes: [] as string[], difficulties: [] as string[], strengths: [] as string[] });
 
     // Populate local state when preferences load
     useEffect(() => {
       if (preferences) {
-        setName(preferences.name);
         setBestWorkTimes(preferences.bestWorkTimes);
         setDifficulties(preferences.difficulties);
         setStrengths(preferences.strengths);
         savedRef.current = {
-          name: preferences.name,
           bestWorkTimes: preferences.bestWorkTimes,
           difficulties: preferences.difficulties,
           strengths: preferences.strengths,
@@ -57,7 +53,6 @@ export const PreferencesSheet = forwardRef<BottomSheet, Props>(
       const saved = savedRef.current;
       const patch: Record<string, unknown> = {};
 
-      if (name !== saved.name) patch.name = name;
       if (JSON.stringify(bestWorkTimes) !== JSON.stringify(saved.bestWorkTimes))
         patch.bestWorkTimes = bestWorkTimes;
       if (JSON.stringify(difficulties) !== JSON.stringify(saved.difficulties))
@@ -67,9 +62,9 @@ export const PreferencesSheet = forwardRef<BottomSheet, Props>(
 
       if (Object.keys(patch).length > 0) {
         updatePreferences(patch);
-        savedRef.current = { name, bestWorkTimes, difficulties, strengths };
+        savedRef.current = { bestWorkTimes, difficulties, strengths };
       }
-    }, [name, bestWorkTimes, difficulties, strengths, updatePreferences]);
+    }, [bestWorkTimes, difficulties, strengths, updatePreferences]);
 
     // Auto-save on tab switch
     const handleTabChange = useCallback(
@@ -108,7 +103,7 @@ export const PreferencesSheet = forwardRef<BottomSheet, Props>(
       <BottomSheet
         ref={ref}
         index={-1}
-        snapPoints={["85%"]}
+        snapPoints={["50%"]}
         enablePanDownToClose
         onClose={handleClose}
         backgroundStyle={{ borderTopLeftRadius: 24, borderTopRightRadius: 24 }}
@@ -130,24 +125,6 @@ export const PreferencesSheet = forwardRef<BottomSheet, Props>(
 
         <BottomSheetScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}>
           {activeTab === 0 && (
-            <View className="items-center pt-8">
-              <View className="w-20 h-20 rounded-full bg-[#ffc8dd]/20 items-center justify-center mb-6">
-                <Ionicons name="person" size={36} color="#ffc8dd" />
-              </View>
-              <Text className="text-base font-medium text-[#4a5565] mb-4">
-                What should we call you?
-              </Text>
-              <TextInput
-                value={name}
-                onChangeText={setName}
-                placeholder="Your name"
-                placeholderTextColor="#9ca3af"
-                className="w-full text-center text-xl font-semibold text-[#1e2939] bg-[#f5f7fa] rounded-2xl px-4 py-4"
-              />
-            </View>
-          )}
-
-          {activeTab === 1 && (
             <View className="pt-4 gap-3">
               {PRODUCTIVE_TIMES.map((time) => {
                 const isSelected = bestWorkTimes.includes(time.label);
@@ -181,7 +158,7 @@ export const PreferencesSheet = forwardRef<BottomSheet, Props>(
             </View>
           )}
 
-          {activeTab === 2 && (
+          {activeTab === 1 && (
             <View className="pt-4">
               <ChipGrid
                 items={DIFFICULTIES}
@@ -192,7 +169,7 @@ export const PreferencesSheet = forwardRef<BottomSheet, Props>(
             </View>
           )}
 
-          {activeTab === 3 && (
+          {activeTab === 2 && (
             <View className="pt-4">
               <ChipGrid
                 items={STRENGTHS}
