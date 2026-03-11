@@ -42,7 +42,6 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
   });
 
   useSpeechRecognitionEvent("result", (event) => {
-    console.log({ text: event.results });
     const text = event.results[0]?.transcript ?? "";
     setTranscript(text);
   });

@@ -16,6 +16,7 @@ import type * as lib_validation from "../lib/validation.js";
 import type * as migration from "../migration.js";
 import type * as preferences from "../preferences.js";
 import type * as progress from "../progress.js";
+import type * as pushTokens from "../pushTokens.js";
 import type * as settings from "../settings.js";
 import type * as tasks from "../tasks.js";
 
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   migration: typeof migration;
   preferences: typeof preferences;
   progress: typeof progress;
+  pushTokens: typeof pushTokens;
   settings: typeof settings;
   tasks: typeof tasks;
 }>;

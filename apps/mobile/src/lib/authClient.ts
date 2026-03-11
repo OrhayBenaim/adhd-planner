@@ -12,8 +12,8 @@ export const authClient = createAuthClient({
   plugins: [
     convexClient(),
     expoClient({
-      scheme: "adhd-planner",
-      storagePrefix: "adhd-planner",
+      scheme: "lullio",
+      storagePrefix: "lullio",
       storage: SecureStore,
     }),
     anonymousClient(),

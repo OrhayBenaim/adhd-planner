@@ -24,7 +24,7 @@ export interface UserPreferences {
   bestWorkTimes: string[];
   difficulties: string[];
   strengths: string[];
-  notificationsEnabled: boolean;
+  notificationsEnabled?: boolean;
   onboardingCompleted: boolean;
   _creationTime: number;
 }
