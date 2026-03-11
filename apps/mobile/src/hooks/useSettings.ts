@@ -73,7 +73,7 @@ export function useSettings() {
 
   const convexSettings = useQuery(api.settings.get);
   const setUserAiEnabled = useMutation(api.settings.setUserAiEnabled);
-  const setNotificationsEnabled = useMutation(api.preferences.setNotificationsEnabled);
+  const setNotificationsEnabled = useMutation(api.settings.setNotificationsEnabled);
 
   // Admin override — if aiEnabled is false, smart scheduling is forced off
   const adminAiEnabled = convexSettings?.aiEnabled ?? true;

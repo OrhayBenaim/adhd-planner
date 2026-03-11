@@ -17,6 +17,7 @@ export default defineSchema({
     aiEnabled: v.boolean(),
     userAiEnabled: v.optional(v.boolean()),
     modelOverride: v.optional(v.string()),
+    notificationsEnabled: v.boolean(),
   }).index("by_user", ["userId"]),
 
   userProgress: defineTable({
@@ -53,7 +54,7 @@ export default defineSchema({
     bestWorkTimes: v.array(v.string()),
     difficulties: v.array(v.string()),
     strengths: v.array(v.string()),
-    notificationsEnabled: v.boolean(),
+    notificationsEnabled: v.optional(v.boolean()),
     onboardingCompleted: v.boolean(),
   }).index("by_user", ["userId"]),
 });

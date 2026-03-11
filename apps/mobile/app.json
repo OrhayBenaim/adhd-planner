@@ -1,19 +1,29 @@
 {
   "expo": {
-    "name": "ADHD Planner",
-    "slug": "adhd-planner",
-    "scheme": "adhd-planner",
+    "name": "Lullio",
+    "slug": "lullio",
+    "scheme": "lullio",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/ios-light.png",
+    "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#BDE0FE",
+      "dark": {
+        "image": "./assets/splash-dark.png",
+        "resizeMode": "contain",
+        "backgroundColor": "#4A5565"
+      }
     },
     "ios": {
       "supportsTablet": true,
+      "icon": {
+        "light": "./assets/ios-light.png",
+        "dark": "./assets/ios-dark.png",
+        "tinted": "./assets/ios-tinted.png"
+      },
       "infoPlist": {
         "NSSpeechRecognitionUsageDescription": "Allow $(PRODUCT_NAME) to use speech recognition.",
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to use the microphone."
@@ -21,14 +31,12 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#BDE0FE"
       },
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "adjustResize",
-      "package": "com.orhaybenaim.adhdplanner",
+      "package": "com.ottersprod.lullio",
       "permissions": [
         "android.permission.RECORD_AUDIO"
       ]
@@ -57,16 +65,16 @@
           "organization": "lullio",
           "project": "react-native",
           "url": "https://sentry.io/",
-          "disableAutoUploadSourceMaps": true
+          "disableAutoUploadSourceMaps": false
         }
       ]
     ],
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "3b6e3c6a-2379-4aa5-be18-9848f5e92154"
+        "projectId": "8c79385d-5d58-4bc4-aab7-d31b537c7bad"
       }
     },
-    "owner": "orhaybenaim"
+    "owner": "ottersprod"
   }
 }

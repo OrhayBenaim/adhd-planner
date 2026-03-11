@@ -27,7 +27,7 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
 
   return betterAuth({
     secret: process.env.BETTER_AUTH_SECRET!,
-    trustedOrigins: ["adhd-planner://"],
+    trustedOrigins: ["lullio://"],
     database: authComponent.adapter(ctx),
     emailAndPassword: {
       enabled: true,

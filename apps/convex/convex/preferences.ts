@@ -54,34 +54,6 @@ export const needsOnboarding = query({
   },
 });
 
-export const setNotificationsEnabled = mutation({
-  args: { enabled: v.boolean() },
-  handler: async (ctx, { enabled }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Unauthenticated");
-
-    const userId = identity.subject;
-    const existing = await ctx.db
-      .query("userPreferences")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-
-    if (existing) {
-      await ctx.db.patch(existing._id, { notificationsEnabled: enabled });
-    } else {
-      await ctx.db.insert("userPreferences", {
-        userId,
-        name: "",
-        bestWorkTimes: [],
-        difficulties: [],
-        strengths: [],
-        notificationsEnabled: enabled,
-        onboardingCompleted: false,
-      });
-    }
-  },
-});
-
 export const getByUserId = internalQuery({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
@@ -104,27 +76,47 @@ export const save = mutation({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new ConvexError("Unauthenticated");
 
-    assertMaxLength(args.name, MAX_NAME, "name");
-    assertArrayLimits(args.difficulties, MAX_PREF_ARRAY, MAX_PREF_ITEM, "difficulties");
-    assertArrayLimits(args.strengths, MAX_PREF_ARRAY, MAX_PREF_ITEM, "strengths");
-    assertArrayLimits(args.bestWorkTimes, MAX_PREF_ARRAY, MAX_PREF_ITEM, "bestWorkTimes");
+    const { notificationsEnabled, ...prefsArgs } = args;
+
+    assertMaxLength(prefsArgs.name, MAX_NAME, "name");
+    assertArrayLimits(prefsArgs.difficulties, MAX_PREF_ARRAY, MAX_PREF_ITEM, "difficulties");
+    assertArrayLimits(prefsArgs.strengths, MAX_PREF_ARRAY, MAX_PREF_ITEM, "strengths");
+    assertArrayLimits(prefsArgs.bestWorkTimes, MAX_PREF_ARRAY, MAX_PREF_ITEM, "bestWorkTimes");
 
     const userId = identity.subject;
-    const existing = await ctx.db
+
+    // Save user preferences
+    const existingPrefs = await ctx.db
       .query("userPreferences")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
-    if (existing) {
-      await ctx.db.patch(existing._id, {
-        ...args,
+    if (existingPrefs) {
+      await ctx.db.patch(existingPrefs._id, {
+        ...prefsArgs,
         onboardingCompleted: true,
       });
     } else {
       await ctx.db.insert("userPreferences", {
         userId,
-        ...args,
+        ...prefsArgs,
         onboardingCompleted: true,
+      });
+    }
+
+    // Ensure userSettings row exists with notification preference
+    const existingSettings = await ctx.db
+      .query("userSettings")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (existingSettings) {
+      await ctx.db.patch(existingSettings._id, { notificationsEnabled });
+    } else {
+      await ctx.db.insert("userSettings", {
+        userId,
+        aiEnabled: true,
+        notificationsEnabled,
       });
     }
   },
