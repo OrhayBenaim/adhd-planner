@@ -15,6 +15,7 @@ export type ActiveSheet =
   | "selectTime"
   | "allTasks"
   | "settings"
+  | "preferences"
   | "taskSummary";
 
 type SheetEntry = { name: ActiveSheet; ref: React.RefObject<BottomSheet | null> };
