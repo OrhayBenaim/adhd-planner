@@ -32,6 +32,7 @@ export function AnonymousProfile({
           onChangeText={onEditNameChange}
           placeholder="Your name"
           placeholderTextColor="#9ca3af"
+          maxLength={100}
           style={{
             fontSize: 20,
             fontWeight: "600",

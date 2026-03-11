@@ -1,10 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { View, Text, type TextInputProps } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import * as Sentry from "@sentry/react-native";
 import { authClient } from "../../lib/authClient";
 import { EmailForm } from "./EmailForm";
 import type { ComponentType } from "react";
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 interface SignInWithEmailProps {
   onSuccess: () => void;
@@ -26,26 +28,45 @@ export function SignInWithEmail({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    return () => setPassword("");
+  }, []);
 
   const handleSubmit = useCallback(async () => {
-    if (!email.trim() || !password.trim()) return;
+    setError(null);
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail || !password) {
+      setError("Please enter your email and password.");
+      return;
+    }
+    if (!EMAIL_REGEX.test(trimmedEmail)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
     setBusy(true);
     try {
       await onBeforeAuth?.();
-      const { error } = await authClient.signIn.email({
-        email: email.trim(),
+      const { error: authError } = await authClient.signIn.email({
+        email: trimmedEmail,
         password,
       });
-      if (error) {
+      if (authError) {
         Sentry.captureMessage(
-          `Email sign-in failed: ${error.message ?? "unknown"}`,
+          `Email sign-in failed: ${authError.message ?? "unknown"}`,
           "error",
         );
+        setError("Sign-in failed. Please check your credentials and try again.");
         return;
       }
+      setPassword("");
       onSuccess();
     } catch (e) {
       Sentry.captureException(e);
+      setError("Something went wrong. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -67,6 +88,7 @@ export function SignInWithEmail({
         onSubmit={handleSubmit}
         submitLabel="Sign In"
         busy={busy}
+        error={error}
         InputComponent={InputComponent}
       />
       {onSwitchToSignUp && (
