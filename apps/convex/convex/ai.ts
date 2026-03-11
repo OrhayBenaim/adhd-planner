@@ -2,39 +2,10 @@ import { v } from "convex/values";
 import { internalAction, internalMutation, internalQuery } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { sanitizeForPrompt, MAX_TITLE } from "./lib/validation";
+import { sentryCaptureEvent } from "./lib/sentry";
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const MAX_SCORES_PER_WINDOW = 10;
-
-/** Send an event to Sentry via HTTP Store API (for use in Convex actions). */
-async function sentryCaptureEvent(
-  level: "error" | "warning",
-  message: string,
-  extra?: Record<string, unknown>,
-) {
-  const dsn = process.env.SENTRY_DSN;
-  if (!dsn) return;
-
-  const match = dsn.match(/^https:\/\/(.+?)@(.+?)\/(.+)$/);
-  if (!match) return;
-  const [, publicKey, host, projectId] = match;
-
-  const url = `https://${host}/api/${projectId}/store/?sentry_key=${publicKey}&sentry_version=7`;
-  await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      event_id: crypto.randomUUID().replace(/-/g, ""),
-      timestamp: new Date().toISOString(),
-      level,
-      logger: "convex.ai",
-      message: { formatted: message },
-      extra,
-    }),
-  }).catch(() => {
-    // Non-fatal — don't let Sentry failures affect the main flow
-  });
-}
 
 export const updateTaskDifficulty = internalMutation({
   args: {
@@ -133,7 +104,7 @@ export const scoreTaskDifficulty = internalAction({
     const settings = await ctx.runQuery(internal.ai.getUserAiEnabled, { userId });
     if (!settings) {
       await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
-      console.warn(`[AI] aiEnabled=false for user ${userId}, task ${taskId} set to 0`);
+      await sentryCaptureEvent("warning", `[AI] aiEnabled=false for user ${userId}, task ${taskId} set to 0`, { userId, taskId });
       return;
     }
 
@@ -145,14 +116,14 @@ export const scoreTaskDifficulty = internalAction({
     });
     if (recentCount >= MAX_SCORES_PER_WINDOW) {
       await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
-      console.warn(`[AI] rate limit exceeded for user ${userId}, task ${taskId} set to 0`);
+      await sentryCaptureEvent("warning", `[AI] rate limit exceeded for user ${userId}, task ${taskId} set to 0`, { userId, taskId });
       return;
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
-      console.error(`[AI] OPENROUTER_API_KEY not set, task ${taskId} set to 0`);
+      await sentryCaptureEvent("error", `[AI] OPENROUTER_API_KEY not set, task ${taskId} set to 0`, { taskId });
       return;
     }
 
@@ -271,7 +242,7 @@ export const scoreTaskDifficulty = internalAction({
         score: 0,
         reason: `Error: ${(error instanceof Error ? error.message : String(error)).slice(0, 1000)}`,
       });
-      console.error(`[AI] scoring failed for task ${taskId}:`, error);
+      await sentryCaptureEvent("error", `[AI] scoring failed for task ${taskId}: ${error instanceof Error ? error.message : String(error)}`, { taskId, userId });
     }
   },
 });

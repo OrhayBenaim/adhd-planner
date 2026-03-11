@@ -5,6 +5,7 @@ import { betterAuth } from "better-auth/minimal";
 import { expo } from "@better-auth/expo";
 import { anonymous } from "better-auth/plugins";
 import { components, internal } from "./_generated/api";
+import { sentryCaptureEvent } from "./lib/sentry";
 import type { DataModel } from "./_generated/dataModel";
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
@@ -73,8 +74,10 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
               newUserId: newUser.user.id,
             });
           } else {
-            console.error(
+            await sentryCaptureEvent(
+              "error",
               "[auth] onLinkAccount: ctx missing runMutation, migration skipped",
+              { anonymousUserId: anonymousUser.user.id, newUserId: newUser.user.id },
             );
           }
         },

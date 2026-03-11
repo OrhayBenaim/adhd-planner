@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, useState, useCallback, type ReactNode } from "react";
-import { Alert } from "react-native";
+import * as Sentry from "@sentry/react-native";
 import { useSavePreferences } from "../../hooks/usePreferences";
 import { router } from "expo-router";
 import { posthog } from "../../lib/posthog";
@@ -94,12 +94,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       posthog.capture("onboarding_completed");
       router.replace("/");
     } catch (error) {
-      if (__DEV__) console.error("[onboarding] save failed:", error);
-      Alert.alert(
-        "Something went wrong",
-        "We couldn't save your preferences. Please try again.",
-        [{ text: "OK" }],
-      );
+      Sentry.captureException(error);
     } finally {
       setIsSubmitting(false);
     }

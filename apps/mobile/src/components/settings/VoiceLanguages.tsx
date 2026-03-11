@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import * as Sentry from "@sentry/react-native";
 import {
   View,
   Text,
@@ -69,7 +70,7 @@ export function useVoiceLanguages() {
       setLocales(result.locales);
       setInstalledLocales(new Set(result.installedLocales));
     } catch (e) {
-      console.warn("Failed to fetch locales:", e);
+      Sentry.captureException(e);
     }
   }, []);
 
@@ -93,7 +94,7 @@ export function useVoiceLanguages() {
           setInstalledLocales((prev) => new Set(prev).add(locale));
         }
       } catch (e) {
-        console.warn("Download failed:", e);
+        Sentry.captureException(e);
       } finally {
         setDownloading((prev) => {
           const next = new Set(prev);

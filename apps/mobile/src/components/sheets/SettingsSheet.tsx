@@ -92,10 +92,10 @@ export const SettingsSheet = forwardRef<BottomSheet, Props>(
       >
         <BottomSheetFlatList
           data={voice.locales}
-          keyExtractor={(item) => item}
+          keyExtractor={(item: string) => item}
           ListHeaderComponent={header}
           contentContainerStyle={{ paddingBottom: 24 }}
-          renderItem={({ item: locale }) => (
+          renderItem={({ item: locale }: { item: string }) => (
             <VoiceLocaleRow
               locale={locale}
               installed={voice.installedLocales.has(locale)}
