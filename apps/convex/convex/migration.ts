@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 export const migrateUserData = internalMutation({
   args: {
@@ -27,15 +28,39 @@ export const migrateUserData = internalMutation({
       .withIndex("by_user", (q) => q.eq("userId", oldUserId))
       .first();
 
-    // Idempotency guard: if oldUser has no data, migration already ran
+    console.log(`[migration] lookup results for oldUserId "${oldUserId}":`, {
+      hasPrefs: !!oldPrefs,
+      prefsUserId: oldPrefs?.userId,
+      taskCount: oldTasks.length,
+      hasSettings: !!oldSettings,
+      hasProgress: !!oldProgress,
+    });
+
+    // Idempotency guard: if oldUser has no data, migration already ran (and was cleaned up)
     if (!oldPrefs && oldTasks.length === 0 && !oldSettings && !oldProgress) {
       console.log(`[migration] no data found for ${oldUserId}, skipping (already migrated?)`);
       return;
     }
 
+    // Also check: if new user already has preferences, migration already ran
+    // (old records may still exist before scheduled cleanup)
+    const newPrefs = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", newUserId))
+      .first();
+    if (newPrefs?.onboardingCompleted) {
+      console.log(`[migration] new user already has completed onboarding, skipping`);
+      return;
+    }
+
     // Migrate userPreferences
+    // Strategy: COPY to new user but keep old record intact.
+    // The client's Convex JWT may still reference the old userId during the
+    // session transition after account linking. If we delete/move the old record,
+    // needsOnboarding returns true with the stale JWT → false onboarding redirect.
+    // Keeping the old record prevents this race condition.
     if (oldPrefs) {
-      console.log(`[migration] found preferences for old user, migrating`);
+      console.log(`[migration] found preferences for old user, copying to new user`);
       const existing = await ctx.db
         .query("userPreferences")
         .withIndex("by_user", (q) => q.eq("userId", newUserId))
@@ -59,16 +84,22 @@ export const migrateUserData = internalMutation({
         if (Object.keys(patch).length > 0) {
           await ctx.db.patch(existing._id, patch);
         }
-        await ctx.db.delete(oldPrefs._id);
+        // Keep old record — it will be orphaned when anonymous session expires
       } else {
-        await ctx.db.patch(oldPrefs._id, { userId: newUserId });
+        // Insert a copy for the new user; keep old record for stale JWT
+        const { _id, _creationTime, userId: _oldUid, ...prefsData } = oldPrefs;
+        await ctx.db.insert("userPreferences", {
+          ...prefsData,
+          userId: newUserId,
+        });
       }
     }
 
-    // Migrate tasks
-    console.log(`[migration] migrating ${oldTasks.length} tasks`);
+    // Migrate tasks — copy to new user, keep old copies for stale JWT
+    console.log(`[migration] copying ${oldTasks.length} tasks to new user`);
     for (const task of oldTasks) {
-      await ctx.db.patch(task._id, { userId: newUserId });
+      const { _id, _creationTime, userId: _oldUid, ...taskData } = task;
+      await ctx.db.insert("tasks", { ...taskData, userId: newUserId });
     }
 
     // Migrate userSettings
@@ -77,11 +108,11 @@ export const migrateUserData = internalMutation({
         .query("userSettings")
         .withIndex("by_user", (q) => q.eq("userId", newUserId))
         .first();
-      if (existing) {
-        await ctx.db.delete(oldSettings._id);
-      } else {
-        await ctx.db.patch(oldSettings._id, { userId: newUserId });
+      if (!existing) {
+        const { _id, _creationTime, userId: _oldUid, ...settingsData } = oldSettings;
+        await ctx.db.insert("userSettings", { ...settingsData, userId: newUserId });
       }
+      // Keep old record for stale JWT
     }
 
     // Migrate userProgress
@@ -90,11 +121,53 @@ export const migrateUserData = internalMutation({
         .query("userProgress")
         .withIndex("by_user", (q) => q.eq("userId", newUserId))
         .first();
-      if (existing) {
-        await ctx.db.delete(oldProgress._id);
-      } else {
-        await ctx.db.patch(oldProgress._id, { userId: newUserId });
+      if (!existing) {
+        const { _id, _creationTime, userId: _oldUid, ...progressData } = oldProgress;
+        await ctx.db.insert("userProgress", { ...progressData, userId: newUserId });
       }
+      // Keep old record for stale JWT
     }
+
+    console.log(`[migration] migration complete: data copied from ${oldUserId} to ${newUserId}`);
+
+    // Schedule cleanup of orphaned old records after JWT has refreshed
+    await ctx.scheduler.runAfter(30_000, internal.migration.cleanupOldUserData, {
+      oldUserId,
+    });
+  },
+});
+
+export const cleanupOldUserData = internalMutation({
+  args: { oldUserId: v.string() },
+  handler: async (ctx, { oldUserId }) => {
+    console.log(`[migration] cleaning up orphaned data for ${oldUserId}`);
+
+    const prefs = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .first();
+    if (prefs) await ctx.db.delete(prefs._id);
+
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .collect();
+    for (const task of tasks) {
+      await ctx.db.delete(task._id);
+    }
+
+    const settings = await ctx.db
+      .query("userSettings")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .first();
+    if (settings) await ctx.db.delete(settings._id);
+
+    const progress = await ctx.db
+      .query("userProgress")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .first();
+    if (progress) await ctx.db.delete(progress._id);
+
+    console.log(`[migration] cleanup complete for ${oldUserId}`);
   },
 });
