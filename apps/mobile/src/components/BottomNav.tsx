@@ -13,6 +13,7 @@ interface Props {
   onListPress: () => void;
   onAddPress: () => void;
   onSettingsPress: () => void;
+  onProfilePress: () => void;
 }
 
 function NavButton({
@@ -57,10 +58,10 @@ function NavButton({
   );
 }
 
-export function BottomNav({ onListPress, onAddPress, onSettingsPress }: Props) {
+export function BottomNav({ onListPress, onAddPress, onSettingsPress, onProfilePress }: Props) {
   return (
     <View className="absolute bottom-0 left-0 right-0 bg-white/80 border-t border-[#f3f4f6] px-6 pt-6 pb-8">
-      <View className="flex-row items-center justify-center gap-16">
+      <View className="flex-row items-center justify-center gap-10">
         <NavButton onPress={onListPress}>
           <Ionicons name="list-outline" size={24} color="#364153" />
         </NavButton>
@@ -71,6 +72,10 @@ export function BottomNav({ onListPress, onAddPress, onSettingsPress }: Props) {
 
         <NavButton onPress={onSettingsPress}>
           <Ionicons name="settings-outline" size={24} color="#364153" />
+        </NavButton>
+
+        <NavButton onPress={onProfilePress}>
+          <Ionicons name="person-circle-outline" size={24} color="#364153" />
         </NavButton>
       </View>
     </View>
