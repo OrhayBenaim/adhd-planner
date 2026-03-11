@@ -68,7 +68,7 @@ export function BottomNav({ onListPress, onPreferencesPress, onAddPress, onSetti
         </NavButton>
 
         <NavButton onPress={onPreferencesPress}>
-          <Ionicons name="person-outline" size={24} color="#364153" />
+          <Ionicons name="color-palette-outline" size={24} color="#364153" />
         </NavButton>
 
         <NavButton onPress={onAddPress} gradient>
@@ -80,7 +80,7 @@ export function BottomNav({ onListPress, onPreferencesPress, onAddPress, onSetti
         </NavButton>
 
         <NavButton onPress={onProfilePress}>
-          <Ionicons name="person-circle-outline" size={24} color="#364153" />
+          <Ionicons name="person-outline" size={24} color="#364153" />
         </NavButton>
       </View>
     </View>
