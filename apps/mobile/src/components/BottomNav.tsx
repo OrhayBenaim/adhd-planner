@@ -11,6 +11,7 @@ import { SPRING_BOUNCY } from "../animations/springs";
 
 interface Props {
   onListPress: () => void;
+  onPreferencesPress: () => void;
   onAddPress: () => void;
   onSettingsPress: () => void;
 }
@@ -57,12 +58,16 @@ function NavButton({
   );
 }
 
-export function BottomNav({ onListPress, onAddPress, onSettingsPress }: Props) {
+export function BottomNav({ onListPress, onPreferencesPress, onAddPress, onSettingsPress }: Props) {
   return (
     <View className="absolute bottom-0 left-0 right-0 bg-white/80 border-t border-[#f3f4f6] px-6 pt-6 pb-8">
-      <View className="flex-row items-center justify-center gap-16">
+      <View className="flex-row items-center justify-center gap-6">
         <NavButton onPress={onListPress}>
           <Ionicons name="list-outline" size={24} color="#364153" />
+        </NavButton>
+
+        <NavButton onPress={onPreferencesPress}>
+          <Ionicons name="person-outline" size={24} color="#364153" />
         </NavButton>
 
         <NavButton onPress={onAddPress} gradient>
