@@ -41,6 +41,24 @@ export const migrateUserData = internalMutation({
         .withIndex("by_user", (q) => q.eq("userId", newUserId))
         .first();
       if (existing) {
+        // Merge critical flags from old prefs into existing new user prefs
+        const patch: Record<string, unknown> = {};
+        if (oldPrefs.onboardingCompleted && !existing.onboardingCompleted) {
+          patch.onboardingCompleted = true;
+        }
+        if (!existing.name && oldPrefs.name) patch.name = oldPrefs.name;
+        if ((!existing.bestWorkTimes || existing.bestWorkTimes.length === 0) && oldPrefs.bestWorkTimes?.length > 0) {
+          patch.bestWorkTimes = oldPrefs.bestWorkTimes;
+        }
+        if ((!existing.difficulties || existing.difficulties.length === 0) && oldPrefs.difficulties?.length > 0) {
+          patch.difficulties = oldPrefs.difficulties;
+        }
+        if ((!existing.strengths || existing.strengths.length === 0) && oldPrefs.strengths?.length > 0) {
+          patch.strengths = oldPrefs.strengths;
+        }
+        if (Object.keys(patch).length > 0) {
+          await ctx.db.patch(existing._id, patch);
+        }
         await ctx.db.delete(oldPrefs._id);
       } else {
         await ctx.db.patch(oldPrefs._id, { userId: newUserId });
