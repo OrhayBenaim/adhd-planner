@@ -11,6 +11,7 @@ interface EmailFormProps {
   onSubmit: () => void;
   submitLabel: string;
   busy: boolean;
+  error?: string | null;
   InputComponent?: ComponentType<TextInputProps>;
 }
 
@@ -22,6 +23,7 @@ export function EmailForm({
   onSubmit,
   submitLabel,
   busy,
+  error,
   InputComponent = TextInput,
 }: EmailFormProps) {
   const Input = InputComponent;
@@ -45,8 +47,15 @@ export function EmailForm({
           placeholderTextColor="#99a1af"
           className="border border-[#e5e7eb] rounded-3xl px-5 py-4 text-base text-[#1e2939]"
           secureTextEntry
+          autoComplete="password"
+          textContentType="password"
         />
       </View>
+      {error && (
+        <Text className="text-sm text-[#ff6b6b] mt-2 text-center">
+          {error}
+        </Text>
+      )}
       <LinearGradient
         colors={["#a2d2ff", "#cdb4db"]}
         start={{ x: 0, y: 0 }}
