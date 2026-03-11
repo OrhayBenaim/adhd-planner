@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, Platform, Alert, KeyboardAvoidingView, ScrollView } from "react-native";
+import { View, Text, TextInput, Pressable, Platform, KeyboardAvoidingView, ScrollView } from "react-native";
+import * as Sentry from "@sentry/react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
@@ -32,12 +33,12 @@ export default function SignInStep() {
         callbackURL: "/",
       });
       if (error) {
-        Alert.alert("Sign-in failed", error.message ?? "Please try again.");
+        Sentry.captureMessage(`Social sign-in failed: ${error.message ?? "unknown"}`, "error");
         return;
       }
       await submitOnboarding();
     } catch (e) {
-      Alert.alert("Sign-in failed", "Something went wrong. Please try again.");
+      Sentry.captureException(e);
     } finally {
       setIsSigningIn(false);
     }
@@ -45,7 +46,7 @@ export default function SignInStep() {
 
   const handleEmailAuth = async () => {
     if (!email.trim() || !password.trim()) {
-      Alert.alert("Missing fields", "Please enter your email and password.");
+      Sentry.captureMessage("Email auth attempted with missing fields", "info");
       return;
     }
 
@@ -58,7 +59,7 @@ export default function SignInStep() {
           name: state.name.trim() || "",
         });
         if (error) {
-          Alert.alert("Sign-up failed", error.message ?? "Please try again.");
+          Sentry.captureMessage(`Sign-up failed: ${error.message ?? "unknown"}`, "error");
           return;
         }
       } else {
@@ -67,13 +68,13 @@ export default function SignInStep() {
           password,
         });
         if (error) {
-          Alert.alert("Sign-in failed", error.message ?? "Please try again.");
+          Sentry.captureMessage(`Email sign-in failed: ${error.message ?? "unknown"}`, "error");
           return;
         }
       }
       await submitOnboarding();
     } catch (e) {
-      Alert.alert("Authentication failed", "Something went wrong. Please try again.");
+      Sentry.captureException(e);
     } finally {
       setIsSigningIn(false);
     }

@@ -17,7 +17,7 @@ export default defineSchema({
     aiEnabled: v.boolean(),
     userAiEnabled: v.optional(v.boolean()),
     modelOverride: v.optional(v.string()),
-    notificationsEnabled: v.boolean(),
+    notificationsEnabled: v.optional(v.boolean()),
   }).index("by_user", ["userId"]),
 
   userProgress: defineTable({

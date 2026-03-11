@@ -17,5 +17,6 @@ export const authClient = createAuthClient({
       storage: SecureStore,
     }),
     anonymousClient(),
+
   ],
 });

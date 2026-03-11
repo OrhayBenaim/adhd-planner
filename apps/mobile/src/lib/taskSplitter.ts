@@ -23,15 +23,13 @@ const MIN_WORDS = 2;
 
 /**
  * Split transcription text into individual task strings.
- * Uses locale-specific heuristics when available, falls back to universal rules.
+ * Uses English heuristics for conjunction/comma splitting.
  */
-export function splitTranscription(text: string, locale: string): string[] {
+export function splitTranscription(text: string): string[] {
   const trimmed = text.trim();
   if (!trimmed) return [];
 
-  // Normalize locale to base language code (e.g., "en-US" → "en")
-  const baseLang = locale.split("-")[0].toLowerCase();
-  const config = LOCALE_CONFIGS[baseLang];
+  const config = LOCALE_CONFIGS.en;
 
   // Try split strategies in priority order
   const numbered = splitByNumbers(trimmed);
@@ -40,14 +38,11 @@ export function splitTranscription(text: string, locale: string): string[] {
   const byLines = splitByLines(trimmed);
   if (byLines.length > 1) return filterShort(byLines);
 
-  // Locale-specific strategies
-  if (config) {
-    const byConjunctions = splitByConjunctions(trimmed, config);
-    if (byConjunctions.length > 1) return filterShort(byConjunctions);
+  const byConjunctions = splitByConjunctions(trimmed, config);
+  if (byConjunctions.length > 1) return filterShort(byConjunctions);
 
-    const byCommas = splitByCommasWithVerbs(trimmed, config);
-    if (byCommas.length > 1) return filterShort(byCommas);
-  }
+  const byCommas = splitByCommasWithVerbs(trimmed, config);
+  if (byCommas.length > 1) return filterShort(byCommas);
 
   return [trimmed];
 }

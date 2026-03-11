@@ -14,21 +14,11 @@ import { useSheetFlow, type PendingTask } from "../home/SheetFlowProvider";
 import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
 import { splitTranscription } from "../../lib/taskSplitter";
 import { posthog } from "../../lib/posthog";
-import { getLocales } from "react-native-localize";
 import { ScrollingWaveform } from "../ScrollingWaveform";
 
 let nextId = 0;
 function genId() {
   return `pending-${++nextId}`;
-}
-
-function getDeviceLocale(): string {
-  try {
-    const locales = getLocales();
-    return locales[0]?.languageCode ?? "en";
-  } catch {
-    return "en";
-  }
 }
 
 interface Props {
@@ -102,7 +92,19 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
     const handleTextConfirm = () => {
       if (!text.trim()) return;
       Keyboard.dismiss();
-      flow.setTitle(text.trim());
+
+      const splitTasks = splitTranscription(text);
+      if (splitTasks.length <= 1) {
+        flow.setTitle(splitTasks[0] || text.trim());
+      } else {
+        const pending: PendingTask[] = splitTasks.map((title) => ({
+          id: genId(),
+          title,
+          dueDate: "",
+          dueTime: "",
+        }));
+        flow.setPendingTasks(pending);
+      }
       flow.next();
       setText("");
     };
@@ -112,8 +114,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
       const spoken = transcript.trim();
       if (!spoken) return;
 
-      const locale = getDeviceLocale();
-      const splitTasks = splitTranscription(spoken, locale);
+      const splitTasks = splitTranscription(spoken);
 
       if (splitTasks.length <= 1) {
         flow.setTitle(splitTasks[0] || spoken);

@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from "react";
+import * as Sentry from "@sentry/react-native";
 import {
   ExpoSpeechRecognitionErrorCode,
   ExpoSpeechRecognitionModule,
@@ -54,7 +55,7 @@ export function useSpeechRecognition(): UseSpeechRecognitionResult {
   });
 
   useSpeechRecognitionEvent("error", (event) => {
-    console.warn("Speech recognition error:", event.error, event.message);
+    Sentry.captureMessage(`Speech recognition error: ${event.error} – ${event.message}`, "warning");
     stateRef.current = "error";
     setState("error");
     setVolume(0);

@@ -1,6 +1,6 @@
 import { useReducer, useEffect, useCallback } from "react";
-import { Alert } from "react-native";
 import * as SecureStore from "expo-secure-store";
+import * as Sentry from "@sentry/react-native";
 import * as Notifications from "expo-notifications";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
@@ -109,10 +109,7 @@ export function useSettings() {
           const { status } = await Notifications.requestPermissionsAsync();
           const granted = status === "granted";
           if (!granted) {
-            Alert.alert(
-              "Permissions required",
-              "Please enable notifications in your device settings.",
-            );
+            Sentry.captureMessage("Notification permissions denied", "info");
           }
           dispatch({ type: "notifications_requested", granted });
           await setNotificationsEnabled({ enabled: granted });

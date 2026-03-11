@@ -1,6 +1,7 @@
 import { ActivityIndicator, View } from "react-native";
+import * as Sentry from "@sentry/react-native";
 import { useEffect } from "react";
-import { Redirect, router } from "expo-router";
+import { Redirect } from "expo-router";
 import { authClient } from "../src/lib/authClient";
 import { useNeedsOnboarding } from "../src/hooks/usePreferences";
 import { HomeScreen } from "../src/components/home/HomeScreen";
@@ -13,8 +14,8 @@ export default function IndexPage() {
   // Trigger anonymous sign-in when there's no session
   useEffect(() => {
     if (!isPending && !session) {
-      authClient.signIn.anonymous().catch((e) => {
-        if (__DEV__) console.error("[index] sign-in error:", e);
+      authClient.signIn.anonymous().catch((e: unknown) => {
+        Sentry.captureException(e);
       });
     }
   }, [session, isPending]);
