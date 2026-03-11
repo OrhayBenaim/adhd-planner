@@ -8,3 +8,11 @@ export function useNeedsOnboarding() {
 export function useSavePreferences() {
   return useMutation(api.preferences.save);
 }
+
+export function useUpdatePreferences() {
+  return useMutation(api.preferences.update);
+}
+
+export function usePreferences() {
+  return useQuery(api.preferences.get);
+}

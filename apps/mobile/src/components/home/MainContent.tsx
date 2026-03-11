@@ -164,6 +164,7 @@ export function MainContent() {
       {/* Bottom nav */}
       <BottomNav
         onListPress={() => openSheet("allTasks")}
+        onPreferencesPress={() => openSheet("preferences")}
         onAddPress={() => flow.start("addTask")}
         onSettingsPress={() => openSheet("settings")}
         onProfilePress={() => openSheet("profile")}

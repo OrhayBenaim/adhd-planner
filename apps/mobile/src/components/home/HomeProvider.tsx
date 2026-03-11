@@ -15,6 +15,7 @@ export type ActiveSheet =
   | "selectTime"
   | "allTasks"
   | "settings"
+  | "preferences"
   | "taskSummary"
   | "profile";
 

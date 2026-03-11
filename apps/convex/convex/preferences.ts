@@ -121,3 +121,46 @@ export const save = mutation({
     }
   },
 });
+
+export const update = mutation({
+  args: {
+    name: v.optional(v.string()),
+    bestWorkTimes: v.optional(v.array(v.string())),
+    difficulties: v.optional(v.array(v.string())),
+    strengths: v.optional(v.array(v.string())),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new ConvexError("Unauthenticated");
+
+    const userId = identity.subject;
+    const existing = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (!existing) throw new ConvexError("No preferences found");
+
+    const patch: Record<string, unknown> = {};
+    if (args.name !== undefined) {
+      assertMaxLength(args.name, MAX_NAME, "name");
+      patch.name = args.name;
+    }
+    if (args.bestWorkTimes !== undefined) {
+      assertArrayLimits(args.bestWorkTimes, MAX_PREF_ARRAY, MAX_PREF_ITEM, "bestWorkTimes");
+      patch.bestWorkTimes = args.bestWorkTimes;
+    }
+    if (args.difficulties !== undefined) {
+      assertArrayLimits(args.difficulties, MAX_PREF_ARRAY, MAX_PREF_ITEM, "difficulties");
+      patch.difficulties = args.difficulties;
+    }
+    if (args.strengths !== undefined) {
+      assertArrayLimits(args.strengths, MAX_PREF_ARRAY, MAX_PREF_ITEM, "strengths");
+      patch.strengths = args.strengths;
+    }
+
+    if (Object.keys(patch).length > 0) {
+      await ctx.db.patch(existing._id, patch);
+    }
+  },
+});
