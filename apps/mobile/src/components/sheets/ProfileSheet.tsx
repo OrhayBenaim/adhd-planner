@@ -25,6 +25,35 @@ type SubView =
   | "signUpEmail"
   | "signInEmail";
 
+function SubViewHeader({ onBack, onClose }: { onBack: () => void; onClose: () => void }) {
+  return (
+    <View className="flex-row items-center justify-between mb-6">
+      <Pressable
+        onPress={onBack}
+        className="flex-row items-center"
+        style={{ gap: 6 }}
+      >
+        <Ionicons name="arrow-back" size={20} color="#6a7282" />
+        <Text className="text-base font-medium text-[#6a7282]">Back</Text>
+      </Pressable>
+      <Pressable onPress={onClose}>
+        <Ionicons name="close" size={24} color="#364153" />
+      </Pressable>
+    </View>
+  );
+}
+
+function MainHeader({ onClose }: { onClose: () => void }) {
+  return (
+    <View className="flex-row items-center justify-between mb-6">
+      <Text className="text-lg font-medium text-[#1e2939]">Profile</Text>
+      <Pressable onPress={onClose}>
+        <Ionicons name="close" size={24} color="#364153" />
+      </Pressable>
+    </View>
+  );
+}
+
 interface Props {
   onClose: () => void;
 }
@@ -66,101 +95,67 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
       closeSheet();
     }, [resetState, closeSheet]);
 
-    const renderHeader = (onBack: () => void) => (
-      <View className="flex-row items-center justify-between mb-6">
-        <Pressable
-          onPress={onBack}
-          className="flex-row items-center"
-          style={{ gap: 6 }}
-        >
-          <Ionicons name="arrow-back" size={20} color="#6a7282" />
-          <Text className="text-base font-medium text-[#6a7282]">Back</Text>
-        </Pressable>
-        <Pressable onPress={closeSheet}>
-          <Ionicons name="close" size={24} color="#364153" />
-        </Pressable>
-      </View>
-    );
+    let content;
 
-    const renderMainHeader = () => (
-      <View className="flex-row items-center justify-between mb-6">
-        <Text className="text-lg font-medium text-[#1e2939]">Profile</Text>
-        <Pressable onPress={closeSheet}>
-          <Ionicons name="close" size={24} color="#364153" />
-        </Pressable>
-      </View>
-    );
-
-    const renderContent = () => {
-      if (subView === "signUpEmail" && isAnonymous) {
-        return (
-          <View className="px-6 pt-6">
-            {renderHeader(() => setSubView("linkOptions"))}
-            <SignUpWithEmail
-              onSuccess={handleAuthSuccess}
-              name={userName}
-              onSwitchToSignIn={() => setSubView("signInOptions")}
-              InputComponent={BottomSheetTextInput as any}
-            />
-          </View>
-        );
-      }
-
-      if (subView === "signInEmail" && isAnonymous) {
-        return (
-          <View className="px-6 pt-6">
-            {renderHeader(() => setSubView("signInOptions"))}
-            <SignInWithEmail
-              onSuccess={handleAuthSuccess}
-              InputComponent={BottomSheetTextInput as any}
-            />
-          </View>
-        );
-      }
-
-      if (subView === "linkOptions") {
-        return (
-          <View className="px-6 pt-6">
-            {renderHeader(() => setSubView("main"))}
-            <LinkAccountOptions
-              onSuccess={handleAuthSuccess}
-              onEmailPress={() => setSubView("signUpEmail")}
-            />
-          </View>
-        );
-      }
-
-      if (subView === "signInOptions") {
-        return (
-          <View className="px-6 pt-6">
-            {renderHeader(() => setSubView("main"))}
-            <SignInOptions
-              onSuccess={handleAuthSuccess}
-              onEmailPress={() => setSubView("signInEmail")}
-            />
-          </View>
-        );
-      }
-
-      // Main view
-      if (isAnonymous) {
-        return (
-          <View className="px-6 pt-6">
-            {renderMainHeader()}
-            <AnonymousProfile
-              userName={userName}
-              editName={editName}
-              onEditNameChange={setEditName}
-              onLinkPress={() => setSubView("linkOptions")}
-              onSignInPress={() => setSubView("signInOptions")}
-            />
-          </View>
-        );
-      }
-
-      return (
+    if (subView === "signUpEmail" && isAnonymous) {
+      content = (
         <View className="px-6 pt-6">
-          {renderMainHeader()}
+          <SubViewHeader onBack={() => setSubView("linkOptions")} onClose={closeSheet} />
+          <SignUpWithEmail
+            onSuccess={handleAuthSuccess}
+            name={userName}
+            onSwitchToSignIn={() => setSubView("signInOptions")}
+            InputComponent={BottomSheetTextInput as any}
+          />
+        </View>
+      );
+    } else if (subView === "signInEmail" && isAnonymous) {
+      content = (
+        <View className="px-6 pt-6">
+          <SubViewHeader onBack={() => setSubView("signInOptions")} onClose={closeSheet} />
+          <SignInWithEmail
+            onSuccess={handleAuthSuccess}
+            InputComponent={BottomSheetTextInput as any}
+          />
+        </View>
+      );
+    } else if (subView === "linkOptions") {
+      content = (
+        <View className="px-6 pt-6">
+          <SubViewHeader onBack={() => setSubView("main")} onClose={closeSheet} />
+          <LinkAccountOptions
+            onSuccess={handleAuthSuccess}
+            onEmailPress={() => setSubView("signUpEmail")}
+          />
+        </View>
+      );
+    } else if (subView === "signInOptions") {
+      content = (
+        <View className="px-6 pt-6">
+          <SubViewHeader onBack={() => setSubView("main")} onClose={closeSheet} />
+          <SignInOptions
+            onSuccess={handleAuthSuccess}
+            onEmailPress={() => setSubView("signInEmail")}
+          />
+        </View>
+      );
+    } else if (isAnonymous) {
+      content = (
+        <View className="px-6 pt-6">
+          <MainHeader onClose={closeSheet} />
+          <AnonymousProfile
+            userName={userName}
+            editName={editName}
+            onEditNameChange={setEditName}
+            onLinkPress={() => setSubView("linkOptions")}
+            onSignInPress={() => setSubView("signInOptions")}
+          />
+        </View>
+      );
+    } else {
+      content = (
+        <View className="px-6 pt-6">
+          <MainHeader onClose={closeSheet} />
           <AuthenticatedProfile
             session={session}
             editName={editName}
@@ -169,7 +164,7 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
           />
         </View>
       );
-    };
+    }
 
     return (
       <BottomSheet
@@ -189,7 +184,7 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
         handleIndicatorStyle={{ display: "none" }}
       >
         <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 24 }}>
-          {renderContent()}
+          {content}
         </BottomSheetScrollView>
       </BottomSheet>
     );

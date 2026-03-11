@@ -1,4 +1,4 @@
-import { forwardRef, useState, useEffect, useMemo } from "react";
+import { forwardRef, useReducer, useEffect, useMemo } from "react";
 import { View, Text, Keyboard } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,6 +21,22 @@ function genId() {
   return `pending-${++nextId}`;
 }
 
+type InputState = { text: string; mode: "text" | "recording" };
+type InputAction =
+  | { type: "setText"; text: string }
+  | { type: "setMode"; mode: "text" | "recording" }
+  | { type: "startEdit"; text: string }
+  | { type: "reset" };
+
+function inputReducer(state: InputState, action: InputAction): InputState {
+  switch (action.type) {
+    case "setText": return { ...state, text: action.text };
+    case "setMode": return { ...state, mode: action.mode };
+    case "startEdit": return { text: action.text, mode: "text" };
+    case "reset": return { ...state, text: "" };
+  }
+}
+
 interface Props {
   onClose: () => void;
 }
@@ -29,8 +45,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const flow = useSheetFlow();
     const isEditing = !!flow.editingExistingTaskId;
-    const [text, setText] = useState("");
-    const [mode, setMode] = useState<"text" | "recording">("text");
+    const [{ text, mode }, dispatch] = useReducer(inputReducer, { text: "", mode: "text" });
 
     const {
       transcript,
@@ -39,27 +54,15 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
       start: startRecording,
       stop: stopRecording,
       cancel: cancelRecording,
-      error: recodingError
-    } = useSpeechRecognition();
+    } = useSpeechRecognition(() => dispatch({ type: "setMode", mode: "text" }));
 
     useEffect(() => {
       if (flow.editingExistingTaskId && flow.title) {
-        setText(flow.title);
+        dispatch({ type: "startEdit", text: flow.title });
       } else if (!flow.editingExistingTaskId) {
-        setText("");
+        dispatch({ type: "reset" });
       }
     }, [flow.editingExistingTaskId, flow.title]);
-
-    // Reset mode when sheet re-opens for editing
-    useEffect(() => {
-      if (isEditing) setMode("text");
-    }, [isEditing]);
-
-    useEffect(() =>{
-      if(recodingError){
-        setMode('text')
-      }
-    } , [recodingError])
 
     const micScale = useSharedValue(1);
     const confirmScale = useSharedValue(1);
@@ -80,13 +83,13 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
       Keyboard.dismiss();
       await requestPermissions();
       posthog.capture("voice_input_used");
-      setMode("recording");
+      dispatch({ type: "setMode", mode: "recording" });
       startRecording();
     };
 
     const handleCancelRecording = () => {
       cancelRecording();
-      setMode("text");
+      dispatch({ type: "setMode", mode: "text" });
     };
 
     const handleTextConfirm = () => {
@@ -106,7 +109,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
         flow.setPendingTasks(pending);
       }
       flow.next();
-      setText("");
+      dispatch({ type: "setText", text: "" });
     };
 
     const handleRecordingConfirm = () => {
@@ -128,12 +131,12 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
         flow.setPendingTasks(pending);
       }
       flow.next();
-      setMode("text");
+      dispatch({ type: "setMode", mode: "text" });
     };
 
     const handleClose = () => {
       if (mode === "recording") cancelRecording();
-      setMode("text");
+      dispatch({ type: "setMode", mode: "text" });
       flow.reset();
     };
 
@@ -148,7 +151,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
         enablePanDownToClose
         onClose={() => {
           if (mode === "recording") cancelRecording();
-          setMode("text");
+          dispatch({ type: "setMode", mode: "text" });
           onClose();
         }}
         keyboardBehavior="interactive"
@@ -175,7 +178,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
               placeholder="Describe your task..."
               placeholderTextColor="#99a1af"
               value={text}
-              onChangeText={setText}
+              onChangeText={(t) => dispatch({ type: "setText", text: t })}
               multiline
               textAlignVertical="top"
             />
@@ -234,11 +237,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
                       borderRadius: 9999,
                       alignItems: "center",
                       justifyContent: "center",
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 10 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 15,
-                      elevation: 8,
+                      boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)",
                     }}
                   >
                     <Ionicons
@@ -269,11 +268,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
                     alignItems: "center",
                     justifyContent: "center",
                     opacity: confirmHasContent ? 1 : 0.5,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 10 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 15,
-                    elevation: 8,
+                    boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)",
                   }}
                 >
                   <Ionicons name="checkmark" size={28} color="#fff" />

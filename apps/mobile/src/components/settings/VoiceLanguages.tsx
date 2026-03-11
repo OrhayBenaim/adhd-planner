@@ -46,7 +46,7 @@ const REGIONS: Record<string, string> = {
   VN: "Vietnam", ZA: "South Africa",
 };
 
-export function getLocaleName(code: string): string {
+function getLocaleName(code: string): string {
   const [lang, region] = code.split("-");
   const langName = LANGUAGES[lang] ?? lang;
   if (!region) return langName;

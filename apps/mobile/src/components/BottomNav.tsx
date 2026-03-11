@@ -39,7 +39,7 @@ function NavButton({
         onPressOut={() => { scale.value = withSpring(1, SPRING_BOUNCY); }}
       >
         {gradient ? (
-          <View style={{ width: 64, height: 64, borderRadius: 32, shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 15, elevation: 8 }}>
+          <View style={{ width: 64, height: 64, borderRadius: 32, boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)" }}>
             <LinearGradient
               colors={["#a2d2ff", "#cdb4db"]}
               start={{ x: 0, y: 0 }}
@@ -50,7 +50,7 @@ function NavButton({
             </LinearGradient>
           </View>
         ) : (
-          <View className="w-14 h-14 bg-white rounded-full items-center justify-center" style={{ shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 6, elevation: 4 }}>
+          <View className="w-14 h-14 bg-white rounded-full items-center justify-center" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
             {children}
           </View>
         )}

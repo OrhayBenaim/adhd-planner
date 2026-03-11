@@ -135,7 +135,7 @@ export function MainContent() {
         <View className="items-center pb-6">
           <Animated.View style={aiAnimStyle}>
             <Pressable onPress={handleAIPick}>
-              <View style={{ width: 154, height: 154, borderRadius: 77, backgroundColor: "#b9cbea", shadowColor: "#000", shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.1, shadowRadius: 15, elevation: 8 }}>
+              <View style={{ width: 154, height: 154, borderRadius: 77, backgroundColor: "#b9cbea", boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)" }}>
                 <View style={{ width: 154, height: 154, borderRadius: 77, overflow: "hidden" }}>
                   <LinearGradient
                     colors={["#a2d2ff", "#cdb4db"]}
