@@ -1,4 +1,4 @@
-import { forwardRef, useState, useCallback } from "react";
+import { forwardRef, useState, useCallback, useEffect } from "react";
 import { View, Text, Image, Alert, Platform } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
@@ -12,6 +12,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { authClient } from "../../lib/authClient";
 import { useHome } from "../home/HomeProvider";
+import { useUpdatePreferences } from "../../hooks/usePreferences";
 
 type SubView = "main" | "linkOptions" | "signInOptions" | "email";
 
@@ -34,8 +35,26 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
     const [password, setPassword] = useState("");
     const [isSignUp, setIsSignUp] = useState(true);
 
+    const updatePreferences = useUpdatePreferences();
+    const [editName, setEditName] = useState("");
+    const [nameLoaded, setNameLoaded] = useState(false);
+
     const isAnonymous = (session?.user as any)?.isAnonymous ?? true;
     const userName = preferences?.name ?? session?.user?.name ?? "User";
+
+    useEffect(() => {
+      if (preferences?.name && !nameLoaded) {
+        setEditName(preferences.name);
+        setNameLoaded(true);
+      }
+    }, [preferences, nameLoaded]);
+
+    const saveName = useCallback(() => {
+      const trimmed = editName.trim();
+      if (trimmed && trimmed !== (preferences?.name ?? "")) {
+        updatePreferences({ name: trimmed });
+      }
+    }, [editName, preferences, updatePreferences]);
 
     const resetState = useCallback(() => {
       setSubView("main");
@@ -461,9 +480,23 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
                   {userName.charAt(0).toUpperCase()}
                 </Text>
               </View>
-              <Text className="text-xl font-semibold text-[#1e2939]">
-                {userName}
-              </Text>
+              <BottomSheetTextInput
+                value={editName}
+                onChangeText={setEditName}
+                placeholder="Your name"
+                placeholderTextColor="#9ca3af"
+                style={{
+                  fontSize: 20,
+                  fontWeight: "600",
+                  color: "#1e2939",
+                  textAlign: "center",
+                  minWidth: 120,
+                  paddingVertical: 4,
+                  paddingHorizontal: 8,
+                  borderBottomWidth: 1,
+                  borderBottomColor: "#e5e7eb",
+                }}
+              />
             </View>
 
             {/* Benefit message */}
@@ -534,9 +567,23 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
                 </Text>
               </View>
             )}
-            <Text className="text-xl font-semibold text-[#1e2939]">
-              {session?.user?.name ?? "User"}
-            </Text>
+            <BottomSheetTextInput
+              value={editName}
+              onChangeText={setEditName}
+              placeholder="Your name"
+              placeholderTextColor="#9ca3af"
+              style={{
+                fontSize: 20,
+                fontWeight: "600",
+                color: "#1e2939",
+                textAlign: "center",
+                minWidth: 120,
+                paddingVertical: 4,
+                paddingHorizontal: 8,
+                borderBottomWidth: 1,
+                borderBottomColor: "#e5e7eb",
+              }}
+            />
             {session?.user?.email && (
               <Text className="text-sm text-[#6a7282] mt-1">
                 {session.user.email}
@@ -596,6 +643,7 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
         snapPoints={["65%"]}
         enablePanDownToClose
         onClose={() => {
+          saveName();
           resetState();
           onClose();
         }}
