@@ -3,3 +3,7 @@ docs/
 apps/portfolio/
 turbo.json
 **/*.md
+.turbo
+.worktrees
+.claude
+.idea
