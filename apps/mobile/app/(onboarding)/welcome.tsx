@@ -1,10 +1,16 @@
 import { View, Text, TextInput, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { router } from "expo-router";
+import { useEffect } from "react";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
+import { posthog } from "../../src/lib/posthog";
 
 export default function WelcomeStep() {
   const { state, updateField } = useOnboarding();
+
+  useEffect(() => {
+    posthog.capture("Intro page loaded");
+  }, []);
 
   return (
     <OnboardingLayout
