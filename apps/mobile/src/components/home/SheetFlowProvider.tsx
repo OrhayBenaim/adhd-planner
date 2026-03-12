@@ -173,7 +173,7 @@ export function SheetFlowProvider({ children }: { children: ReactNode }) {
           syncDispatch({ type: "RESET" });
         } else {
           closeSheet();
-          posthog.capture("task_created", { source: "text" });
+          posthog.capture("Created item", { source: "text" });
           await createTask({ title: s.title, dueDate: s.selectedDay, dueTime: s.selectedTime });
           syncDispatch({ type: "RESET" });
         }
@@ -183,7 +183,7 @@ export function SheetFlowProvider({ children }: { children: ReactNode }) {
         const tasks = stateRef.current.pendingTasks;
         closeSheet();
         for (const task of tasks) {
-          posthog.capture("task_created", { source: "voice" });
+          posthog.capture("Created item", { source: "voice" });
           await createTask({ title: task.title, dueDate: task.dueDate, dueTime: task.dueTime });
         }
         syncDispatch({ type: "RESET" });

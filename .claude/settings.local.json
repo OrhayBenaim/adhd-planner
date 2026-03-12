@@ -18,7 +18,28 @@
       "mcp__plugin_figma_figma__get_metadata",
       "Bash(xargs grep:*)",
       "Bash(grep:*)",
-      "mcp__plugin_figma_figma__get_design_context"
+      "mcp__plugin_figma_figma__get_design_context",
+      "WebSearch",
+      "WebFetch(domain:www.reddit.com)",
+      "WebFetch(domain:www.testerscommunity.com)",
+      "WebFetch(domain:ashutoshagarwal2014.medium.com)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:testerscommunity.medium.com)",
+      "WebFetch(domain:old.reddit.com)",
+      "WebFetch(domain:primetestlab.com)",
+      "WebFetch(domain:xdaforums.com)",
+      "mcp__posthog__organizations-get",
+      "mcp__posthog__projects-get",
+      "mcp__posthog__event-definitions-list",
+      "mcp__posthog__properties-list",
+      "mcp__posthog__dashboards-get-all",
+      "mcp__posthog__insights-get-all",
+      "mcp__posthog__dashboard-create",
+      "mcp__posthog__query-run",
+      "mcp__posthog__insight-create-from-query",
+      "mcp__posthog__add-insight-to-dashboard",
+      "mcp__posthog__insight-update",
+      "mcp__posthog__dashboard-get"
     ]
   }
 }
