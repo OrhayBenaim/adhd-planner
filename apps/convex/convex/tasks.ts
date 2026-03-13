@@ -116,6 +116,18 @@ export const completeTask = mutation({
       await ctx.db.insert("userProgress", { userId, ...next });
     }
 
+    // Update streak and check achievements in background
+    await ctx.scheduler.runAfter(
+      0,
+      internal.streaks.updateOnCompletion,
+      { userId },
+    );
+    await ctx.scheduler.runAfter(
+      0,
+      internal.achievementDefs.checkOnTaskComplete,
+      { userId, taskDifficulty: task.difficulty, newLevel: next.level },
+    );
+
     return { earned, leveledUp, progress: next };
   },
 });

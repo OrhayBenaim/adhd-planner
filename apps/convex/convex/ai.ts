@@ -63,6 +63,68 @@ export const accumulateUserCost = internalMutation({
   },
 });
 
+export const getMonthlyAiCost = internalQuery({
+  args: { userId: v.string(), month: v.string() },
+  handler: async (ctx, { userId, month }) => {
+    const row = await ctx.db
+      .query("monthlyAiCosts")
+      .withIndex("by_user_month", (q) =>
+        q.eq("userId", userId).eq("month", month),
+      )
+      .first();
+    return row?.totalCost ?? 0;
+  },
+});
+
+export const getMonthlyAiCostByDevice = internalQuery({
+  args: { deviceId: v.string(), month: v.string() },
+  handler: async (ctx, { deviceId, month }) => {
+    const rows = await ctx.db
+      .query("monthlyAiCosts")
+      .withIndex("by_device_month", (q) =>
+        q.eq("deviceId", deviceId).eq("month", month),
+      )
+      .collect();
+    return rows.reduce((sum, r) => sum + r.totalCost, 0);
+  },
+});
+
+export const accumulateMonthlyAiCost = internalMutation({
+  args: {
+    userId: v.string(),
+    month: v.string(),
+    cost: v.number(),
+    deviceId: v.optional(v.string()),
+  },
+  handler: async (ctx, { userId, month, cost, deviceId }) => {
+    const existing = await ctx.db
+      .query("monthlyAiCosts")
+      .withIndex("by_user_month", (q) =>
+        q.eq("userId", userId).eq("month", month),
+      )
+      .first();
+
+    if (existing) {
+      const patch: { totalCost: number; deviceId?: string } = {
+        totalCost: existing.totalCost + cost,
+      };
+      if (deviceId && !existing.deviceId) {
+        patch.deviceId = deviceId;
+      }
+      await ctx.db.patch(existing._id, patch);
+      return existing.totalCost + cost;
+    } else {
+      await ctx.db.insert("monthlyAiCosts", {
+        userId,
+        month,
+        totalCost: cost,
+        ...(deviceId ? { deviceId } : {}),
+      });
+      return cost;
+    }
+  },
+});
+
 export const getUserAiEnabled = internalQuery({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
@@ -118,6 +180,46 @@ export const scoreTaskDifficulty = internalAction({
       await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
       await sentryCaptureEvent("warning", `[AI] rate limit exceeded for user ${userId}, task ${taskId} set to 0`, { userId, taskId });
       return;
+    }
+
+    // Cost ceiling check — also check by deviceId to prevent anonymous bypass
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    let monthlyCost = await ctx.runQuery(internal.ai.getMonthlyAiCost, {
+      userId,
+      month: currentMonth,
+    });
+
+    const deviceId = await ctx.runQuery(internal.settings.getDeviceId, {
+      userId,
+    });
+    if (deviceId) {
+      const deviceCost = await ctx.runQuery(
+        internal.ai.getMonthlyAiCostByDevice,
+        { deviceId, month: currentMonth },
+      );
+      monthlyCost = Math.max(monthlyCost, deviceCost);
+    }
+
+    const premium = await ctx.runQuery(internal.subscriptions.isPremium, {
+      userId,
+    });
+    const ceilingKey = premium
+      ? "premiumTierCostCeiling"
+      : "freeTierCostCeiling";
+    const ceiling = await ctx.runQuery(internal.appConfig.get, {
+      key: ceilingKey,
+    });
+
+    let usingCredits = false;
+    if (monthlyCost >= ceiling) {
+      const creditBalance = await ctx.runQuery(internal.credits.getBalance, {
+        userId,
+      });
+      if (creditBalance <= 0) {
+        // No credits, don't score — leave difficulty at -1 (unscored)
+        return;
+      }
+      usingCredits = true;
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
@@ -220,6 +322,20 @@ export const scoreTaskDifficulty = internalAction({
       });
 
       if (costFromResponse > 0) {
+        if (usingCredits) {
+          await ctx.runMutation(internal.credits.deductCredits, {
+            userId,
+            amount: costFromResponse,
+          });
+        }
+
+        await ctx.runMutation(internal.ai.accumulateMonthlyAiCost, {
+          userId,
+          month: currentMonth,
+          cost: costFromResponse,
+          ...(deviceId ? { deviceId } : {}),
+        });
+
         const newTotal = await ctx.runMutation(internal.ai.accumulateUserCost, {
           userId, cost: costFromResponse,
         });
