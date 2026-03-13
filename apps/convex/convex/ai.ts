@@ -3,7 +3,7 @@ import { internalAction, internalMutation, internalQuery } from "./_generated/se
 import { internal } from "./_generated/api";
 import { sanitizeForPrompt, MAX_TITLE } from "./lib/validation";
 import { sentryCaptureEvent } from "./lib/sentry";
-import { AI_AI_RATE_LIMIT_WINDOW_MS, AI_AI_MAX_SCORES_PER_WINDOW } from "./lib/constants";
+import { AI_RATE_LIMIT_WINDOW_MS, AI_MAX_SCORES_PER_WINDOW } from "./lib/constants";
 
 export const updateTaskDifficulty = internalMutation({
   args: {
