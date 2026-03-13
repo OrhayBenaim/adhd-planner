@@ -30,11 +30,12 @@ export const list = query({
   args: {},
   handler: async (ctx) => {
     const userId = await requireAuth(ctx);
-    const all = await ctx.db
+    return await ctx.db
       .query("tasks")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .withIndex("by_user_completed", (q) =>
+        q.eq("userId", userId).eq("completed", false),
+      )
       .collect();
-    return all.filter((t) => !t.completed);
   },
 });
 

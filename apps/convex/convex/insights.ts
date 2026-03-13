@@ -13,19 +13,23 @@ export const getWeeklyReport = query({
     const weekAgo = new Date(now.getTime() - 7 * DAY_MS);
     const twoWeeksAgo = new Date(now.getTime() - 14 * DAY_MS);
 
-    const allTasks = await ctx.db
+    // Only fetch completed tasks from last 2 weeks (not ALL tasks ever)
+    const recentTasks = await ctx.db
       .query("tasks")
       .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("completed"), true),
+          q.gte(q.field("_creationTime"), twoWeeksAgo.getTime()),
+        ),
+      )
       .collect();
 
-    const completedThisWeek = allTasks.filter(
-      (t) => t.completed && t._creationTime >= weekAgo.getTime(),
+    const completedThisWeek = recentTasks.filter(
+      (t) => t._creationTime >= weekAgo.getTime(),
     );
-    const completedLastWeek = allTasks.filter(
-      (t) =>
-        t.completed &&
-        t._creationTime >= twoWeeksAgo.getTime() &&
-        t._creationTime < weekAgo.getTime(),
+    const completedLastWeek = recentTasks.filter(
+      (t) => t._creationTime < weekAgo.getTime(),
     );
 
     // Most productive day
