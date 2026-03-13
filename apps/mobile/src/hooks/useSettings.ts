@@ -10,6 +10,7 @@ import { setSoundEnabled } from "../lib/soundStore";
   notifications: boolean;
   soundEffects: boolean;
   smartScheduling: boolean;
+  coachNotifications: boolean;
 }
 
 const LOCAL_KEY = "@adhd_settings";
@@ -22,18 +23,21 @@ interface LocalSettings {
   notificationsDesired: boolean;
   notificationsGranted: boolean;
   soundEffects: boolean;
+  coachNotifications: boolean;
 }
 
 type SettingsAction =
   | { type: "loaded"; stored: Partial<LocalSettings>; granted: boolean }
   | { type: "notifications_requested"; granted: boolean }
   | { type: "notifications_disabled" }
-  | { type: "sound"; enabled: boolean };
+  | { type: "sound"; enabled: boolean }
+  | { type: "coach"; enabled: boolean };
 
 const initialState: LocalSettings = {
   notificationsDesired: true,
   notificationsGranted: false,
   soundEffects: true,
+  coachNotifications: false,
 };
 
 
@@ -46,6 +50,7 @@ function settingsReducer(state: LocalSettings, action: SettingsAction): LocalSet
         notificationsDesired: action.stored.notificationsDesired ?? true,
         notificationsGranted: action.granted,
         soundEffects: action.stored.soundEffects ?? true,
+        coachNotifications: action.stored.coachNotifications ?? false,
       };
       break;
     case "notifications_requested":
@@ -56,6 +61,9 @@ function settingsReducer(state: LocalSettings, action: SettingsAction): LocalSet
       break;
     case "sound":
       changedState = { soundEffects: action.enabled };
+      break;
+    case "coach":
+      changedState = { coachNotifications: action.enabled };
       break;
   }
 
@@ -99,6 +107,7 @@ export function useSettings() {
     notifications: localSettings.notificationsDesired && localSettings.notificationsGranted,
     soundEffects: localSettings.soundEffects,
     smartScheduling: adminAiEnabled && userAiEnabled,
+    coachNotifications: localSettings.coachNotifications,
   };
 
 
@@ -122,6 +131,8 @@ export function useSettings() {
       } else if (key === "soundEffects") {
         setSoundEnabled(value);
         dispatch({ type: "sound", enabled: value });
+      } else if (key === "coachNotifications") {
+        dispatch({ type: "coach", enabled: value });
       }
     },
     [setUserAiEnabled, setNotificationsEnabled],
