@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { query, internalMutation } from "./_generated/server";
 import { DAY_MS } from "./lib/constants";
-import { requireAuth } from "./lib/auth";
+import { requireAuth, checkPremium } from "./lib/auth";
 
 function getMonday(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00Z");
@@ -52,12 +52,7 @@ export const get = query({
 export const updateOnCompletion = internalMutation({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
-    // Check premium status inline (mutations can't call runQuery on other modules)
-    const sub = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-    const isPremium = sub?.isActive ?? false;
+    const isPremium = await checkPremium(ctx, userId);
 
     const today = new Date().toISOString().slice(0, 10);
     const yesterday = new Date(Date.now() - DAY_MS)
