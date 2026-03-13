@@ -26,18 +26,15 @@ export function LinkAccountOptions({
         if (provider === "google") {
           const idToken = await getGoogleIdToken();
           if (!idToken) {
-            console.warn("[LinkAccount] Google idToken was null — link aborted");
             Alert.alert("Link failed", "Could not get Google credentials. Please try again.");
             return;
           }
-          console.log("[LinkAccount] Calling authClient.signIn.social with idToken");
           const { error } = await authClient.signIn.social({
             provider: "google",
             idToken: { token: idToken },
             callbackURL: "/",
           });
           if (error) {
-            console.error("[LinkAccount] social sign-in error:", error);
             Sentry.captureMessage(
               `Link account failed: ${error.message ?? "unknown"}`,
               "error",
@@ -45,7 +42,6 @@ export function LinkAccountOptions({
             Alert.alert("Link failed", error.message ?? "An unknown error occurred.");
             return;
           }
-          console.log("[LinkAccount] social sign-in succeeded");
         } else {
           const { error } = await authClient.signIn.social({
             provider,
@@ -62,7 +58,6 @@ export function LinkAccountOptions({
         }
         onSuccess();
       } catch (e) {
-        console.error("[LinkAccount] exception:", e);
         Sentry.captureException(e);
         Alert.alert("Link failed", e instanceof Error ? e.message : "An unexpected error occurred.");
       } finally {
