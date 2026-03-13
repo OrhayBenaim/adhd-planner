@@ -4,6 +4,7 @@ import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { useHome } from "../home/HomeProvider";
+import { ProBadge } from "../ProBadge";
 import {
   useVoiceLanguages,
   VoiceLanguagesHeader,
@@ -18,9 +19,10 @@ interface SettingRowProps {
   value: boolean;
   onChange: (v: boolean) => void;
   disabled?: boolean;
+  isPro?: boolean;
 }
 
-function SettingRow({ icon, color, title, subtitle, value, onChange, disabled }: SettingRowProps) {
+function SettingRow({ icon, color, title, subtitle, value, onChange, disabled, isPro }: SettingRowProps) {
   return (
     <View
       className="bg-[#f5f7fa] rounded-3xl px-4 py-4 flex-row items-center justify-between mb-3"
@@ -34,7 +36,10 @@ function SettingRow({ icon, color, title, subtitle, value, onChange, disabled }:
           <Ionicons name={icon} size={20} color="#fff" />
         </View>
         <View>
-          <Text className="text-sm font-medium text-[#1e2939]">{title}</Text>
+          <View className="flex-row items-center gap-1.5">
+            <Text className="text-sm font-medium text-[#1e2939]">{title}</Text>
+            {isPro && <ProBadge />}
+          </View>
           <Text className="text-xs text-[#6a7282]">{subtitle}</Text>
         </View>
       </View>
