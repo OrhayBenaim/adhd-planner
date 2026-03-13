@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
+import { deleteAllUserData } from "./lib/deleteUserData";
 
 export const migrateUserData = internalMutation({
   args: {
@@ -8,8 +9,6 @@ export const migrateUserData = internalMutation({
     newUserId: v.string(),
   },
   handler: async (ctx, { oldUserId, newUserId }) => {
-    console.log(`[migration] migrating user data: ${oldUserId} → ${newUserId}`);
-
     // Pre-fetch all old user data upfront
     const oldPrefs = await ctx.db
       .query("userPreferences")
@@ -28,17 +27,8 @@ export const migrateUserData = internalMutation({
       .withIndex("by_user", (q) => q.eq("userId", oldUserId))
       .first();
 
-    console.log(`[migration] lookup results for oldUserId "${oldUserId}":`, {
-      hasPrefs: !!oldPrefs,
-      prefsUserId: oldPrefs?.userId,
-      taskCount: oldTasks.length,
-      hasSettings: !!oldSettings,
-      hasProgress: !!oldProgress,
-    });
-
     // Idempotency guard: if oldUser has no data, migration already ran (and was cleaned up)
     if (!oldPrefs && oldTasks.length === 0 && !oldSettings && !oldProgress) {
-      console.log(`[migration] no data found for ${oldUserId}, skipping (already migrated?)`);
       return;
     }
 
@@ -49,7 +39,6 @@ export const migrateUserData = internalMutation({
       .withIndex("by_user", (q) => q.eq("userId", newUserId))
       .first();
     if (newPrefs?.onboardingCompleted) {
-      console.log(`[migration] new user already has completed onboarding, skipping`);
       return;
     }
 
@@ -60,7 +49,6 @@ export const migrateUserData = internalMutation({
     // needsOnboarding returns true with the stale JWT → false onboarding redirect.
     // Keeping the old record prevents this race condition.
     if (oldPrefs) {
-      console.log(`[migration] found preferences for old user, copying to new user`);
       const existing = await ctx.db
         .query("userPreferences")
         .withIndex("by_user", (q) => q.eq("userId", newUserId))
@@ -96,7 +84,6 @@ export const migrateUserData = internalMutation({
     }
 
     // Migrate tasks — copy to new user, keep old copies for stale JWT
-    console.log(`[migration] copying ${oldTasks.length} tasks to new user`);
     for (const task of oldTasks) {
       const { _id, _creationTime, userId: _oldUid, ...taskData } = task;
       await ctx.db.insert("tasks", { ...taskData, userId: newUserId });
@@ -194,8 +181,6 @@ export const migrateUserData = internalMutation({
       }
     }
 
-    console.log(`[migration] migration complete: data copied from ${oldUserId} to ${newUserId}`);
-
     // Schedule cleanup of orphaned old records after JWT has refreshed
     await ctx.scheduler.runAfter(30_000, internal.migration.cleanupOldUserData, {
       oldUserId,
@@ -206,68 +191,6 @@ export const migrateUserData = internalMutation({
 export const cleanupOldUserData = internalMutation({
   args: { oldUserId: v.string() },
   handler: async (ctx, { oldUserId }) => {
-    console.log(`[migration] cleaning up orphaned data for ${oldUserId}`);
-
-    const prefs = await ctx.db
-      .query("userPreferences")
-      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
-      .first();
-    if (prefs) await ctx.db.delete(prefs._id);
-
-    const tasks = await ctx.db
-      .query("tasks")
-      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
-      .collect();
-    for (const task of tasks) {
-      await ctx.db.delete(task._id);
-    }
-
-    const settings = await ctx.db
-      .query("userSettings")
-      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
-      .first();
-    if (settings) await ctx.db.delete(settings._id);
-
-    const progress = await ctx.db
-      .query("userProgress")
-      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
-      .first();
-    if (progress) await ctx.db.delete(progress._id);
-
-    const oldSub = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
-      .first();
-    if (oldSub) await ctx.db.delete(oldSub._id);
-
-    const oldCredits = await ctx.db
-      .query("aiCredits")
-      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
-      .first();
-    if (oldCredits) await ctx.db.delete(oldCredits._id);
-
-    const oldStreak = await ctx.db
-      .query("streaks")
-      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
-      .first();
-    if (oldStreak) await ctx.db.delete(oldStreak._id);
-
-    const oldAchievements = await ctx.db
-      .query("achievements")
-      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
-      .collect();
-    for (const a of oldAchievements) {
-      await ctx.db.delete(a._id);
-    }
-
-    const oldCoachLogs = await ctx.db
-      .query("coachNotificationLog")
-      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
-      .collect();
-    for (const log of oldCoachLogs) {
-      await ctx.db.delete(log._id);
-    }
-
-    console.log(`[migration] cleanup complete for ${oldUserId}`);
+    await deleteAllUserData(ctx, oldUserId);
   },
 });
