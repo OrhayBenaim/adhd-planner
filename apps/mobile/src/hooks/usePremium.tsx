@@ -44,8 +44,14 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     async function init() {
       const apiKey =
         Platform.OS === "ios"
-          ? process.env.EXPO_PUBLIC_REVENUECAT_APPLE_KEY!
-          : process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY!;
+          ? process.env.EXPO_PUBLIC_REVENUECAT_APPLE_KEY
+          : process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY;
+
+      if (!apiKey) {
+        // RevenueCat not configured — skip SDK init, stay on free tier
+        setIsLoading(false);
+        return;
+      }
 
       await Purchases.configure({ apiKey });
 
@@ -73,6 +79,12 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   }, [session.data?.user?.id, registerDeviceIdMutation]);
 
   useEffect(() => {
+    const apiKey =
+      Platform.OS === "ios"
+        ? process.env.EXPO_PUBLIC_REVENUECAT_APPLE_KEY
+        : process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY;
+    if (!apiKey) return;
+
     const listener = (info: CustomerInfo) => {
       setIsPremium(!!info.entitlements.active[ENTITLEMENT_ID]);
     };

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as SecureStore from "expo-secure-store";
 
 let soundEnabled = true;
 const listeners = new Set<() => void>();
@@ -23,13 +23,14 @@ export function useSoundEnabled() {
   );
 }
 
-// Hydrate from AsyncStorage on module load
-AsyncStorage.getItem("@adhd_settings").then((raw) => {
-  if (raw) {
+// Hydrate from SecureStore on module load
+const raw = SecureStore.getItem("adhd_settings");
+if (raw) {
+  try {
     const stored = JSON.parse(raw);
     if (stored.soundEffects === false) {
       soundEnabled = false;
       emit();
     }
-  }
-});
+  } catch {}
+}

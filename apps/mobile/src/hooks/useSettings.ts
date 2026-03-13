@@ -13,7 +13,8 @@ import { setSoundEnabled } from "../lib/soundStore";
   coachNotifications: boolean;
 }
 
-const LOCAL_KEY = "@adhd_settings";
+const LOCAL_KEY = "adhd_settings";
+const OLD_KEY = "@adhd_settings";
 
 export type SettingsEntry = {
   [K in keyof Settings]: [key: K, value: Settings[K]];
@@ -92,10 +93,17 @@ export function useSettings() {
     let mounted = true;
     Promise.all([
       SecureStore.getItemAsync(LOCAL_KEY),
+      SecureStore.getItemAsync(OLD_KEY),
       Notifications.getPermissionsAsync(),
-    ]).then(([raw, { status }]) => {
+    ]).then(([raw, oldRaw, { status }]) => {
       if (!mounted) return;
-      const stored = raw ? JSON.parse(raw) : {};
+      // Migrate from old key if new key is empty
+      const effective = raw ?? oldRaw;
+      if (!raw && oldRaw) {
+        SecureStore.setItemAsync(LOCAL_KEY, oldRaw);
+        SecureStore.deleteItemAsync(OLD_KEY);
+      }
+      const stored = effective ? JSON.parse(effective) : {};
       dispatch({ type: "loaded", stored, granted: status === "granted" });
     }).catch(() => {
       // Settings load failure is non-fatal — defaults are already set
