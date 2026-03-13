@@ -226,7 +226,8 @@ export const scoreTaskDifficulty = internalAction({
         userId,
       });
       if (creditBalance <= 0) {
-        // No credits, don't score — leave difficulty at -1 (unscored)
+        // No credits, don't score — set difficulty to 0 (unscored)
+        await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
         return;
       }
       usingCredits = true;

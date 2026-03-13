@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "173317413568",
+    "project_id": "lullio-f19fa",
+    "storage_bucket": "lullio-f19fa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:173317413568:android:e857926df5a83537f4ab25",
+        "android_client_info": {
+          "package_name": "com.ottersprod.lullio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDQzjB1lfOHKabMyy9odGGeMmgk31OBEPg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
