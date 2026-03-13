@@ -4,12 +4,19 @@
   "private": true,
   "scripts": {
     "dev": "convex dev",
-    "deploy": "convex deploy"
+    "deploy": "convex deploy",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "better-auth": "1.4.9",
+    "@better-auth/expo": "1.4.9",
     "@convex-dev/better-auth": "0.10.13",
-    "convex": "1.32.0",
-    "@better-auth/expo": "1.4.9"
+    "better-auth": "1.4.9",
+    "convex": "1.32.0"
+  },
+  "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
+    "convex-test": "^0.0.41",
+    "vitest": "^3.2.1"
   }
 }
