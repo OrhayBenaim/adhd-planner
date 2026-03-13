@@ -2111,6 +2111,64 @@ git commit -m "feat: add shared types for subscriptions, streaks, achievements, 
 
 ---
 
+### Task 26: Sign-In Gate Page for Anonymous Users Attempting Purchase
+
+**Files:**
+- Create: `apps/mobile/app/sign-in-gate.tsx`
+- Modify: `apps/mobile/src/hooks/usePremium.tsx`
+
+**Step 1: Create a dedicated sign-in gate screen**
+
+When an anonymous user tries to access the paywall (purchase premium or credits), show an intermediate full-screen page that:
+- Explains they need to sign in or link an account to make purchases
+- Shows the sign-in/link-account form inline (Google, Apple, Email — reuse existing auth components from ProfileSheet)
+- On successful auth, automatically navigates to the paywall
+- Has a close/back button
+
+**Step 2: Update `showPaywall` in usePremium**
+
+Instead of callers manually checking `isAnonymous`, `showPaywall()` should handle it:
+- If anonymous → navigate to `/sign-in-gate` (which then forwards to `/paywall` after auth)
+- If authenticated → navigate to `/paywall` directly
+
+**Step 3: Commit**
+
+```bash
+git add apps/mobile/app/sign-in-gate.tsx apps/mobile/src/hooks/usePremium.tsx
+git commit -m "feat: add sign-in gate page for anonymous users attempting purchase"
+```
+
+---
+
+### Task 27: Use Device ID for Anonymous Users to Prevent Ceiling Bypass
+
+**Files:**
+- Modify: `apps/mobile/app/index.tsx` (anonymous sign-in)
+- Modify: `apps/convex/convex/ai.ts` (cost ceiling check)
+
+**Problem:** Users can create multiple anonymous accounts to bypass the AI cost ceiling.
+
+**Step 1: Use device ID as anonymous user identifier**
+
+Use `expo-application` or `expo-device` to get a stable device ID. Pass it during anonymous sign-in so the same device always gets the same anonymous user, or store it alongside the user record.
+
+**Step 2: Enforce cost ceiling by device ID (backend)**
+
+In the cost ceiling check in `ai.ts`, also check `monthlyAiCosts` by device ID (not just userId) so that even if multiple anonymous accounts are created on the same device, they share the same ceiling.
+
+**Step 3: Add deviceId field to relevant tables**
+
+Add `deviceId` to `monthlyAiCosts` table and create an index for it. The ceiling check should query by both userId and deviceId, using whichever has higher accumulated cost.
+
+**Step 4: Commit**
+
+```bash
+git add apps/mobile/app/index.tsx apps/convex/convex/ai.ts apps/convex/convex/schema.ts
+git commit -m "feat: use device ID for anonymous users to prevent cost ceiling bypass"
+```
+
+---
+
 ## Implementation Priority Order
 
 If time-constrained, implement in this order:
