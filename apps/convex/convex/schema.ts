@@ -102,4 +102,11 @@ export default defineSchema({
     userId: v.string(),
     balance: v.number(),
   }).index("by_user", ["userId"]),
+
+  coachNotificationLog: defineTable({
+    userId: v.string(),
+    date: v.string(),
+    type: v.string(),
+    message: v.string(),
+  }).index("by_user", ["userId"]),
 });

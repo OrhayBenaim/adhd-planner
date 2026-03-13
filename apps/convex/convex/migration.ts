@@ -260,6 +260,14 @@ export const cleanupOldUserData = internalMutation({
       await ctx.db.delete(a._id);
     }
 
+    const oldCoachLogs = await ctx.db
+      .query("coachNotificationLog")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .collect();
+    for (const log of oldCoachLogs) {
+      await ctx.db.delete(log._id);
+    }
+
     console.log(`[migration] cleanup complete for ${oldUserId}`);
   },
 });
