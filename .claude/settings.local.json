@@ -40,7 +40,19 @@
       "mcp__posthog__add-insight-to-dashboard",
       "mcp__posthog__insight-update",
       "mcp__posthog__dashboard-get",
-      "Bash(cd C:/Users/Orhay/git/adhd-planner/apps/mobile && npx eas-cli build --platform android --profile production --auto-submit --non-interactive)"
+      "Bash(cd C:/Users/Orhay/git/adhd-planner/apps/mobile && npx eas-cli build --platform android --profile production --auto-submit --non-interactive)",
+      "WebFetch(domain:saleksovski.github.io)",
+      "Bash(find /c/Users/Orhay/git/adhd-planner/apps/mobile/src/hooks -name \"*useTasks*\" -o -name \"*useSettings*\" -o -name \"*useUserProgress*\" 2>/dev/null | head -5)",
+      "Bash(find /c/Users/Orhay/git/adhd-planner/apps/convex/convex -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) ! -path \"*/_generated/*\" -exec wc -l {} + | sort -rn | head -20)",
+      "Bash(find /c/Users/Orhay/git/adhd-planner/apps/mobile/src -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) -exec wc -l {} +)",
+      "Bash(sort -k2 -rn)",
+      "WebFetch(domain:expo.dev)",
+      "Bash(find /c/Users/Orhay/git/adhd-planner/apps/mobile/app -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) -exec wc -l {} +)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:dev.to)",
+      "Bash(wc -l /c/Users/Orhay/git/adhd-planner/apps/mobile/src/components/sheets/*.tsx)",
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs"
     ]
   }
 }
