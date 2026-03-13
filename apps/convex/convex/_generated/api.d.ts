@@ -9,9 +9,15 @@
  */
 
 import type * as account from "../account.js";
+import type * as achievementDefs from "../achievementDefs.js";
 import type * as ai from "../ai.js";
+import type * as appConfig from "../appConfig.js";
 import type * as auth from "../auth.js";
+import type * as coachNotifications from "../coachNotifications.js";
+import type * as credits from "../credits.js";
+import type * as crons from "../crons.js";
 import type * as http from "../http.js";
+import type * as insights from "../insights.js";
 import type * as lib_levenshtein from "../lib/levenshtein.js";
 import type * as lib_sentry from "../lib/sentry.js";
 import type * as lib_validation from "../lib/validation.js";
@@ -20,6 +26,8 @@ import type * as preferences from "../preferences.js";
 import type * as progress from "../progress.js";
 import type * as pushTokens from "../pushTokens.js";
 import type * as settings from "../settings.js";
+import type * as streaks from "../streaks.js";
+import type * as subscriptions from "../subscriptions.js";
 import type * as tasks from "../tasks.js";
 
 import type {
@@ -30,9 +38,15 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   account: typeof account;
+  achievementDefs: typeof achievementDefs;
   ai: typeof ai;
+  appConfig: typeof appConfig;
   auth: typeof auth;
+  coachNotifications: typeof coachNotifications;
+  credits: typeof credits;
+  crons: typeof crons;
   http: typeof http;
+  insights: typeof insights;
   "lib/levenshtein": typeof lib_levenshtein;
   "lib/sentry": typeof lib_sentry;
   "lib/validation": typeof lib_validation;
@@ -41,6 +55,8 @@ declare const fullApi: ApiFromModules<{
   progress: typeof progress;
   pushTokens: typeof pushTokens;
   settings: typeof settings;
+  streaks: typeof streaks;
+  subscriptions: typeof subscriptions;
   tasks: typeof tasks;
 }>;
 

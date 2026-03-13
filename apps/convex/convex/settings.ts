@@ -1,5 +1,5 @@
 import { v, ConvexError } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, internalQuery } from "./_generated/server";
 
 const DEFAULTS = {
   aiEnabled: true,
@@ -41,6 +41,43 @@ export const setUserAiEnabled = mutation({
         userAiEnabled: enabled,
       });
     }
+  },
+});
+
+export const registerDeviceId = mutation({
+  args: { deviceId: v.string() },
+  handler: async (ctx, { deviceId }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new ConvexError("Unauthenticated");
+
+    const userId = identity.subject;
+    const existing = await ctx.db
+      .query("userSettings")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (existing) {
+      if (existing.deviceId !== deviceId) {
+        await ctx.db.patch(existing._id, { deviceId });
+      }
+    } else {
+      await ctx.db.insert("userSettings", {
+        userId,
+        ...DEFAULTS,
+        deviceId,
+      });
+    }
+  },
+});
+
+export const getDeviceId = internalQuery({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    const settings = await ctx.db
+      .query("userSettings")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    return settings?.deviceId ?? null;
   },
 });
 

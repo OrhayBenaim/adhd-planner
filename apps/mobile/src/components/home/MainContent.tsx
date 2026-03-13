@@ -12,13 +12,19 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
+import { useQuery } from "convex/react";
+import { api } from "@adhd-planner/convex/convex/_generated/api";
+
 import { XPBar } from "../XPBar";
 import { MoodSlider } from "../MoodSlider";
 import { TaskCard } from "../TaskCard";
 import { BottomNav } from "../BottomNav";
 import { PointsToast } from "../PointsToast";
+import { StreakBadge } from "../StreakBadge";
+import { AiCeilingBanner } from "../AiCeilingBanner";
 import { useHome } from "./HomeProvider";
 import { useSheetFlow } from "./SheetFlowProvider";
+import { usePremium } from "../../hooks/usePremium";
 import { posthog } from "../../lib/posthog";
 
 export function MainContent() {
@@ -36,6 +42,8 @@ export function MainContent() {
     openSheet,
   } = useHome();
   const flow = useSheetFlow();
+  const { isPremium, showPaywall } = usePremium();
+  const streakData = useQuery(api.streaks.get);
 
   // AI button animation — local to this component
   const aiScale = useSharedValue(1);
@@ -114,17 +122,29 @@ export function MainContent() {
           <Text className="text-sm text-[#6a7282] text-center mt-1">Let's find the perfect task for you</Text>
         </View>
 
-        {/* XP bar */}
-        <View className="py-6">
-          <View className="relative">
-            <XPBar progress={progress} />
-            <PointsToast
-              points={toast.points}
-              visible={toast.visible}
-              onDone={hideToast}
-            />
+        {/* XP bar — tap opens insights for premium */}
+        <Pressable
+          onPress={isPremium ? () => openSheet("insights") : undefined}
+        >
+          <View className="py-6">
+            <View className="relative">
+              <XPBar progress={progress} />
+              <PointsToast
+                points={toast.points}
+                visible={toast.visible}
+                onDone={hideToast}
+              />
+            </View>
           </View>
-        </View>
+        </Pressable>
+
+        {/* Streak badge (premium) */}
+        {isPremium && streakData && (
+          <StreakBadge
+            streak={streakData.currentStreak}
+            onPress={() => openSheet("achievements")}
+          />
+        )}
 
         {/* Mood slider */}
         <View className="px-6 pt-2 pb-8">
@@ -150,6 +170,13 @@ export function MainContent() {
             </Pressable>
           </Animated.View>
         </View>
+
+        {/* AI ceiling banner */}
+        {tasks.some((t) => !t.completed && t.difficulty === -1) && (
+          <View className="px-6 pb-2">
+            <AiCeilingBanner onUpgrade={showPaywall} />
+          </View>
+        )}
 
         {/* Task card */}
         <View className="px-6">

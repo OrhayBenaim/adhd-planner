@@ -128,6 +128,72 @@ export const migrateUserData = internalMutation({
       // Keep old record for stale JWT
     }
 
+    // Migrate subscriptions
+    const oldSub = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .first();
+    if (oldSub) {
+      const existingSub = await ctx.db
+        .query("subscriptions")
+        .withIndex("by_user", (q) => q.eq("userId", newUserId))
+        .first();
+      if (!existingSub) {
+        const { _id, _creationTime, userId: _oldUid, ...subData } = oldSub;
+        await ctx.db.insert("subscriptions", { ...subData, userId: newUserId });
+      }
+    }
+
+    // Migrate aiCredits
+    const oldCredits = await ctx.db
+      .query("aiCredits")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .first();
+    if (oldCredits) {
+      const existingCredits = await ctx.db
+        .query("aiCredits")
+        .withIndex("by_user", (q) => q.eq("userId", newUserId))
+        .first();
+      if (!existingCredits) {
+        const { _id, _creationTime, userId: _oldUid, ...creditData } = oldCredits;
+        await ctx.db.insert("aiCredits", { ...creditData, userId: newUserId });
+      }
+    }
+
+    // Migrate streaks
+    const oldStreak = await ctx.db
+      .query("streaks")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .first();
+    if (oldStreak) {
+      const existingStreak = await ctx.db
+        .query("streaks")
+        .withIndex("by_user", (q) => q.eq("userId", newUserId))
+        .first();
+      if (!existingStreak) {
+        const { _id, _creationTime, userId: _oldUid, ...streakData } = oldStreak;
+        await ctx.db.insert("streaks", { ...streakData, userId: newUserId });
+      }
+    }
+
+    // Migrate achievements
+    const oldAchievements = await ctx.db
+      .query("achievements")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .collect();
+    for (const ach of oldAchievements) {
+      const exists = await ctx.db
+        .query("achievements")
+        .withIndex("by_user_achievement", (q) =>
+          q.eq("userId", newUserId).eq("achievementId", ach.achievementId),
+        )
+        .first();
+      if (!exists) {
+        const { _id, _creationTime, userId: _oldUid, ...achData } = ach;
+        await ctx.db.insert("achievements", { ...achData, userId: newUserId });
+      }
+    }
+
     console.log(`[migration] migration complete: data copied from ${oldUserId} to ${newUserId}`);
 
     // Schedule cleanup of orphaned old records after JWT has refreshed
@@ -167,6 +233,40 @@ export const cleanupOldUserData = internalMutation({
       .withIndex("by_user", (q) => q.eq("userId", oldUserId))
       .first();
     if (progress) await ctx.db.delete(progress._id);
+
+    const oldSub = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .first();
+    if (oldSub) await ctx.db.delete(oldSub._id);
+
+    const oldCredits = await ctx.db
+      .query("aiCredits")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .first();
+    if (oldCredits) await ctx.db.delete(oldCredits._id);
+
+    const oldStreak = await ctx.db
+      .query("streaks")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .first();
+    if (oldStreak) await ctx.db.delete(oldStreak._id);
+
+    const oldAchievements = await ctx.db
+      .query("achievements")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .collect();
+    for (const a of oldAchievements) {
+      await ctx.db.delete(a._id);
+    }
+
+    const oldCoachLogs = await ctx.db
+      .query("coachNotificationLog")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .collect();
+    for (const log of oldCoachLogs) {
+      await ctx.db.delete(log._id);
+    }
 
     console.log(`[migration] cleanup complete for ${oldUserId}`);
   },
