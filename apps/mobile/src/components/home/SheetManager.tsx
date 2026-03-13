@@ -9,6 +9,7 @@ import { SettingsSheet } from "../sheets/SettingsSheet";
 import { PreferencesSheet } from "../sheets/PreferencesSheet";
 import { TaskSummarySheet } from "../sheets/TaskSummarySheet";
 import { ProfileSheet } from "../sheets/ProfileSheet";
+import { AchievementsSheet } from "../sheets/AchievementsSheet";
 import { useHome } from "./HomeProvider";
 
 export function SheetManager() {
@@ -22,6 +23,7 @@ export function SheetManager() {
   const preferencesSheetRef = useRef<BottomSheet>(null);
   const taskSummaryRef = useRef<BottomSheet>(null);
   const profileSheetRef = useRef<BottomSheet>(null);
+  const achievementsSheetRef = useRef<BottomSheet>(null);
 
   useEffect(() => {
     registerSheet({ name: "addTask", ref: addSheetRef });
@@ -32,6 +34,7 @@ export function SheetManager() {
     registerSheet({ name: "preferences", ref: preferencesSheetRef });
     registerSheet({ name: "taskSummary", ref: taskSummaryRef });
     registerSheet({ name: "profile", ref: profileSheetRef });
+    registerSheet({ name: "achievements", ref: achievementsSheetRef });
   }, [registerSheet]);
 
   return (
@@ -44,6 +47,7 @@ export function SheetManager() {
       <SettingsSheet ref={settingsSheetRef} onClose={onSheetClose} />
       <PreferencesSheet ref={preferencesSheetRef} onClose={onSheetClose} />
       <ProfileSheet ref={profileSheetRef} onClose={onSheetClose} />
+      <AchievementsSheet ref={achievementsSheetRef} onClose={onSheetClose} />
     </>
   );
 }
