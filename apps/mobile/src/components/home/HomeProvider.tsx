@@ -18,7 +18,8 @@ import type BottomSheet from "@gorhom/bottom-sheet";
   | "preferences"
   | "taskSummary"
   | "profile"
-  | "achievements";
+  | "achievements"
+  | "insights";
 
 type SheetEntry = { name: ActiveSheet; ref: React.RefObject<BottomSheet | null> };
 
