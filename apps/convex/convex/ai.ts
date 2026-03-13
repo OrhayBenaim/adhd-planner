@@ -171,9 +171,16 @@ export const scoreTaskDifficulty = internalAction({
       key: ceilingKey,
     });
 
+    let usingCredits = false;
     if (monthlyCost >= ceiling) {
-      // Don't score — user hit their ceiling. Leave difficulty at -1 (unscored).
-      return;
+      const creditBalance = await ctx.runQuery(internal.credits.getBalance, {
+        userId,
+      });
+      if (creditBalance <= 0) {
+        // No credits, don't score — leave difficulty at -1 (unscored)
+        return;
+      }
+      usingCredits = true;
     }
 
     const apiKey = process.env.OPENROUTER_API_KEY;
@@ -276,6 +283,13 @@ export const scoreTaskDifficulty = internalAction({
       });
 
       if (costFromResponse > 0) {
+        if (usingCredits) {
+          await ctx.runMutation(internal.credits.deductCredits, {
+            userId,
+            amount: costFromResponse,
+          });
+        }
+
         await ctx.runMutation(internal.ai.accumulateMonthlyAiCost, {
           userId,
           month: currentMonth,
