@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const WIDGET_KEY = "@widget_data";
 
-export interface WidgetData {
+interface WidgetData {
   streak: number;
   suggestedTask: string | null;
   level: number;

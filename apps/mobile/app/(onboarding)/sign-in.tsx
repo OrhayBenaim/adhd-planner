@@ -225,11 +225,7 @@ export default function SignInStep() {
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 24,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.1,
-            shadowRadius: 15,
-            elevation: 6,
+            boxShadow: "0px 10px 15px rgba(0,0,0,0.1)",
           }}
         >
           <Ionicons name="cloud-outline" size={28} color="#fff" />
@@ -253,11 +249,7 @@ export default function SignInStep() {
             height: 56,
             borderRadius: 9999,
             marginBottom: 16,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.1,
-            shadowRadius: 15,
-            elevation: 6,
+            boxShadow: "0px 10px 15px rgba(0,0,0,0.1)",
           }}
         >
           <Pressable

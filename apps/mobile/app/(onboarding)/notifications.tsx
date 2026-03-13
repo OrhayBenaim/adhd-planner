@@ -53,11 +53,7 @@ export default function NotificationsStep() {
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 24,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.1,
-            shadowRadius: 15,
-            elevation: 6,
+            boxShadow: "0px 10px 15px rgba(0,0,0,0.1)",
           }}
         >
           <Ionicons name="notifications-outline" size={28} color="#fff" />
@@ -80,11 +76,7 @@ export default function NotificationsStep() {
             height: 56,
             borderRadius: 9999,
             marginBottom: 16,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.15,
-            shadowRadius: 8,
-            elevation: 6,
+            boxShadow: "0px 4px 8px rgba(0,0,0,0.15)",
           }}
         >
           <Pressable onPress={handleEnable} className="flex-1 items-center justify-center">

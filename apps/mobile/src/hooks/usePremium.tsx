@@ -2,7 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
-  useState,
+  useReducer,
   useCallback,
   type ReactNode,
 } from "react";
@@ -15,6 +15,27 @@ import { authClient } from "../lib/authClient";
 import { getDeviceId } from "../lib/deviceId";
 
 const ENTITLEMENT_ID = "premium";
+
+interface PremiumState {
+  isPremium: boolean;
+  isLoading: boolean;
+}
+
+type PremiumAction =
+  | { type: "INIT_DONE"; isPremium: boolean }
+  | { type: "INIT_FAILED" }
+  | { type: "PREMIUM_CHANGED"; isPremium: boolean };
+
+function premiumReducer(_state: PremiumState, action: PremiumAction): PremiumState {
+  switch (action.type) {
+    case "INIT_DONE":
+      return { isPremium: action.isPremium, isLoading: false };
+    case "INIT_FAILED":
+      return { isPremium: false, isLoading: false };
+    case "PREMIUM_CHANGED":
+      return { ..._state, isPremium: action.isPremium };
+  }
+}
 
 interface PremiumContextValue {
   isPremium: boolean;
@@ -32,8 +53,10 @@ export function usePremium() {
 }
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
-  const [isPremium, setIsPremium] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [{ isPremium, isLoading }, dispatch] = useReducer(premiumReducer, {
+    isPremium: false,
+    isLoading: true,
+  });
 
   const session = authClient.useSession();
   const isAnonymous =
@@ -49,7 +72,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
 
       if (!apiKey) {
         // RevenueCat not configured — skip SDK init, stay on free tier
-        setIsLoading(false);
+        dispatch({ type: "INIT_FAILED" });
         return;
       }
 
@@ -62,12 +85,13 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       }
 
       const info = await Purchases.getCustomerInfo();
-      setIsPremium(!!info.entitlements.active[ENTITLEMENT_ID]);
-
-      setIsLoading(false);
+      dispatch({
+        type: "INIT_DONE",
+        isPremium: !!info.entitlements.active[ENTITLEMENT_ID],
+      });
     }
 
-    init().catch(() => setIsLoading(false));
+    init().catch(() => dispatch({ type: "INIT_FAILED" }));
   }, [session.data?.user?.id, isAnonymous]);
 
   // Register device ID with backend for cost ceiling enforcement
@@ -86,7 +110,10 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     if (!apiKey) return;
 
     const listener = (info: CustomerInfo) => {
-      setIsPremium(!!info.entitlements.active[ENTITLEMENT_ID]);
+      dispatch({
+        type: "PREMIUM_CHANGED",
+        isPremium: !!info.entitlements.active[ENTITLEMENT_ID],
+      });
     };
     Purchases.addCustomerInfoUpdateListener(listener);
     return () => { Purchases.removeCustomerInfoUpdateListener(listener); };
