@@ -1,5 +1,6 @@
-import { v, ConvexError } from "convex/values";
+import { v } from "convex/values";
 import { mutation } from "./_generated/server";
+import { requireAuth } from "./lib/auth";
 
 export const register = mutation({
   args: {
@@ -7,9 +8,7 @@ export const register = mutation({
     platform: v.string(),
   },
   handler: async (ctx, { token, platform }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Unauthenticated");
-    const userId = identity.subject;
+    const userId = await requireAuth(ctx);
 
     const existing = await ctx.db
       .query("pushTokens")

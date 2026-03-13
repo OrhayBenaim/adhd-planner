@@ -1,5 +1,6 @@
-import { v, ConvexError } from "convex/values";
+import { v } from "convex/values";
 import { mutation, query, internalQuery } from "./_generated/server";
+import { requireAuth } from "./lib/auth";
 
 const DEFAULTS = {
   aiEnabled: true,
@@ -10,12 +11,10 @@ const DEFAULTS = {
 export const get = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Unauthenticated");
-
+    const userId = await requireAuth(ctx);
     return await ctx.db
       .query("userSettings")
-      .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
   },
 });
@@ -23,10 +22,7 @@ export const get = query({
 export const setUserAiEnabled = mutation({
   args: { enabled: v.boolean() },
   handler: async (ctx, { enabled }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Unauthenticated");
-
-    const userId = identity.subject;
+    const userId = await requireAuth(ctx);
     const existing = await ctx.db
       .query("userSettings")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -47,10 +43,7 @@ export const setUserAiEnabled = mutation({
 export const registerDeviceId = mutation({
   args: { deviceId: v.string() },
   handler: async (ctx, { deviceId }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Unauthenticated");
-
-    const userId = identity.subject;
+    const userId = await requireAuth(ctx);
     const existing = await ctx.db
       .query("userSettings")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -84,10 +77,7 @@ export const getDeviceId = internalQuery({
 export const setNotificationsEnabled = mutation({
   args: { enabled: v.boolean() },
   handler: async (ctx, { enabled }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Unauthenticated");
-
-    const userId = identity.subject;
+    const userId = await requireAuth(ctx);
     const existing = await ctx.db
       .query("userSettings")
       .withIndex("by_user", (q) => q.eq("userId", userId))

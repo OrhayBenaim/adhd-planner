@@ -7,16 +7,15 @@ import {
   MAX_PREF_ITEM,
   MAX_PREF_ARRAY,
 } from "./lib/validation";
+import { requireAuth } from "./lib/auth";
 
 export const get = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Unauthenticated");
-
+    const userId = await requireAuth(ctx);
     return await ctx.db
       .query("userPreferences")
-      .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
   },
 });
@@ -73,8 +72,7 @@ export const save = mutation({
     notificationsEnabled: v.boolean(),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Unauthenticated");
+    const userId = await requireAuth(ctx);
 
     const { notificationsEnabled, ...prefsArgs } = args;
 
@@ -82,8 +80,6 @@ export const save = mutation({
     assertArrayLimits(prefsArgs.difficulties, MAX_PREF_ARRAY, MAX_PREF_ITEM, "difficulties");
     assertArrayLimits(prefsArgs.strengths, MAX_PREF_ARRAY, MAX_PREF_ITEM, "strengths");
     assertArrayLimits(prefsArgs.bestWorkTimes, MAX_PREF_ARRAY, MAX_PREF_ITEM, "bestWorkTimes");
-
-    const userId = identity.subject;
 
     // Save user preferences
     const existingPrefs = await ctx.db
@@ -131,10 +127,7 @@ export const update = mutation({
     strengths: v.optional(v.array(v.string())),
   },
   handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Unauthenticated");
-
-    const userId = identity.subject;
+    const userId = await requireAuth(ctx);
     const existing = await ctx.db
       .query("userPreferences")
       .withIndex("by_user", (q) => q.eq("userId", userId))

@@ -1,8 +1,7 @@
 // apps/convex/convex/tasks.ts
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { ConvexError } from "convex/values";
 import {
   assertMaxLength,
   assertDateFormat,
@@ -11,14 +10,9 @@ import {
   MAX_DESCRIPTION,
 } from "./lib/validation";
 import { normalizedLevenshtein } from "./lib/levenshtein";
+import { requireAuth } from "./lib/auth";
 
 const RESCORE_THRESHOLD = 0.3;
-
-async function requireAuth(ctx: { auth: { getUserIdentity(): Promise<{ subject: string } | null> } }) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) throw new ConvexError("Unauthenticated");
-  return identity.subject;
-}
 
 function calcPointsEarned(difficulty: number): number {
   return Math.round(difficulty / 10) + 1;
