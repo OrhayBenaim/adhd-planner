@@ -1,9 +1,10 @@
-// apps/convex/convex/http.ts
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { authComponent, createAuth } from "./auth";
-import { RC_ACTIVE_EVENTS, RC_INACTIVE_EVENTS, CREDIT_MULTIPLIERS } from "./lib/constants";
+import { validateWebhookPayload } from "./lib/webhook";
+import { CREDIT_MULTIPLIERS } from "./lib/constants";
+import { sentryCaptureEvent } from "./lib/sentry";
 
 const http = httpRouter();
 
@@ -13,58 +14,72 @@ http.route({
   path: "/webhooks/revenuecat",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
-    const authHeader = request.headers.get("Authorization");
+    // Fail closed: reject if secret is not configured
     const expectedToken = process.env.REVENUECAT_WEBHOOK_SECRET;
-    if (!expectedToken || authHeader !== `Bearer ${expectedToken}`) {
+    if (!expectedToken) {
+      await sentryCaptureEvent(
+        "error",
+        "[Webhook] REVENUECAT_WEBHOOK_SECRET is not configured",
+        {},
+      );
+      return new Response("Server misconfigured", { status: 500 });
+    }
+
+    const authHeader = request.headers.get("Authorization");
+    if (authHeader !== `Bearer ${expectedToken}`) {
+      await sentryCaptureEvent("warning", "[Webhook] Unauthorized request", {
+        ip: request.headers.get("x-forwarded-for"),
+      });
       return new Response("Unauthorized", { status: 401 });
     }
 
-    const body = await request.json();
-    const event = body.event;
-
-    if (!event) {
-      return new Response("No event", { status: 400 });
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response("Invalid JSON", { status: 400 });
     }
 
-    const appUserId = event.app_user_id;
-    const rcId =
-      event.id ?? event.original_transaction_id ?? appUserId;
-
-    const eventType = event.type;
-    let isActive: boolean | null = null;
-
-    if ((RC_ACTIVE_EVENTS as readonly string[]).includes(eventType)) {
-      isActive = true;
-    } else if ((RC_INACTIVE_EVENTS as readonly string[]).includes(eventType)) {
-      isActive = false;
+    const validated = validateWebhookPayload(body);
+    if (validated === null) {
+      await sentryCaptureEvent("warning", "[Webhook] Invalid payload", {
+        body: JSON.stringify(body).slice(0, 500),
+      });
+      return new Response("Invalid payload", { status: 400 });
     }
 
-    if (isActive !== null && appUserId) {
+    if (validated.kind === "ignored") {
+      return new Response("OK", { status: 200 });
+    }
+
+    if (validated.kind === "subscription") {
+      const d = validated.data;
       await ctx.runMutation(internal.subscriptions.upsertFromWebhook, {
-        userId: appUserId,
-        revenueCatId: rcId,
+        userId: d.appUserId,
+        revenueCatId: d.rcId,
         entitlement: "premium",
-        isActive,
-        expiresAt: event.expiration_at_ms
-          ? new Date(event.expiration_at_ms).toISOString()
+        isActive: d.classification === "active",
+        expiresAt: d.expirationAtMs
+          ? new Date(d.expirationAtMs).toISOString()
           : undefined,
-        productId: event.product_id,
-        periodType: event.period_type,
+        productId: d.productId,
+        periodType: d.periodType,
       });
     }
 
-    // Handle consumable (AI credits) purchases
-    if (eventType === "NON_RENEWING_PURCHASE" && appUserId) {
-      const productId = event.product_id ?? "";
+    if (validated.kind === "credit") {
+      const d = validated.data;
       const creditValue = await ctx.runQuery(internal.appConfig.get, {
         key: "aiCreditValue",
       });
-      const tier = Object.keys(CREDIT_MULTIPLIERS).find((t) => productId.includes(t));
+      const tier = Object.keys(CREDIT_MULTIPLIERS).find((t) =>
+        d.productId.includes(t),
+      );
       const creditAmount = tier ? creditValue * CREDIT_MULTIPLIERS[tier] : 0;
 
       if (creditAmount > 0) {
         await ctx.runMutation(internal.credits.addCredits, {
-          userId: appUserId,
+          userId: d.appUserId,
           amount: creditAmount,
         });
       }
