@@ -57,4 +57,44 @@ export default defineSchema({
     notificationsEnabled: v.optional(v.boolean()),
     onboardingCompleted: v.boolean(),
   }).index("by_user", ["userId"]),
+
+  subscriptions: defineTable({
+    userId: v.string(),
+    revenueCatId: v.string(),
+    entitlement: v.string(),
+    isActive: v.boolean(),
+    expiresAt: v.optional(v.string()),
+    productId: v.optional(v.string()),
+    periodType: v.optional(v.string()),
+  })
+    .index("by_user", ["userId"])
+    .index("by_rc_id", ["revenueCatId"]),
+
+  monthlyAiCosts: defineTable({
+    userId: v.string(),
+    month: v.string(),
+    totalCost: v.number(),
+  }).index("by_user_month", ["userId", "month"]),
+
+  appConfig: defineTable({
+    key: v.string(),
+    value: v.number(),
+  }).index("by_key", ["key"]),
+
+  streaks: defineTable({
+    userId: v.string(),
+    currentStreak: v.number(),
+    longestStreak: v.number(),
+    lastCompletionDate: v.string(),
+    freezesUsedThisWeek: v.number(),
+    weekStart: v.string(),
+  }).index("by_user", ["userId"]),
+
+  achievements: defineTable({
+    userId: v.string(),
+    achievementId: v.string(),
+    unlockedAt: v.number(),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_achievement", ["userId", "achievementId"]),
 });
