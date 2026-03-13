@@ -7,10 +7,8 @@ import {
   type ReactNode,
 } from "react";
 import { Platform } from "react-native";
-import Purchases, {
-  type CustomerInfo,
-  type PurchasesPackage,
-} from "react-native-purchases";
+import Purchases, { type CustomerInfo } from "react-native-purchases";
+import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { authClient } from "../lib/authClient";
 
 const ENTITLEMENT_ID = "premium";
@@ -18,9 +16,7 @@ const ENTITLEMENT_ID = "premium";
 interface PremiumContextValue {
   isPremium: boolean;
   isLoading: boolean;
-  offerings: PurchasesPackage[];
-  purchase: (pkg: PurchasesPackage) => Promise<boolean>;
-  restore: () => Promise<boolean>;
+  showPaywall: () => Promise<boolean>;
 }
 
 const PremiumContext = createContext<PremiumContextValue | null>(null);
@@ -34,7 +30,6 @@ export function usePremium() {
 export function PremiumProvider({ children }: { children: ReactNode }) {
   const [isPremium, setIsPremium] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [offerings, setOfferings] = useState<PurchasesPackage[]>([]);
 
   const session = authClient.useSession();
 
@@ -55,12 +50,6 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       const info = await Purchases.getCustomerInfo();
       setIsPremium(!!info.entitlements.active[ENTITLEMENT_ID]);
 
-      const offeringsResult = await Purchases.getOfferings();
-      const current = offeringsResult.current;
-      if (current) {
-        setOfferings(current.availablePackages);
-      }
-
       setIsLoading(false);
     }
 
@@ -75,33 +64,24 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     return () => Purchases.removeCustomerInfoUpdateListener(listener);
   }, []);
 
-  const purchase = useCallback(
-    async (pkg: PurchasesPackage): Promise<boolean> => {
-      try {
-        const { customerInfo } = await Purchases.purchasePackage(pkg);
-        const active = !!customerInfo.entitlements.active[ENTITLEMENT_ID];
-        setIsPremium(active);
-        return active;
-      } catch {
-        return false;
-      }
-    },
-    [],
-  );
-
-  const restore = useCallback(async (): Promise<boolean> => {
+  const showPaywall = useCallback(async (): Promise<boolean> => {
     try {
-      const info = await Purchases.restorePurchases();
-      const active = !!info.entitlements.active[ENTITLEMENT_ID];
-      setIsPremium(active);
-      return active;
+      const result = await RevenueCatUI.presentPaywallIfNeeded({
+        requiredEntitlementIdentifier: ENTITLEMENT_ID,
+        displayCloseButton: true,
+      });
+
+      return (
+        result === PAYWALL_RESULT.PURCHASED ||
+        result === PAYWALL_RESULT.RESTORED
+      );
     } catch {
       return false;
     }
   }, []);
 
   return (
-    <PremiumContext value={{ isPremium, isLoading, offerings, purchase, restore }}>
+    <PremiumContext value={{ isPremium, isLoading, showPaywall }}>
       {children}
     </PremiumContext>
   );
