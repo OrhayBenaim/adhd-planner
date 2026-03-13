@@ -1,5 +1,6 @@
 import { v, ConvexError } from "convex/values";
 import { query, internalMutation } from "./_generated/server";
+import { DAY_MS } from "./lib/constants";
 
 function getMonday(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00Z");
@@ -25,7 +26,7 @@ export const get = query({
     }
 
     const today = new Date().toISOString().slice(0, 10);
-    const yesterday = new Date(Date.now() - 86400000)
+    const yesterday = new Date(Date.now() - DAY_MS)
       .toISOString()
       .slice(0, 10);
 
@@ -59,7 +60,7 @@ export const updateOnCompletion = internalMutation({
     const isPremium = sub?.isActive ?? false;
 
     const today = new Date().toISOString().slice(0, 10);
-    const yesterday = new Date(Date.now() - 86400000)
+    const yesterday = new Date(Date.now() - DAY_MS)
       .toISOString()
       .slice(0, 10);
     const mondayOfThisWeek = getMonday(today);
@@ -106,7 +107,7 @@ export const updateOnCompletion = internalMutation({
       const todayDate = new Date(today + "T00:00:00Z");
       const daysMissed =
         Math.floor(
-          (todayDate.getTime() - missedDate.getTime()) / 86400000,
+          (todayDate.getTime() - missedDate.getTime()) / DAY_MS,
         ) - 1;
 
       if (isPremium && daysMissed === 1 && freezesUsed < 1) {

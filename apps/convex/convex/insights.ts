@@ -1,5 +1,6 @@
 import { v, ConvexError } from "convex/values";
 import { query } from "./_generated/server";
+import { DAY_MS } from "./lib/constants";
 
 export const getWeeklyReport = query({
   args: {},
@@ -9,8 +10,8 @@ export const getWeeklyReport = query({
     const userId = identity.subject;
 
     const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 86400000);
-    const twoWeeksAgo = new Date(now.getTime() - 14 * 86400000);
+    const weekAgo = new Date(now.getTime() - 7 * DAY_MS);
+    const twoWeeksAgo = new Date(now.getTime() - 14 * DAY_MS);
 
     const allTasks = await ctx.db
       .query("tasks")
@@ -71,7 +72,7 @@ export const getCompletionTrends = query({
     if (!identity) throw new ConvexError("Unauthenticated");
     const userId = identity.subject;
 
-    const since = Date.now() - days * 86400000;
+    const since = Date.now() - days * DAY_MS;
 
     const tasks = await ctx.db
       .query("tasks")

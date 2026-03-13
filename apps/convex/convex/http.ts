@@ -3,6 +3,7 @@ import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { authComponent, createAuth } from "./auth";
+import { RC_ACTIVE_EVENTS, RC_INACTIVE_EVENTS, CREDIT_MULTIPLIERS } from "./lib/constants";
 
 const http = httpRouter();
 
@@ -29,26 +30,12 @@ http.route({
     const rcId =
       event.id ?? event.original_transaction_id ?? appUserId;
 
-    const activeTypes = [
-      "INITIAL_PURCHASE",
-      "RENEWAL",
-      "PRODUCT_CHANGE",
-      "UNCANCELLATION",
-      "SUBSCRIPTION_EXTENDED",
-    ];
-    const inactiveTypes = [
-      "CANCELLATION",
-      "EXPIRATION",
-      "BILLING_ISSUE",
-      "SUBSCRIPTION_PAUSED",
-    ];
-
     const eventType = event.type;
     let isActive: boolean | null = null;
 
-    if (activeTypes.includes(eventType)) {
+    if ((RC_ACTIVE_EVENTS as readonly string[]).includes(eventType)) {
       isActive = true;
-    } else if (inactiveTypes.includes(eventType)) {
+    } else if ((RC_INACTIVE_EVENTS as readonly string[]).includes(eventType)) {
       isActive = false;
     }
 
@@ -72,10 +59,8 @@ http.route({
       const creditValue = await ctx.runQuery(internal.appConfig.get, {
         key: "aiCreditValue",
       });
-      let creditAmount = 0;
-      if (productId.includes("small")) creditAmount = creditValue;
-      else if (productId.includes("medium")) creditAmount = creditValue * 3;
-      else if (productId.includes("large")) creditAmount = creditValue * 5;
+      const tier = Object.keys(CREDIT_MULTIPLIERS).find((t) => productId.includes(t));
+      const creditAmount = tier ? creditValue * CREDIT_MULTIPLIERS[tier] : 0;
 
       if (creditAmount > 0) {
         await ctx.runMutation(internal.credits.addCredits, {
