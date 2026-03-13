@@ -8,8 +8,11 @@ import {
 } from "react";
 import { Platform } from "react-native";
 import Purchases, { type CustomerInfo } from "react-native-purchases";
+import { useMutation } from "convex/react";
+import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { router } from "expo-router";
 import { authClient } from "../lib/authClient";
+import { getDeviceId } from "../lib/deviceId";
 
 const ENTITLEMENT_ID = "premium";
 
@@ -35,6 +38,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   const session = authClient.useSession();
   const isAnonymous =
     (session.data?.user as any)?.isAnonymous ?? true;
+  const registerDeviceIdMutation = useMutation(api.settings.registerDeviceId);
 
   useEffect(() => {
     async function init() {
@@ -60,6 +64,14 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     init().catch(() => setIsLoading(false));
   }, [session.data?.user?.id, isAnonymous]);
 
+  // Register device ID with backend for cost ceiling enforcement
+  useEffect(() => {
+    if (!session.data?.user?.id) return;
+    getDeviceId().then((deviceId) => {
+      registerDeviceIdMutation({ deviceId }).catch(() => {});
+    });
+  }, [session.data?.user?.id, registerDeviceIdMutation]);
+
   useEffect(() => {
     const listener = (info: CustomerInfo) => {
       setIsPremium(!!info.entitlements.active[ENTITLEMENT_ID]);
@@ -69,8 +81,12 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const showPaywall = useCallback(() => {
-    router.push("/paywall");
-  }, []);
+    if (isAnonymous) {
+      router.push("/sign-in-gate");
+    } else {
+      router.push("/paywall");
+    }
+  }, [isAnonymous]);
 
   return (
     <PremiumContext value={{ isPremium, isAnonymous, isLoading, showPaywall }}>
