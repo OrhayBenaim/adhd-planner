@@ -121,17 +121,21 @@ export function MainContent() {
           <Text className="text-sm text-[#6a7282] text-center mt-1">Let's find the perfect task for you</Text>
         </View>
 
-        {/* XP bar */}
-        <View className="py-6">
-          <View className="relative">
-            <XPBar progress={progress} />
-            <PointsToast
-              points={toast.points}
-              visible={toast.visible}
-              onDone={hideToast}
-            />
+        {/* XP bar — tap opens insights for premium */}
+        <Pressable
+          onPress={isPremium ? () => openSheet("insights") : undefined}
+        >
+          <View className="py-6">
+            <View className="relative">
+              <XPBar progress={progress} />
+              <PointsToast
+                points={toast.points}
+                visible={toast.visible}
+                onDone={hideToast}
+              />
+            </View>
           </View>
-        </View>
+        </Pressable>
 
         {/* Streak badge (premium) */}
         {isPremium && streakData && (
