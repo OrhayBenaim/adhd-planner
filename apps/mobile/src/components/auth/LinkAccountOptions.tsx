@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { View, Text } from "react-native";
 import * as Sentry from "@sentry/react-native";
 import { authClient } from "../../lib/authClient";
+import { getGoogleIdToken } from "../../lib/googleSignIn";
 import { SocialAuthButtons } from "./SocialAuthButtons";
 
 interface LinkAccountOptionsProps {
@@ -22,16 +23,33 @@ export function LinkAccountOptions({
       setBusy(true);
       try {
         await onBeforeAuth?.();
-        const { error } = await authClient.signIn.social({
-          provider,
-          callbackURL: "/",
-        });
-        if (error) {
-          Sentry.captureMessage(
-            `Link account failed: ${error.message ?? "unknown"}`,
-            "error",
-          );
-          return;
+        if (provider === "google") {
+          const idToken = await getGoogleIdToken();
+          if (!idToken) return;
+          const { error } = await authClient.signIn.social({
+            provider: "google",
+            idToken: { token: idToken },
+            callbackURL: "/",
+          });
+          if (error) {
+            Sentry.captureMessage(
+              `Link account failed: ${error.message ?? "unknown"}`,
+              "error",
+            );
+            return;
+          }
+        } else {
+          const { error } = await authClient.signIn.social({
+            provider,
+            callbackURL: "/",
+          });
+          if (error) {
+            Sentry.captureMessage(
+              `Link account failed: ${error.message ?? "unknown"}`,
+              "error",
+            );
+            return;
+          }
         }
         onSuccess();
       } catch (e) {
