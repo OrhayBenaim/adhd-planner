@@ -1,27 +1,5 @@
-import { v, ConvexError } from "convex/values";
-import { query, internalMutation, internalQuery } from "./_generated/server";
-
-export const getByUserId = query({
-  args: {},
-  handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Unauthenticated");
-
-    const sub = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_user", (q) => q.eq("userId", identity.subject))
-      .first();
-
-    return sub
-      ? {
-          isActive: sub.isActive,
-          productId: sub.productId,
-          periodType: sub.periodType,
-          expiresAt: sub.expiresAt,
-        }
-      : null;
-  },
-});
+import { v } from "convex/values";
+import { internalMutation, internalQuery } from "./_generated/server";
 
 export const isPremium = internalQuery({
   args: { userId: v.string() },
