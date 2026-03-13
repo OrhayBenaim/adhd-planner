@@ -28,3 +28,30 @@ export interface UserPreferences {
   onboardingCompleted: boolean;
   _creationTime: number;
 }
+
+export interface Subscription {
+  isActive: boolean;
+  productId?: string;
+  periodType?: string;
+  expiresAt?: string;
+}
+
+export interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  lastCompletionDate: string | null;
+}
+
+export interface Achievement {
+  achievementId: string;
+  unlockedAt: number;
+}
+
+export interface WeeklyReport {
+  tasksCompletedThisWeek: number;
+  tasksCompletedLastWeek: number;
+  mostProductiveDay: string | null;
+  avgDifficulty: number;
+  currentStreak: number;
+  longestStreak: number;
+}

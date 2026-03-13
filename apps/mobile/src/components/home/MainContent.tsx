@@ -21,6 +21,7 @@ import { TaskCard } from "../TaskCard";
 import { BottomNav } from "../BottomNav";
 import { PointsToast } from "../PointsToast";
 import { StreakBadge } from "../StreakBadge";
+import { AiCeilingBanner } from "../AiCeilingBanner";
 import { useHome } from "./HomeProvider";
 import { useSheetFlow } from "./SheetFlowProvider";
 import { usePremium } from "../../hooks/usePremium";
@@ -41,7 +42,7 @@ export function MainContent() {
     openSheet,
   } = useHome();
   const flow = useSheetFlow();
-  const { isPremium } = usePremium();
+  const { isPremium, showPaywall } = usePremium();
   const streakData = useQuery(api.streaks.get);
 
   // AI button animation — local to this component
@@ -169,6 +170,13 @@ export function MainContent() {
             </Pressable>
           </Animated.View>
         </View>
+
+        {/* AI ceiling banner */}
+        {tasks.some((t) => !t.completed && t.difficulty === -1) && (
+          <View className="px-6 pb-2">
+            <AiCeilingBanner onUpgrade={showPaywall} />
+          </View>
+        )}
 
         {/* Task card */}
         <View className="px-6">
