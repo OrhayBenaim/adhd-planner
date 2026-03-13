@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:background="@drawable/widget_background_premium_upsell"
+    android:padding="16dp"
+    android:id="@+id/widget_root">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="⭐"
+        android:textSize="24sp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Upgrade to Pro"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#1E3A5F"
+        android:layout_marginTop="4dp" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="for home widgets"
+        android:textSize="11sp"
+        android:textColor="#64748B"
+        android:layout_marginTop="2dp" />
+</LinearLayout>
