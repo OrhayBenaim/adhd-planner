@@ -1,0 +1,95 @@
+import { v, ConvexError } from "convex/values";
+import { query } from "./_generated/server";
+
+export const getWeeklyReport = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new ConvexError("Unauthenticated");
+    const userId = identity.subject;
+
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 86400000);
+    const twoWeeksAgo = new Date(now.getTime() - 14 * 86400000);
+
+    const allTasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+
+    const completedThisWeek = allTasks.filter(
+      (t) => t.completed && t._creationTime >= weekAgo.getTime(),
+    );
+    const completedLastWeek = allTasks.filter(
+      (t) =>
+        t.completed &&
+        t._creationTime >= twoWeeksAgo.getTime() &&
+        t._creationTime < weekAgo.getTime(),
+    );
+
+    // Most productive day
+    const dayMap: Record<string, number> = {};
+    for (const t of completedThisWeek) {
+      const day = new Date(t._creationTime).toLocaleDateString("en-US", {
+        weekday: "long",
+      });
+      dayMap[day] = (dayMap[day] ?? 0) + 1;
+    }
+    const mostProductiveDay =
+      Object.entries(dayMap).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+
+    // Average difficulty
+    const scoredTasks = completedThisWeek.filter((t) => t.difficulty > 0);
+    const avgDifficulty = scoredTasks.length
+      ? Math.round(
+          scoredTasks.reduce((sum, t) => sum + t.difficulty, 0) /
+            scoredTasks.length,
+        )
+      : 0;
+
+    // Streak
+    const streak = await ctx.db
+      .query("streaks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    return {
+      tasksCompletedThisWeek: completedThisWeek.length,
+      tasksCompletedLastWeek: completedLastWeek.length,
+      mostProductiveDay,
+      avgDifficulty,
+      currentStreak: streak?.currentStreak ?? 0,
+      longestStreak: streak?.longestStreak ?? 0,
+    };
+  },
+});
+
+export const getCompletionTrends = query({
+  args: { days: v.optional(v.number()) },
+  handler: async (ctx, { days = 30 }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new ConvexError("Unauthenticated");
+    const userId = identity.subject;
+
+    const since = Date.now() - days * 86400000;
+
+    const tasks = await ctx.db
+      .query("tasks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("completed"), true),
+          q.gte(q.field("_creationTime"), since),
+        ),
+      )
+      .collect();
+
+    const byDate: Record<string, number> = {};
+    for (const t of tasks) {
+      const date = new Date(t._creationTime).toISOString().slice(0, 10);
+      byDate[date] = (byDate[date] ?? 0) + 1;
+    }
+
+    return byDate;
+  },
+});
