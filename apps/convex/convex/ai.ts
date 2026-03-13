@@ -63,6 +63,41 @@ export const accumulateUserCost = internalMutation({
   },
 });
 
+export const getMonthlyAiCost = internalQuery({
+  args: { userId: v.string(), month: v.string() },
+  handler: async (ctx, { userId, month }) => {
+    const row = await ctx.db
+      .query("monthlyAiCosts")
+      .withIndex("by_user_month", (q) =>
+        q.eq("userId", userId).eq("month", month),
+      )
+      .first();
+    return row?.totalCost ?? 0;
+  },
+});
+
+export const accumulateMonthlyAiCost = internalMutation({
+  args: { userId: v.string(), month: v.string(), cost: v.number() },
+  handler: async (ctx, { userId, month, cost }) => {
+    const existing = await ctx.db
+      .query("monthlyAiCosts")
+      .withIndex("by_user_month", (q) =>
+        q.eq("userId", userId).eq("month", month),
+      )
+      .first();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, {
+        totalCost: existing.totalCost + cost,
+      });
+      return existing.totalCost + cost;
+    } else {
+      await ctx.db.insert("monthlyAiCosts", { userId, month, totalCost: cost });
+      return cost;
+    }
+  },
+});
+
 export const getUserAiEnabled = internalQuery({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
@@ -117,6 +152,27 @@ export const scoreTaskDifficulty = internalAction({
     if (recentCount >= MAX_SCORES_PER_WINDOW) {
       await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
       await sentryCaptureEvent("warning", `[AI] rate limit exceeded for user ${userId}, task ${taskId} set to 0`, { userId, taskId });
+      return;
+    }
+
+    // Cost ceiling check
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const monthlyCost = await ctx.runQuery(internal.ai.getMonthlyAiCost, {
+      userId,
+      month: currentMonth,
+    });
+    const premium = await ctx.runQuery(internal.subscriptions.isPremium, {
+      userId,
+    });
+    const ceilingKey = premium
+      ? "premiumTierCostCeiling"
+      : "freeTierCostCeiling";
+    const ceiling = await ctx.runQuery(internal.appConfig.get, {
+      key: ceilingKey,
+    });
+
+    if (monthlyCost >= ceiling) {
+      // Don't score — user hit their ceiling. Leave difficulty at -1 (unscored).
       return;
     }
 
@@ -220,6 +276,12 @@ export const scoreTaskDifficulty = internalAction({
       });
 
       if (costFromResponse > 0) {
+        await ctx.runMutation(internal.ai.accumulateMonthlyAiCost, {
+          userId,
+          month: currentMonth,
+          cost: costFromResponse,
+        });
+
         const newTotal = await ctx.runMutation(internal.ai.accumulateUserCost, {
           userId, cost: costFromResponse,
         });
