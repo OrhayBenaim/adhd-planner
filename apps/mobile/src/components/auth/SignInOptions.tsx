@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { View, Text } from "react-native";
+import { View, Text, Alert } from "react-native";
 import * as Sentry from "@sentry/react-native";
 import { authClient } from "../../lib/authClient";
 import { getGoogleIdToken } from "../../lib/googleSignIn";
@@ -25,19 +25,27 @@ export function SignInOptions({
         await onBeforeAuth?.();
         if (provider === "google") {
           const idToken = await getGoogleIdToken();
-          if (!idToken) return;
+          if (!idToken) {
+            console.warn("[SignIn] Google idToken was null — sign-in aborted");
+            Alert.alert("Sign-in failed", "Could not get Google credentials. Please try again.");
+            return;
+          }
+          console.log("[SignIn] Calling authClient.signIn.social with idToken");
           const { error } = await authClient.signIn.social({
             provider: "google",
             idToken: { token: idToken },
             callbackURL: "/",
           });
           if (error) {
+            console.error("[SignIn] social sign-in error:", error);
             Sentry.captureMessage(
               `Sign-in failed: ${error.message ?? "unknown"}`,
               "error",
             );
+            Alert.alert("Sign-in failed", error.message ?? "An unknown error occurred.");
             return;
           }
+          console.log("[SignIn] social sign-in succeeded");
         } else {
           const { error } = await authClient.signIn.social({
             provider,
@@ -48,12 +56,15 @@ export function SignInOptions({
               `Sign-in failed: ${error.message ?? "unknown"}`,
               "error",
             );
+            Alert.alert("Sign-in failed", error.message ?? "An unknown error occurred.");
             return;
           }
         }
         onSuccess();
       } catch (e) {
+        console.error("[SignIn] exception:", e);
         Sentry.captureException(e);
+        Alert.alert("Sign-in failed", e instanceof Error ? e.message : "An unexpected error occurred.");
       } finally {
         setBusy(false);
       }
