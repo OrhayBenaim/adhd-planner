@@ -1,11 +1,14 @@
 // apps/mobile/src/components/home/HomeProvider.tsx
-import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@adhd-planner/convex/convex/_generated/api";
 import type { Id } from "@adhd-planner/convex/convex/_generated/dataModel";
 import type { Task, UserProgress } from "@adhd-planner/types";
 import type {  Settings, SettingsEntry } from "../../hooks/useSettings";
 import { useTasks, useCreateTask, useCompleteTask, useDeleteTask, useUpdateTask } from "../../hooks/useTasks";
 import { useUserProgress } from "../../hooks/useUserProgress";
 import { useSettings } from "../../hooks/useSettings";
+import { syncWidgetData } from "../../lib/widgetSync";
 import type BottomSheet from "@gorhom/bottom-sheet";
 
  type ActiveSheet =
@@ -75,6 +78,18 @@ export function HomeProvider({ children }: { children: ReactNode }) {
   const updateTaskMutation = useUpdateTask();
   const { progress } = useUserProgress();
   const { settings, updateSetting, adminAiEnabled } = useSettings();
+  const streakData = useQuery(api.streaks.get);
+
+  // Sync data to shared storage for home screen widgets
+  useEffect(() => {
+    syncWidgetData({
+      streak: streakData?.currentStreak ?? 0,
+      suggestedTask: selectedTask?.title ?? null,
+      level: progress.level,
+      points: progress.points,
+      pointsToNextLevel: progress.pointsToNextLevel,
+    });
+  }, [progress, selectedTask, streakData]);
 
   // Sheet registry — SheetManager registers its refs here
   const sheetsRef = useRef<Map<ActiveSheet, React.RefObject<BottomSheet | null>>>(new Map());
