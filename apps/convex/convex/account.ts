@@ -1,13 +1,10 @@
-import { ConvexError } from "convex/values";
 import { mutation } from "./_generated/server";
+import { requireAuth } from "./lib/auth";
 
 export const deleteAccount = mutation({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Unauthenticated");
-
-    const userId = identity.subject;
+    const userId = await requireAuth(ctx);
 
     // Delete tasks
     const tasks = await ctx.db

@@ -1,13 +1,12 @@
-import { v, ConvexError } from "convex/values";
+import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { DAY_MS } from "./lib/constants";
+import { requireAuth } from "./lib/auth";
 
 export const getWeeklyReport = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Unauthenticated");
-    const userId = identity.subject;
+    const userId = await requireAuth(ctx);
 
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * DAY_MS);
@@ -68,9 +67,7 @@ export const getWeeklyReport = query({
 export const getCompletionTrends = query({
   args: { days: v.optional(v.number()) },
   handler: async (ctx, { days = 30 }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Unauthenticated");
-    const userId = identity.subject;
+    const userId = await requireAuth(ctx);
 
     const since = Date.now() - days * DAY_MS;
 

@@ -1,6 +1,7 @@
-import { v, ConvexError } from "convex/values";
+import { v } from "convex/values";
 import { query, internalMutation } from "./_generated/server";
 import { DAY_MS } from "./lib/constants";
+import { requireAuth } from "./lib/auth";
 
 function getMonday(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00Z");
@@ -13,12 +14,11 @@ function getMonday(dateStr: string): string {
 export const get = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) throw new ConvexError("Unauthenticated");
+    const userId = await requireAuth(ctx);
 
     const streak = await ctx.db
       .query("streaks")
-      .withIndex("by_user", (q) => q.eq("userId", identity.subject))
+      .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
     if (!streak) {
