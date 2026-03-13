@@ -7,3 +7,7 @@ turbo.json
 .worktrees
 .claude
 .idea
+
+# CNG-generated native directories (contain local absolute paths)
+apps/mobile/android/
+apps/mobile/ios/
