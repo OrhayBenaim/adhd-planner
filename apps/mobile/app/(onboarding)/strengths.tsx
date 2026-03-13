@@ -1,12 +1,18 @@
 import { View, Text, ScrollView } from "react-native";
 import { router } from "expo-router";
+import { useEffect } from "react";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { ChipGrid } from "../../src/components/onboarding/ChipGrid";
 import { STRENGTHS } from "../../src/constants/onboarding";
+import { posthog } from "../../src/lib/posthog";
 
 export default function StrengthsStep() {
   const { state, toggleArrayItem } = useOnboarding();
+
+  useEffect(() => {
+    posthog.capture("onboarding_step_viewed", { step: "strengths", step_number: 4 });
+  }, []);
 
   return (
     <OnboardingLayout

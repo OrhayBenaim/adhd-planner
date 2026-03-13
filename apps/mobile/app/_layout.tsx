@@ -27,7 +27,6 @@ function RootLayout() {
   const [fontsLoaded] = useFonts({
     ...Ionicons.font,
   });
-
   if (!fontsLoaded) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f5f7fa" }}>
