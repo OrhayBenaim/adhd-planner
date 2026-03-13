@@ -1,12 +1,18 @@
 import { View, Text, ScrollView } from "react-native";
 import { router } from "expo-router";
+import { useEffect } from "react";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { ChipGrid } from "../../src/components/onboarding/ChipGrid";
 import { DIFFICULTIES } from "../../src/constants/onboarding";
+import { posthog } from "../../src/lib/posthog";
 
 export default function DifficultiesStep() {
   const { state, toggleArrayItem } = useOnboarding();
+
+  useEffect(() => {
+    posthog.capture("onboarding_step_viewed", { step: "difficulties", step_number: 3 });
+  }, []);
 
   return (
     <OnboardingLayout

@@ -1,12 +1,18 @@
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { useEffect } from "react";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { PRODUCTIVE_TIMES } from "../../src/constants/onboarding";
+import { posthog } from "../../src/lib/posthog";
 
 export default function WorkTimeStep() {
   const { state, toggleArrayItem } = useOnboarding();
+
+  useEffect(() => {
+    posthog.capture("onboarding_step_viewed", { step: "work_time", step_number: 2 });
+  }, []);
 
   return (
     <OnboardingLayout

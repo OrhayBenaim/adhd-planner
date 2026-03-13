@@ -3,11 +3,17 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 import { router } from "expo-router";
+import { useEffect } from "react";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
+import { posthog } from "../../src/lib/posthog";
 
 export default function NotificationsStep() {
   const { updateField } = useOnboarding();
+
+  useEffect(() => {
+    posthog.capture("onboarding_step_viewed", { step: "notifications", step_number: 5 });
+  }, []);
 
   const handleEnable = async () => {
     try {

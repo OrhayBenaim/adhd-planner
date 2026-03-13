@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { authClient } from "../../src/lib/authClient";
 import { SocialAuthButtons } from "../../src/components/auth/SocialAuthButtons";
 import { SignUpWithEmail } from "../../src/components/auth/SignUpWithEmail";
 import { SignInWithEmail } from "../../src/components/auth/SignInWithEmail";
+import { posthog } from "../../src/lib/posthog";
 
 type SubView = "main" | "options" | "signUpEmail" | "signInEmail";
 
@@ -26,6 +27,10 @@ export default function SignInStep() {
   const [socialBusy, setSocialBusy] = useState(false);
 
   const busy = isSubmitting || socialBusy;
+
+  useEffect(() => {
+    posthog.capture("onboarding_step_viewed", { step: "sign_in", step_number: 6 });
+  }, []);
 
   const handleSkip = async () => {
     await submitOnboarding();
