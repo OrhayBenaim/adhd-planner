@@ -6,6 +6,7 @@ import {
   Platform,
   KeyboardAvoidingView,
   ScrollView,
+  Alert,
 } from "react-native";
 import * as Sentry from "@sentry/react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -44,18 +45,27 @@ export default function SignInStep() {
         await saveOnboardingData();
         if (provider === "google") {
           const idToken = await getGoogleIdToken();
-          if (!idToken) return;
+          if (!idToken) {
+            console.warn("[Onboarding SignIn] Google idToken was null");
+            Alert.alert("Sign-in failed", "Could not get Google credentials. Please try again.");
+            return;
+          }
+          console.log("[Onboarding SignIn] Calling authClient.signIn.social with idToken");
           const { error } = await authClient.signIn.social({
             provider: "google",
             idToken: { token: idToken },
             callbackURL: "/",
           });
           if (error) {
+            console.error("[Onboarding SignIn] social sign-in error:", error);
             Sentry.captureMessage(
               `Social sign-in failed: ${error.message ?? "unknown"}`,
               "error",
             );
+            Alert.alert("Sign-in failed", error.message ?? "An unknown error occurred.");
+            return;
           }
+          console.log("[Onboarding SignIn] social sign-in succeeded, submitting onboarding");
         } else {
           const { error } = await authClient.signIn.social({
             provider,
@@ -66,15 +76,20 @@ export default function SignInStep() {
               `Social sign-in failed: ${error.message ?? "unknown"}`,
               "error",
             );
+            Alert.alert("Sign-in failed", error.message ?? "An unknown error occurred.");
+            return;
           }
         }
+        await submitOnboarding();
       } catch (e) {
+        console.error("[Onboarding SignIn] exception:", e);
         Sentry.captureException(e);
+        Alert.alert("Sign-in failed", e instanceof Error ? e.message : "An unexpected error occurred.");
       } finally {
         setSocialBusy(false);
       }
     },
-    [saveOnboardingData],
+    [saveOnboardingData, submitOnboarding],
   );
 
   // Email form sub-views
