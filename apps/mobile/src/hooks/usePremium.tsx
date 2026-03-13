@@ -65,7 +65,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       setIsPremium(!!info.entitlements.active[ENTITLEMENT_ID]);
     };
     Purchases.addCustomerInfoUpdateListener(listener);
-    return () => Purchases.removeCustomerInfoUpdateListener(listener);
+    return () => { Purchases.removeCustomerInfoUpdateListener(listener); };
   }, []);
 
   const showPaywall = useCallback(() => {

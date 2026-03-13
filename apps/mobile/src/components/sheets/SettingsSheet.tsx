@@ -4,6 +4,7 @@ import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { useHome } from "../home/HomeProvider";
+import { usePremium } from "../../hooks/usePremium";
 import { ProBadge } from "../ProBadge";
 import {
   useVoiceLanguages,
@@ -61,6 +62,7 @@ interface Props {
 export const SettingsSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const { settings, updateSetting, adminAiEnabled, closeSheet } = useHome();
+    const { isPremium, showPaywall } = usePremium();
     const voice = useVoiceLanguages();
 
     const header = useCallback(
@@ -79,10 +81,13 @@ export const SettingsSheet = forwardRef<BottomSheet, Props>(
           <SettingRow icon="flash-outline" color="#bde0fe" title="Smart Scheduling" subtitle="AI-powered task scoring"
             value={settings.smartScheduling} onChange={(v) => updateSetting("smartScheduling", v)}
             disabled={!adminAiEnabled} />
+          <SettingRow icon="chatbubble-ellipses-outline" color="#cdb4db" title="AI Coach" subtitle="Personalized nudges & tips"
+            value={settings.coachNotifications} isPro
+            onChange={(v) => { isPremium ? updateSetting("coachNotifications", v) : showPaywall(); }} />
           <VoiceLanguagesHeader expanded={voice.expanded} onToggle={voice.toggleExpanded} />
         </View>
       ),
-      [settings, adminAiEnabled, closeSheet, updateSetting, voice.expanded, voice.toggleExpanded],
+      [settings, adminAiEnabled, isPremium, showPaywall, closeSheet, updateSetting, voice.expanded, voice.toggleExpanded],
     );
 
     return (
