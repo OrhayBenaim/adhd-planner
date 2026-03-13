@@ -13,6 +13,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { authClient } from "../../src/lib/authClient";
+import { getGoogleIdToken } from "../../src/lib/googleSignIn";
 import { SocialAuthButtons } from "../../src/components/auth/SocialAuthButtons";
 import { SignUpWithEmail } from "../../src/components/auth/SignUpWithEmail";
 import { SignInWithEmail } from "../../src/components/auth/SignInWithEmail";
@@ -41,16 +42,31 @@ export default function SignInStep() {
       setSocialBusy(true);
       try {
         await saveOnboardingData();
-        const { error } = await authClient.signIn.social({
-          provider,
-          callbackURL: "/",
-        });
-        if (error) {
-          Sentry.captureMessage(
-            `Social sign-in failed: ${error.message ?? "unknown"}`,
-            "error",
-          );
-          return;
+        if (provider === "google") {
+          const idToken = await getGoogleIdToken();
+          if (!idToken) return;
+          const { error } = await authClient.signIn.social({
+            provider: "google",
+            idToken: { token: idToken },
+            callbackURL: "/",
+          });
+          if (error) {
+            Sentry.captureMessage(
+              `Social sign-in failed: ${error.message ?? "unknown"}`,
+              "error",
+            );
+          }
+        } else {
+          const { error } = await authClient.signIn.social({
+            provider,
+            callbackURL: "/",
+          });
+          if (error) {
+            Sentry.captureMessage(
+              `Social sign-in failed: ${error.message ?? "unknown"}`,
+              "error",
+            );
+          }
         }
       } catch (e) {
         Sentry.captureException(e);
