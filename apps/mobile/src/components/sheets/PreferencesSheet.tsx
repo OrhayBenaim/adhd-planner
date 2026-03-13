@@ -1,4 +1,4 @@
-import { forwardRef, useState, useCallback, useReducer, useRef } from "react";
+import { forwardRef, useState, useCallback, useReducer, useRef, useMemo } from "react";
 import { View, Text, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -102,11 +102,14 @@ export const PreferencesSheet = forwardRef<BottomSheet, Props>(
       onClose();
     }, [autoSave, onClose]);
 
-    const base: PrefsFields = {
-      bestWorkTimes: preferences?.bestWorkTimes ?? [],
-      difficulties: preferences?.difficulties ?? [],
-      strengths: preferences?.strengths ?? [],
-    };
+    const base: PrefsFields = useMemo(
+      () => ({
+        bestWorkTimes: preferences?.bestWorkTimes ?? [],
+        difficulties: preferences?.difficulties ?? [],
+        strengths: preferences?.strengths ?? [],
+      }),
+      [preferences?.bestWorkTimes, preferences?.difficulties, preferences?.strengths],
+    );
 
     const toggleWorkTime = useCallback((label: string) => {
       ensureSaved();
