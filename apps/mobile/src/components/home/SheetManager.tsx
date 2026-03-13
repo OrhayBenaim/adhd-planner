@@ -9,7 +9,6 @@ import { SettingsSheet } from "../sheets/SettingsSheet";
 import { PreferencesSheet } from "../sheets/PreferencesSheet";
 import { TaskSummarySheet } from "../sheets/TaskSummarySheet";
 import { ProfileSheet } from "../sheets/ProfileSheet";
-import { PaywallSheet } from "../sheets/PaywallSheet";
 import { useHome } from "./HomeProvider";
 
 export function SheetManager() {
@@ -23,7 +22,6 @@ export function SheetManager() {
   const preferencesSheetRef = useRef<BottomSheet>(null);
   const taskSummaryRef = useRef<BottomSheet>(null);
   const profileSheetRef = useRef<BottomSheet>(null);
-  const paywallSheetRef = useRef<BottomSheet>(null);
 
   useEffect(() => {
     registerSheet({ name: "addTask", ref: addSheetRef });
@@ -34,7 +32,6 @@ export function SheetManager() {
     registerSheet({ name: "preferences", ref: preferencesSheetRef });
     registerSheet({ name: "taskSummary", ref: taskSummaryRef });
     registerSheet({ name: "profile", ref: profileSheetRef });
-    registerSheet({ name: "paywall", ref: paywallSheetRef });
   }, [registerSheet]);
 
   return (
@@ -47,7 +44,6 @@ export function SheetManager() {
       <SettingsSheet ref={settingsSheetRef} onClose={onSheetClose} />
       <PreferencesSheet ref={preferencesSheetRef} onClose={onSheetClose} />
       <ProfileSheet ref={profileSheetRef} onClose={onSheetClose} />
-      <PaywallSheet ref={paywallSheetRef} onClose={onSheetClose} />
     </>
   );
 }
