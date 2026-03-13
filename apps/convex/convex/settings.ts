@@ -1,12 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query, internalQuery } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
-
-const DEFAULTS = {
-  aiEnabled: true,
-  userAiEnabled: true,
-  notificationsEnabled: false,
-} as const;
+import { upsertUserSetting } from "./lib/upsert";
 
 export const get = query({
   args: {},
@@ -23,20 +18,7 @@ export const setUserAiEnabled = mutation({
   args: { enabled: v.boolean() },
   handler: async (ctx, { enabled }) => {
     const userId = await requireAuth(ctx);
-    const existing = await ctx.db
-      .query("userSettings")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-
-    if (existing) {
-      await ctx.db.patch(existing._id, { userAiEnabled: enabled });
-    } else {
-      await ctx.db.insert("userSettings", {
-        userId,
-        ...DEFAULTS,
-        userAiEnabled: enabled,
-      });
-    }
+    await upsertUserSetting(ctx, userId, { userAiEnabled: enabled });
   },
 });
 
@@ -48,18 +30,17 @@ export const registerDeviceId = mutation({
       .query("userSettings")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
+    // Skip patch if deviceId unchanged
+    if (existing?.deviceId === deviceId) return;
+    await upsertUserSetting(ctx, userId, { deviceId });
+  },
+});
 
-    if (existing) {
-      if (existing.deviceId !== deviceId) {
-        await ctx.db.patch(existing._id, { deviceId });
-      }
-    } else {
-      await ctx.db.insert("userSettings", {
-        userId,
-        ...DEFAULTS,
-        deviceId,
-      });
-    }
+export const setNotificationsEnabled = mutation({
+  args: { enabled: v.boolean() },
+  handler: async (ctx, { enabled }) => {
+    const userId = await requireAuth(ctx);
+    await upsertUserSetting(ctx, userId, { notificationsEnabled: enabled });
   },
 });
 
@@ -71,26 +52,5 @@ export const getDeviceId = internalQuery({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
     return settings?.deviceId ?? null;
-  },
-});
-
-export const setNotificationsEnabled = mutation({
-  args: { enabled: v.boolean() },
-  handler: async (ctx, { enabled }) => {
-    const userId = await requireAuth(ctx);
-    const existing = await ctx.db
-      .query("userSettings")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-
-    if (existing) {
-      await ctx.db.patch(existing._id, { notificationsEnabled: enabled });
-    } else {
-      await ctx.db.insert("userSettings", {
-        userId,
-        ...DEFAULTS,
-        notificationsEnabled: enabled,
-      });
-    }
   },
 });
