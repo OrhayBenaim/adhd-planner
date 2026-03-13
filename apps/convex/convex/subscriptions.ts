@@ -8,7 +8,9 @@ export const isPremium = internalQuery({
       .query("subscriptions")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
-    return sub?.isActive ?? false;
+    if (!sub?.isActive) return false;
+    if (sub.expiresAt && new Date(sub.expiresAt) <= new Date()) return false;
+    return true;
   },
 });
 
