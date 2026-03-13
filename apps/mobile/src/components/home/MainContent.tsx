@@ -135,7 +135,10 @@ export function MainContent() {
 
         {/* Streak badge (premium) */}
         {isPremium && streakData && (
-          <StreakBadge streak={streakData.currentStreak} />
+          <StreakBadge
+            streak={streakData.currentStreak}
+            onPress={() => openSheet("achievements")}
+          />
         )}
 
         {/* Mood slider */}
