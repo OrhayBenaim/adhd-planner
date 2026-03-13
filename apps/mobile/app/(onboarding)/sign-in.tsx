@@ -46,18 +46,15 @@ export default function SignInStep() {
         if (provider === "google") {
           const idToken = await getGoogleIdToken();
           if (!idToken) {
-            console.warn("[Onboarding SignIn] Google idToken was null");
             Alert.alert("Sign-in failed", "Could not get Google credentials. Please try again.");
             return;
           }
-          console.log("[Onboarding SignIn] Calling authClient.signIn.social with idToken");
           const { error } = await authClient.signIn.social({
             provider: "google",
             idToken: { token: idToken },
             callbackURL: "/",
           });
           if (error) {
-            console.error("[Onboarding SignIn] social sign-in error:", error);
             Sentry.captureMessage(
               `Social sign-in failed: ${error.message ?? "unknown"}`,
               "error",
@@ -65,7 +62,6 @@ export default function SignInStep() {
             Alert.alert("Sign-in failed", error.message ?? "An unknown error occurred.");
             return;
           }
-          console.log("[Onboarding SignIn] social sign-in succeeded, submitting onboarding");
         } else {
           const { error } = await authClient.signIn.social({
             provider,
@@ -82,7 +78,6 @@ export default function SignInStep() {
         }
         await submitOnboarding();
       } catch (e) {
-        console.error("[Onboarding SignIn] exception:", e);
         Sentry.captureException(e);
         Alert.alert("Sign-in failed", e instanceof Error ? e.message : "An unexpected error occurred.");
       } finally {
