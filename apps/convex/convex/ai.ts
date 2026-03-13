@@ -41,6 +41,18 @@ export const getUserModelOverride = internalQuery({
   },
 });
 
+export const getLifetimeCost = internalQuery({
+  args: { userId: v.string() },
+  handler: async (ctx, { userId }) => {
+    const rows = await ctx.db
+      .query("monthlyAiCosts")
+      .withIndex("by_user_month", (q) => q.eq("userId", userId))
+      .collect();
+    return rows.reduce((sum, r) => sum + r.totalCost, 0);
+  },
+});
+
+/** @deprecated Use getLifetimeCost instead. Kept for backward compat until userCosts table cleanup. */
 export const accumulateUserCost = internalMutation({
   args: { userId: v.string(), cost: v.number() },
   handler: async (ctx, { userId, cost }) => {
@@ -334,8 +346,8 @@ export const scoreTaskDifficulty = internalAction({
           ...(deviceId ? { deviceId } : {}),
         });
 
-        const newTotal = await ctx.runMutation(internal.ai.accumulateUserCost, {
-          userId, cost: costFromResponse,
+        const newTotal = await ctx.runQuery(internal.ai.getLifetimeCost, {
+          userId,
         });
 
         const threshold = parseFloat(process.env.COST_ALERT_THRESHOLD ?? "20");
