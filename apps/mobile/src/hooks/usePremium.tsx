@@ -15,6 +15,7 @@ const ENTITLEMENT_ID = "premium";
 
 interface PremiumContextValue {
   isPremium: boolean;
+  isAnonymous: boolean;
   isLoading: boolean;
   showPaywall: () => void;
 }
@@ -32,6 +33,8 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const session = authClient.useSession();
+  const isAnonymous =
+    (session.data?.user as any)?.isAnonymous ?? true;
 
   useEffect(() => {
     async function init() {
@@ -42,8 +45,9 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
 
       await Purchases.configure({ apiKey });
 
+      // Only identify non-anonymous users with RevenueCat
       const userId = session.data?.user?.id;
-      if (userId) {
+      if (userId && !isAnonymous) {
         await Purchases.logIn(userId);
       }
 
@@ -54,7 +58,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     }
 
     init().catch(() => setIsLoading(false));
-  }, [session.data?.user?.id]);
+  }, [session.data?.user?.id, isAnonymous]);
 
   useEffect(() => {
     const listener = (info: CustomerInfo) => {
@@ -69,7 +73,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <PremiumContext value={{ isPremium, isLoading, showPaywall }}>
+    <PremiumContext value={{ isPremium, isAnonymous, isLoading, showPaywall }}>
       {children}
     </PremiumContext>
   );
