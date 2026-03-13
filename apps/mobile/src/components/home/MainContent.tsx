@@ -12,13 +12,18 @@ import Animated, {
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 
+import { useQuery } from "convex/react";
+import { api } from "@adhd-planner/convex/convex/_generated/api";
+
 import { XPBar } from "../XPBar";
 import { MoodSlider } from "../MoodSlider";
 import { TaskCard } from "../TaskCard";
 import { BottomNav } from "../BottomNav";
 import { PointsToast } from "../PointsToast";
+import { StreakBadge } from "../StreakBadge";
 import { useHome } from "./HomeProvider";
 import { useSheetFlow } from "./SheetFlowProvider";
+import { usePremium } from "../../hooks/usePremium";
 import { posthog } from "../../lib/posthog";
 
 export function MainContent() {
@@ -36,6 +41,8 @@ export function MainContent() {
     openSheet,
   } = useHome();
   const flow = useSheetFlow();
+  const { isPremium } = usePremium();
+  const streakData = useQuery(api.streaks.get);
 
   // AI button animation — local to this component
   const aiScale = useSharedValue(1);
@@ -125,6 +132,11 @@ export function MainContent() {
             />
           </View>
         </View>
+
+        {/* Streak badge (premium) */}
+        {isPremium && streakData && (
+          <StreakBadge streak={streakData.currentStreak} />
+        )}
 
         {/* Mood slider */}
         <View className="px-6 pt-2 pb-8">
