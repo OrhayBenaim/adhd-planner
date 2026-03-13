@@ -51,6 +51,13 @@ function RootLayout() {
                   gestureEnabled: false,
                 }}
               />
+              <Stack.Screen
+                name="sign-in-gate"
+                options={{
+                  presentation: "fullScreenModal",
+                  gestureEnabled: false,
+                }}
+              />
             </Stack>
           </PostHogProvider>
         </PremiumProvider>

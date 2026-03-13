@@ -18,6 +18,7 @@ export default defineSchema({
     userAiEnabled: v.optional(v.boolean()),
     modelOverride: v.optional(v.string()),
     notificationsEnabled: v.optional(v.boolean()),
+    deviceId: v.optional(v.string()),
   }).index("by_user", ["userId"]),
 
   userProgress: defineTable({
@@ -74,7 +75,10 @@ export default defineSchema({
     userId: v.string(),
     month: v.string(),
     totalCost: v.number(),
-  }).index("by_user_month", ["userId", "month"]),
+    deviceId: v.optional(v.string()),
+  })
+    .index("by_user_month", ["userId", "month"])
+    .index("by_device_month", ["deviceId", "month"]),
 
   appConfig: defineTable({
     key: v.string(),
