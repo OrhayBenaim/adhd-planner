@@ -102,5 +102,14 @@ export const deleteAccount = mutation({
     for (const a of userAchievements) {
       await ctx.db.delete(a._id);
     }
+
+    // Delete coachNotificationLog
+    const coachLogs = await ctx.db
+      .query("coachNotificationLog")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    for (const log of coachLogs) {
+      await ctx.db.delete(log._id);
+    }
   },
 });
