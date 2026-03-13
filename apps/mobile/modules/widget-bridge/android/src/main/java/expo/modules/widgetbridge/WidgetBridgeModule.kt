@@ -12,33 +12,35 @@ class WidgetBridgeModule : Module() {
         Name("WidgetBridge")
 
         Function("setItem") { key: String, value: String ->
-            val context = appContext.reactContext ?: return@Function
-            val prefs = context.getSharedPreferences("widget_data", Context.MODE_PRIVATE)
-            prefs.edit().putString(key, value).apply()
+            appContext.reactContext?.let { context ->
+                val prefs = context.getSharedPreferences("widget_data", Context.MODE_PRIVATE)
+                prefs.edit().putString(key, value).apply()
+            }
         }
 
         Function("reloadWidgets") {
-            val context = appContext.reactContext ?: return@Function
-            val appWidgetManager = AppWidgetManager.getInstance(context)
+            appContext.reactContext?.let { context ->
+                val appWidgetManager = AppWidgetManager.getInstance(context)
 
-            val widgetProviders = listOf(
-                "com.ottersprod.lullio.widget.StreakWidgetProvider",
-                "com.ottersprod.lullio.widget.TodayTaskWidgetProvider",
-                "com.ottersprod.lullio.widget.MoodWidgetProvider"
-            )
+                val widgetProviders = listOf(
+                    "com.ottersprod.lullio.widget.StreakWidgetProvider",
+                    "com.ottersprod.lullio.widget.TodayTaskWidgetProvider",
+                    "com.ottersprod.lullio.widget.MoodWidgetProvider"
+                )
 
-            for (providerName in widgetProviders) {
-                try {
-                    val provider = ComponentName(context, providerName)
-                    val widgetIds = appWidgetManager.getAppWidgetIds(provider)
-                    if (widgetIds.isNotEmpty()) {
-                        val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
-                        intent.component = provider
-                        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, widgetIds)
-                        context.sendBroadcast(intent)
+                for (providerName in widgetProviders) {
+                    try {
+                        val provider = ComponentName(context, providerName)
+                        val widgetIds = appWidgetManager.getAppWidgetIds(provider)
+                        if (widgetIds.isNotEmpty()) {
+                            val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+                            intent.component = provider
+                            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, widgetIds)
+                            context.sendBroadcast(intent)
+                        }
+                    } catch (e: Exception) {
+                        // Widget provider not found — skip
                     }
-                } catch (e: Exception) {
-                    // Widget provider not found — skip
                 }
             }
         }
