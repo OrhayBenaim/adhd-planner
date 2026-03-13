@@ -17,7 +17,8 @@ import type BottomSheet from "@gorhom/bottom-sheet";
   | "settings"
   | "preferences"
   | "taskSummary"
-  | "profile";
+  | "profile"
+  | "paywall";
 
 type SheetEntry = { name: ActiveSheet; ref: React.RefObject<BottomSheet | null> };
 
