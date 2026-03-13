@@ -25,6 +25,9 @@
         "dark": "./assets/ios-dark.png",
         "tinted": "./assets/ios-tinted.png"
       },
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.com.ottersprod.lullio.widgets"]
+      },
       "infoPlist": {
         "NSSpeechRecognitionUsageDescription": "Allow $(PRODUCT_NAME) to use speech recognition.",
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to use the microphone."
