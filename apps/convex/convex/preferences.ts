@@ -28,27 +28,25 @@ export const needsOnboarding = query({
 
     const userId = identity.subject;
 
-    // Has preferences with onboarding completed? Skip.
-    const prefs = await ctx.db
-      .query("userPreferences")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
+    const [prefs, hasTask, hasProgress] = await Promise.all([
+      ctx.db
+        .query("userPreferences")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .first(),
+      ctx.db
+        .query("tasks")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .first(),
+      ctx.db
+        .query("userProgress")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .first(),
+    ]);
+
     if (prefs?.onboardingCompleted) return false;
-
-    // Has existing data (tasks or progress)? They're a pre-onboarding user. Skip.
-    const hasTask = await ctx.db
-      .query("tasks")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
     if (hasTask) return false;
-
-    const hasProgress = await ctx.db
-      .query("userProgress")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
     if (hasProgress) return false;
 
-    // New user with no data and no completed onboarding
     return true;
   },
 });
