@@ -50,6 +50,7 @@
       "expo-router",
       "expo-notifications",
       "react-native-localize",
+      "@react-native-google-signin/google-signin",
       [
         "expo-speech-recognition",
         {
