@@ -43,7 +43,15 @@ function RootLayout() {
       <ConvexBetterAuthProvider  client={convex} authClient={authClient} >
         <PremiumProvider>
           <PostHogProvider client={posthog}>
-            <Stack screenOptions={{ headerShown: false }} />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen
+                name="paywall"
+                options={{
+                  presentation: "fullScreenModal",
+                  gestureEnabled: false,
+                }}
+              />
+            </Stack>
           </PostHogProvider>
         </PremiumProvider>
       </ConvexBetterAuthProvider >

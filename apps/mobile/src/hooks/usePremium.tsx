@@ -8,7 +8,7 @@ import {
 } from "react";
 import { Platform } from "react-native";
 import Purchases, { type CustomerInfo } from "react-native-purchases";
-import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
+import { router } from "expo-router";
 import { authClient } from "../lib/authClient";
 
 const ENTITLEMENT_ID = "premium";
@@ -16,7 +16,7 @@ const ENTITLEMENT_ID = "premium";
 interface PremiumContextValue {
   isPremium: boolean;
   isLoading: boolean;
-  showPaywall: () => Promise<boolean>;
+  showPaywall: () => void;
 }
 
 const PremiumContext = createContext<PremiumContextValue | null>(null);
@@ -64,20 +64,8 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     return () => Purchases.removeCustomerInfoUpdateListener(listener);
   }, []);
 
-  const showPaywall = useCallback(async (): Promise<boolean> => {
-    try {
-      const result = await RevenueCatUI.presentPaywallIfNeeded({
-        requiredEntitlementIdentifier: ENTITLEMENT_ID,
-        displayCloseButton: true,
-      });
-
-      return (
-        result === PAYWALL_RESULT.PURCHASED ||
-        result === PAYWALL_RESULT.RESTORED
-      );
-    } catch {
-      return false;
-    }
+  const showPaywall = useCallback(() => {
+    router.push("/paywall");
   }, []);
 
   return (
