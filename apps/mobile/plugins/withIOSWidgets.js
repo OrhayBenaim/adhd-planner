@@ -1,11 +1,10 @@
-import {
-  ConfigPlugin,
+const {
   withXcodeProject,
   withDangerousMod,
   withEntitlementsPlist,
-} from "expo/config-plugins";
-import * as fs from "fs";
-import * as path from "path";
+} = require("expo/config-plugins");
+const fs = require("fs");
+const path = require("path");
 
 const WIDGET_EXTENSION_NAME = "LullioWidgets";
 const WIDGET_BUNDLE_ID = "com.ottersprod.lullio.widgets";
@@ -14,7 +13,7 @@ const SWIFT_SRC_DIR = "src/widgets/ios";
 const DEPLOYMENT_TARGET = "17.0";
 
 // Ensure main app has App Group entitlement
-const withAppGroupEntitlement: ConfigPlugin = (config) => {
+const withAppGroupEntitlement = (config) => {
   return withEntitlementsPlist(config, (config) => {
     config.modResults["com.apple.security.application-groups"] = [APP_GROUP];
     return config;
@@ -22,7 +21,7 @@ const withAppGroupEntitlement: ConfigPlugin = (config) => {
 };
 
 // Copy Swift files and create extension support files
-const withWidgetExtensionFiles: ConfigPlugin = (config) => {
+const withWidgetExtensionFiles = (config) => {
   return withDangerousMod(config, [
     "ios",
     async (config) => {
@@ -81,7 +80,7 @@ const withWidgetExtensionFiles: ConfigPlugin = (config) => {
 };
 
 // Add widget extension target to Xcode project
-const withWidgetXcodeTarget: ConfigPlugin = (config) => {
+const withWidgetXcodeTarget = (config) => {
   return withXcodeProject(config, (config) => {
     const project = config.modResults;
     const projectRoot = config.modRequest.projectRoot;
@@ -114,11 +113,7 @@ const withWidgetXcodeTarget: ConfigPlugin = (config) => {
     project.addToPbxGroup(group.uuid, mainGroupId);
 
     // Add Swift source files to the widget target
-    const extensionDir = path.join(
-      projectRoot,
-      "ios",
-      WIDGET_EXTENSION_NAME
-    );
+    const extensionDir = path.join(projectRoot, "ios", WIDGET_EXTENSION_NAME);
     if (fs.existsSync(extensionDir)) {
       const swiftFiles = fs
         .readdirSync(extensionDir)
@@ -159,12 +154,7 @@ const withWidgetXcodeTarget: ConfigPlugin = (config) => {
     };
 
     for (const [key, value] of Object.entries(buildSettings)) {
-      project.updateBuildProperty(
-        key,
-        value,
-        undefined,
-        WIDGET_EXTENSION_NAME
-      );
+      project.updateBuildProperty(key, value, undefined, WIDGET_EXTENSION_NAME);
     }
 
     // Add embed extension build phase to main app target
@@ -183,9 +173,11 @@ const withWidgetXcodeTarget: ConfigPlugin = (config) => {
   });
 };
 
-export const withIOSWidgets: ConfigPlugin = (config) => {
+const withIOSWidgets = (config) => {
   config = withAppGroupEntitlement(config);
   config = withWidgetExtensionFiles(config);
   config = withWidgetXcodeTarget(config);
   return config;
 };
+
+module.exports = withIOSWidgets;
