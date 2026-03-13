@@ -63,5 +63,44 @@ export const deleteAccount = mutation({
     for (const token of tokens) {
       await ctx.db.delete(token._id);
     }
+
+    // Delete subscriptions
+    const sub = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    if (sub) await ctx.db.delete(sub._id);
+
+    // Delete monthlyAiCosts
+    const monthlyCosts = await ctx.db
+      .query("monthlyAiCosts")
+      .filter((q) => q.eq(q.field("userId"), userId))
+      .collect();
+    for (const mc of monthlyCosts) {
+      await ctx.db.delete(mc._id);
+    }
+
+    // Delete aiCredits
+    const credits = await ctx.db
+      .query("aiCredits")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    if (credits) await ctx.db.delete(credits._id);
+
+    // Delete streaks
+    const streak = await ctx.db
+      .query("streaks")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    if (streak) await ctx.db.delete(streak._id);
+
+    // Delete achievements
+    const userAchievements = await ctx.db
+      .query("achievements")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect();
+    for (const a of userAchievements) {
+      await ctx.db.delete(a._id);
+    }
   },
 });
