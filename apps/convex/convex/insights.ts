@@ -1,12 +1,13 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { DAY_MS } from "./lib/constants";
-import { requireAuth } from "./lib/auth";
+import { requireAuth, requirePremium } from "./lib/auth";
 
 export const getWeeklyReport = query({
   args: {},
   handler: async (ctx) => {
     const userId = await requireAuth(ctx);
+    await requirePremium(ctx, userId);
 
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * DAY_MS);
@@ -68,6 +69,7 @@ export const getCompletionTrends = query({
   args: { days: v.optional(v.number()) },
   handler: async (ctx, { days = 30 }) => {
     const userId = await requireAuth(ctx);
+    await requirePremium(ctx, userId);
 
     const since = Date.now() - days * DAY_MS;
 

@@ -12,3 +12,32 @@ export async function requireAuth(
   if (!identity) throw new ConvexError("Unauthenticated");
   return identity.subject;
 }
+
+/**
+ * Check if user has active premium subscription.
+ */
+export async function checkPremium(
+  ctx: QueryCtx | MutationCtx,
+  userId: string,
+): Promise<boolean> {
+  const sub = await ctx.db
+    .query("subscriptions")
+    .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .first();
+  if (!sub?.isActive) return false;
+  if (sub.expiresAt && new Date(sub.expiresAt) <= new Date()) return false;
+  return true;
+}
+
+/**
+ * Require active premium subscription. Throws ConvexError if not premium.
+ */
+export async function requirePremium(
+  ctx: QueryCtx | MutationCtx,
+  userId: string,
+): Promise<void> {
+  const isPremium = await checkPremium(ctx, userId);
+  if (!isPremium) {
+    throw new ConvexError("Premium subscription required");
+  }
+}
