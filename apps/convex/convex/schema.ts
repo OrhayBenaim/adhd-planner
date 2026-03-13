@@ -10,7 +10,9 @@ export default defineSchema({
     completed: v.boolean(),
     dueDate: v.string(),
     dueTime: v.string(),
-  }).index("by_user", ["userId"]),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_completed", ["userId", "completed"]),
 
   userSettings: defineTable({
     userId: v.string(),
@@ -112,5 +114,7 @@ export default defineSchema({
     date: v.string(),
     type: v.string(),
     message: v.string(),
-  }).index("by_user", ["userId"]),
+  })
+    .index("by_user", ["userId"])
+    .index("by_user_date", ["userId", "date"]),
 });
