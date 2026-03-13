@@ -9,6 +9,7 @@ import { useTasks, useCreateTask, useCompleteTask, useDeleteTask, useUpdateTask 
 import { useUserProgress } from "../../hooks/useUserProgress";
 import { useSettings } from "../../hooks/useSettings";
 import { syncWidgetData } from "../../lib/widgetSync";
+import { usePremium } from "../../hooks/usePremium";
 import type BottomSheet from "@gorhom/bottom-sheet";
 
  type ActiveSheet =
@@ -79,17 +80,25 @@ export function HomeProvider({ children }: { children: ReactNode }) {
   const { progress } = useUserProgress();
   const { settings, updateSetting, adminAiEnabled } = useSettings();
   const streakData = useQuery(api.streaks.get);
+  const { isPremium } = usePremium();
 
   // Sync data to shared storage for home screen widgets
   useEffect(() => {
+    const todayStr = new Date().toISOString().split("T")[0];
+    const todayTasks = tasks.filter((t) => t.dueDate === todayStr);
+
     syncWidgetData({
+      isPremium,
       streak: streakData?.currentStreak ?? 0,
       suggestedTask: selectedTask?.title ?? null,
       level: progress.level,
       points: progress.points,
       pointsToNextLevel: progress.pointsToNextLevel,
+      moodLevel,
+      todayTaskCount: todayTasks.length,
+      todayCompletedCount: todayTasks.filter((t) => t.completed).length,
     });
-  }, [progress, selectedTask, streakData]);
+  }, [isPremium, progress, selectedTask, streakData, moodLevel, tasks]);
 
   // Sheet registry — SheetManager registers its refs here
   const sheetsRef = useRef<Map<ActiveSheet, React.RefObject<BottomSheet | null>>>(new Map());
