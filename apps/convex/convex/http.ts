@@ -57,7 +57,7 @@ http.route({
       await ctx.runMutation(internal.subscriptions.upsertFromWebhook, {
         userId: d.appUserId,
         revenueCatId: d.rcId,
-        entitlement: "premium",
+        entitlement: "Lullio Pro",
         isActive: d.classification === "active",
         expiresAt: d.expirationAtMs
           ? new Date(d.expirationAtMs).toISOString()

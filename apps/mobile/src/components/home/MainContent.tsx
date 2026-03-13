@@ -172,7 +172,8 @@ export function MainContent() {
         </View>
 
         {/* AI ceiling banner */}
-        {tasks.some((t) => !t.completed && t.difficulty === -1) && (
+        {/*TODO change to use debounce and check difficulty -1 */}
+        {!isPremium && tasks.some((t) => !t.completed && t.difficulty === -1) && (
           <View className="px-6 pb-2">
             <AiCeilingBanner onUpgrade={showPaywall} />
           </View>

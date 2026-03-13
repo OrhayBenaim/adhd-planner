@@ -6,6 +6,7 @@ import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useQuery } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { useHome } from "../home/HomeProvider";
+import { usePremium } from "../../hooks/usePremium";
 import { ProBadge } from "../ProBadge";
 
 interface Props {
@@ -66,8 +67,9 @@ function MiniBarChart({ data }: { data: Record<string, number> }) {
 export const InsightsSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const { closeSheet } = useHome();
-    const report = useQuery(api.insights.getWeeklyReport);
-    const trends = useQuery(api.insights.getCompletionTrends, { days: 7 });
+    const { isPremium } = usePremium();
+    const report = useQuery(api.insights.getWeeklyReport, isPremium ? {} : "skip");
+    const trends = useQuery(api.insights.getCompletionTrends, isPremium ? { days: 7 } : "skip");
 
     return (
       <BottomSheet

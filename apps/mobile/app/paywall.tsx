@@ -13,9 +13,10 @@ export default function PaywallScreen() {
     <View style={{ flex: 1 }}>
       <RevenueCatUI.Paywall
         options={{ displayCloseButton: true }}
-        onDismiss={() => router.back()}
-        onPurchaseCompleted={() => router.back()}
-        onRestoreCompleted={() => router.back()}
+        onDismiss={() => router.replace("/")}
+        onPurchaseCompleted={() => router.replace("/")}
+        onRestoreCompleted={() => router.replace("/")}
+
       />
     </View>
   );

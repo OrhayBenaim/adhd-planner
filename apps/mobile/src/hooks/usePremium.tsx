@@ -14,7 +14,7 @@ import { router } from "expo-router";
 import { authClient } from "../lib/authClient";
 import { getDeviceId } from "../lib/deviceId";
 
-const ENTITLEMENT_ID = "premium";
+const ENTITLEMENT_ID = "Lullio Pro";
 
 interface PremiumState {
   isPremium: boolean;
@@ -78,10 +78,17 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
 
       await Purchases.configure({ apiKey });
 
-      // Only identify non-anonymous users with RevenueCat
       const userId = session.data?.user?.id;
-      if (userId && !isAnonymous) {
+      if (userId) {
         await Purchases.logIn(userId);
+      }
+
+      const user = session.data?.user;
+      if (user?.email) {
+        await Purchases.setEmail(user.email);
+      }
+      if (user?.name) {
+        await Purchases.setDisplayName(user.name);
       }
 
       const info = await Purchases.getCustomerInfo();
