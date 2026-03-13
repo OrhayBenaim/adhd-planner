@@ -116,6 +116,13 @@ export const completeTask = mutation({
       await ctx.db.insert("userProgress", { userId, ...next });
     }
 
+    // Update streak in background
+    await ctx.scheduler.runAfter(
+      0,
+      internal.streaks.updateOnCompletion,
+      { userId },
+    );
+
     return { earned, leveledUp, progress: next };
   },
 });
