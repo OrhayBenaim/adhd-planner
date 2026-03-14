@@ -68,7 +68,7 @@ export function AuthenticatedProfile({
             setBusy(true);
             try {
               await deleteAccountMutation();
-              await authClient.signOut();
+              await authClient.deleteUser();
               onClose();
             } catch (e) {
               Sentry.captureException(e);
