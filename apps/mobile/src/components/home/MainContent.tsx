@@ -122,21 +122,32 @@ export function MainContent() {
           <Text className="text-sm text-[#6a7282] text-center mt-1">Let's find the perfect task for you</Text>
         </View>
 
-        {/* XP bar — tap opens insights for premium */}
-        <Pressable
-          onPress={isPremium ? () => openSheet("insights") : undefined}
-        >
-          <View className="py-6">
-            <View className="relative">
-              <XPBar progress={progress} />
-              <PointsToast
-                points={toast.points}
-                visible={toast.visible}
-                onDone={hideToast}
-              />
-            </View>
+        {/* XP bar */}
+        <View className="py-6">
+          <View className="relative">
+            <XPBar progress={progress} />
+            <PointsToast
+              points={toast.points}
+              visible={toast.visible}
+              onDone={hideToast}
+            />
           </View>
-        </Pressable>
+        </View>
+
+        {/* View Insights button (premium only) */}
+        {isPremium && (
+          <View className="items-center mb-2">
+            <Pressable
+              onPress={() => openSheet("insights")}
+              className="flex-row items-center gap-1.5 bg-[#f0f4ff] px-4 py-2 rounded-full"
+            >
+              <Ionicons name="bar-chart-outline" size={14} color="#5b8def" />
+              <Text className="text-sm font-medium text-[#5b8def]">
+                View Insights
+              </Text>
+            </Pressable>
+          </View>
+        )}
 
         {/* Streak badge (premium) */}
         {isPremium && streakData && (
