@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { View, Text, Image, Alert } from "react-native";
+import { View, Text, Image, Alert, Linking, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { AppPressable as Pressable } from "../../AppPressable";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
@@ -30,7 +30,7 @@ export function AuthenticatedProfile({
   onClose,
 }: AuthenticatedProfileProps) {
   const router = useRouter();
-  const { isPremium } = usePremium();
+  const { isPremium, expiresAt, willRenew, managementURL } = usePremium();
   const deleteAccountMutation = useMutation(api.account.deleteAccount);
   const [busy, setBusy] = useState(false);
 
@@ -80,6 +80,37 @@ export function AuthenticatedProfile({
       ],
     );
   }, [deleteAccountMutation, onClose]);
+
+  const formatExpiryDate = (isoDate: string): string => {
+    const date = new Date(isoDate);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const handleCancelSubscription = useCallback(() => {
+    Alert.alert(
+      "Cancel Subscription",
+      "You'll be redirected to your device's subscription settings to manage your subscription.",
+      [
+        { text: "Not now", style: "cancel" },
+        {
+          text: "Continue",
+          style: "destructive",
+          onPress: () => {
+            const url =
+              managementURL ??
+              (Platform.OS === "ios"
+                ? "https://apps.apple.com/account/subscriptions"
+                : "https://play.google.com/store/account/subscriptions");
+            Linking.openURL(url);
+          },
+        },
+      ],
+    );
+  }, [managementURL]);
 
   const provider = getProviderBadge();
 
@@ -149,6 +180,28 @@ export function AuthenticatedProfile({
           <View className="flex-1" />
           <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
         </Pressable>
+      )}
+
+      {/* Subscription (premium only) */}
+      {isPremium && (
+        <View className="bg-[#f5f7fa] rounded-3xl px-4 py-4 flex-row items-center mb-3" style={{ gap: 12 }}>
+          <View className="w-10 h-10 rounded-full bg-[#ffafcc] items-center justify-center">
+            <Ionicons name="card-outline" size={20} color="#fff" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-sm font-medium text-[#1e2939]">Subscription</Text>
+            {expiresAt && (
+              <Text className="text-xs text-[#6a7282]">
+                {willRenew ? "Renews" : "Expires"} {formatExpiryDate(expiresAt)}
+              </Text>
+            )}
+          </View>
+          {willRenew && (
+            <Pressable onPress={handleCancelSubscription}>
+              <Text className="text-sm font-medium text-[#ff6b6b]">Cancel</Text>
+            </Pressable>
+          )}
+        </View>
       )}
 
       {/* Sign Out */}
