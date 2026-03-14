@@ -26,11 +26,26 @@ interface PremiumState {
 }
 
 type PremiumAction =
-  | { type: "INIT_DONE"; isPremium: boolean; expiresAt: string | null; willRenew: boolean; managementURL: string | null }
+  | {
+      type: "INIT_DONE";
+      isPremium: boolean;
+      expiresAt: string | null;
+      willRenew: boolean;
+      managementURL: string | null;
+    }
   | { type: "INIT_FAILED" }
-  | { type: "PREMIUM_CHANGED"; isPremium: boolean; expiresAt: string | null; willRenew: boolean; managementURL: string | null };
+  | {
+      type: "PREMIUM_CHANGED";
+      isPremium: boolean;
+      expiresAt: string | null;
+      willRenew: boolean;
+      managementURL: string | null;
+    };
 
-function premiumReducer(_state: PremiumState, action: PremiumAction): PremiumState {
+function premiumReducer(
+  _state: PremiumState,
+  action: PremiumAction,
+): PremiumState {
   switch (action.type) {
     case "INIT_DONE":
       return {
@@ -41,7 +56,13 @@ function premiumReducer(_state: PremiumState, action: PremiumAction): PremiumSta
         managementURL: action.managementURL,
       };
     case "INIT_FAILED":
-      return { isPremium: false, isLoading: false, expiresAt: null, willRenew: false, managementURL: null };
+      return {
+        isPremium: false,
+        isLoading: false,
+        expiresAt: null,
+        willRenew: false,
+        managementURL: null,
+      };
     case "PREMIUM_CHANGED":
       return {
         ..._state,
@@ -72,7 +93,10 @@ export function usePremium() {
 }
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
-  const [{ isPremium, isLoading, expiresAt, willRenew, managementURL }, dispatch] = useReducer(premiumReducer, {
+  const [
+    { isPremium, isLoading, expiresAt, willRenew, managementURL },
+    dispatch,
+  ] = useReducer(premiumReducer, {
     isPremium: false,
     isLoading: true,
     expiresAt: null,
@@ -81,8 +105,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   });
 
   const session = authClient.useSession();
-  const isAnonymous =
-    (session.data?.user as any)?.isAnonymous ?? true;
+  const isAnonymous = (session.data?.user as any)?.isAnonymous ?? true;
   const registerDeviceIdMutation = useMutation(api.settings.registerDeviceId);
 
   const extractSubscriptionInfo = useCallback((info: CustomerInfo) => {
@@ -97,6 +120,12 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     async function init() {
+      // Don't initialize RevenueCat for anonymous users — they can't purchase
+      if (isAnonymous || !session.data?.user?.id) {
+        dispatch({ type: "INIT_FAILED" });
+        return;
+      }
+
       const apiKey =
         Platform.OS === "ios"
           ? process.env.EXPO_PUBLIC_REVENUECAT_APPLE_KEY
@@ -109,17 +138,13 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       }
 
       await Purchases.configure({ apiKey });
+      await Purchases.logIn(session.data.user.id);
 
-      const userId = session.data?.user?.id;
-      if (userId) {
-        await Purchases.logIn(userId);
-      }
-
-      const user = session.data?.user;
-      if (user?.email) {
+      const user = session.data.user;
+      if (user.email) {
         await Purchases.setEmail(user.email);
       }
-      if (user?.name) {
+      if (user.name) {
         await Purchases.setDisplayName(user.name);
       }
 
@@ -139,18 +164,24 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   }, [session.data?.user?.id, registerDeviceIdMutation]);
 
   useEffect(() => {
-    const apiKey =
-      Platform.OS === "ios"
-        ? process.env.EXPO_PUBLIC_REVENUECAT_APPLE_KEY
-        : process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY;
-    if (!apiKey) return;
-
     const listener = (info: CustomerInfo) => {
       dispatch({ type: "PREMIUM_CHANGED", ...extractSubscriptionInfo(info) });
     };
-    Purchases.addCustomerInfoUpdateListener(listener);
-    return () => { Purchases.removeCustomerInfoUpdateListener(listener); };
-  }, []);
+    if (!isAnonymous && session?.data?.user.id) {
+      const apiKey =
+        Platform.OS === "ios"
+          ? process.env.EXPO_PUBLIC_REVENUECAT_APPLE_KEY
+          : process.env.EXPO_PUBLIC_REVENUECAT_GOOGLE_KEY;
+      if (!apiKey) return;
+
+      Purchases.addCustomerInfoUpdateListener(listener);
+    }
+    return () => {
+      if (!isAnonymous && session?.data?.user.id) {
+        Purchases.removeCustomerInfoUpdateListener(listener);
+      }
+    };
+  }, [isAnonymous, session.data?.user?.id]);
 
   const showPaywall = useCallback(() => {
     if (isAnonymous) {
@@ -181,7 +212,17 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   }, [showPaywall]);
 
   return (
-    <PremiumContext value={{ isPremium, isAnonymous, isLoading, expiresAt, willRenew, managementURL, showPaywall }}>
+    <PremiumContext
+      value={{
+        isPremium,
+        isAnonymous,
+        isLoading,
+        expiresAt,
+        willRenew,
+        managementURL,
+        showPaywall,
+      }}
+    >
       {children}
     </PremiumContext>
   );
