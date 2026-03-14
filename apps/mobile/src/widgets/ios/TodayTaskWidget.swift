@@ -29,7 +29,7 @@ struct TodayTaskWidgetView: View {
         if !entry.data.isPremium {
             PremiumUpsellView()
         } else {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text("📋 Today")
                         .font(.caption)
@@ -40,7 +40,38 @@ struct TodayTaskWidgetView: View {
                         .foregroundColor(.secondary)
                 }
 
-                if let task = entry.data.suggestedTask {
+                let uncompletedTasks = (entry.data.tasks ?? []).filter { !$0.completed }
+
+                if !uncompletedTasks.isEmpty {
+                    if #available(iOS 17.0, *) {
+                        ForEach(uncompletedTasks.prefix(5), id: \.id) { task in
+                            HStack(spacing: 6) {
+                                Button(intent: CompleteTaskIntent(taskId: task.id)) {
+                                    Image(systemName: "circle")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.blue)
+                                }
+                                .buttonStyle(.plain)
+                                Text(task.title)
+                                    .font(.caption)
+                                    .lineLimit(1)
+                                    .foregroundColor(Color(red: 0.12, green: 0.23, blue: 0.37))
+                            }
+                        }
+                    } else {
+                        ForEach(uncompletedTasks.prefix(5), id: \.id) { task in
+                            HStack(spacing: 6) {
+                                Image(systemName: "circle")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.blue)
+                                Text(task.title)
+                                    .font(.caption)
+                                    .lineLimit(1)
+                                    .foregroundColor(Color(red: 0.12, green: 0.23, blue: 0.37))
+                            }
+                        }
+                    }
+                } else if let task = entry.data.suggestedTask {
                     Text(task)
                         .font(.subheadline)
                         .lineLimit(2)
@@ -69,8 +100,20 @@ struct TodayTaskWidget: Widget {
         StaticConfiguration(kind: kind, provider: TodayTaskProvider()) { entry in
             TodayTaskWidgetView(entry: entry)
         }
-        .configurationDisplayName("Today's Task")
-        .description("See your suggested task for today")
+        .configurationDisplayName("Today's Tasks")
+        .description("View and complete your tasks for today")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
+}
+
+#Preview(as: .systemSmall) {
+    TodayTaskWidget()
+} timeline: {
+    TodayTaskEntry(date: Date(), data: .placeholder)
+}
+
+#Preview(as: .systemMedium) {
+    TodayTaskWidget()
+} timeline: {
+    TodayTaskEntry(date: Date(), data: .placeholder)
 }

@@ -1,5 +1,11 @@
 import Foundation
 
+struct WidgetTaskItem: Codable {
+    let id: String
+    let title: String
+    let completed: Bool
+}
+
 struct WidgetData: Codable {
     let isPremium: Bool
     let streak: Int
@@ -10,6 +16,7 @@ struct WidgetData: Codable {
     let moodLevel: Int
     let todayTaskCount: Int
     let todayCompletedCount: Int
+    let tasks: [WidgetTaskItem]?
 
     static let appGroup = "group.com.ottersprod.lullio.widgets"
     static let storageKey = "@widget_data"
@@ -33,7 +40,8 @@ struct WidgetData: Codable {
             pointsToNextLevel: 100,
             moodLevel: 50,
             todayTaskCount: 0,
-            todayCompletedCount: 0
+            todayCompletedCount: 0,
+            tasks: nil
         )
     }
 

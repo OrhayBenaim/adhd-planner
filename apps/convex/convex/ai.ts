@@ -1,9 +1,90 @@
 import { v } from "convex/values";
-import { internalAction, internalMutation, internalQuery } from "./_generated/server";
+import { internalAction, internalMutation, internalQuery, query } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { sanitizeForPrompt, MAX_TITLE } from "./lib/validation";
 import { sentryCaptureEvent } from "./lib/sentry";
 import { AI_RATE_LIMIT_WINDOW_MS, AI_MAX_SCORES_PER_WINDOW } from "./lib/constants";
+import { requireAuth } from "./lib/auth";
+
+const CEILING_DEFAULTS: Record<string, number> = {
+  freeTierCostCeiling: 1.0,
+  premiumTierCostCeiling: 10.0,
+};
+
+export const getCeilingStatus = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
+
+    // Check user AI settings
+    const settings = await ctx.db
+      .query("userSettings")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    const adminEnabled = settings?.aiEnabled ?? true;
+    const userEnabled = settings?.userAiEnabled ?? true;
+    if (!adminEnabled || !userEnabled) {
+      return { atCeiling: false };
+    }
+
+    // Check premium status
+    const sub = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    const premium =
+      sub?.isActive === true &&
+      (!sub.expiresAt || new Date(sub.expiresAt) > new Date());
+
+    // Get ceiling
+    const ceilingKey = premium ? "premiumTierCostCeiling" : "freeTierCostCeiling";
+    const ceilingRow = await ctx.db
+      .query("appConfig")
+      .withIndex("by_key", (q) => q.eq("key", ceilingKey))
+      .first();
+    const ceiling = (ceilingRow?.value as number) ?? CEILING_DEFAULTS[ceilingKey] ?? 0;
+
+    // Get monthly cost (user + device)
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const userCostRow = await ctx.db
+      .query("monthlyAiCosts")
+      .withIndex("by_user_month", (q) =>
+        q.eq("userId", userId).eq("month", currentMonth),
+      )
+      .first();
+    let monthlyCost = userCostRow?.totalCost ?? 0;
+
+    const deviceId = settings?.deviceId;
+    if (deviceId) {
+      const deviceRows = await ctx.db
+        .query("monthlyAiCosts")
+        .withIndex("by_device_month", (q) =>
+          q.eq("deviceId", deviceId as string).eq("month", currentMonth),
+        )
+        .collect();
+      const deviceCost = deviceRows.reduce((sum, r) => sum + r.totalCost, 0);
+      monthlyCost = Math.max(monthlyCost, deviceCost);
+    }
+
+    if (monthlyCost < ceiling) {
+      return { atCeiling: false };
+    }
+
+    // At ceiling — check credits
+    const creditRow = await ctx.db
+      .query("aiCredits")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    if ((creditRow?.balance ?? 0) > 0) {
+      return { atCeiling: false };
+    }
+
+    return {
+      atCeiling: true,
+      reason: "Monthly AI scoring limit reached",
+    };
+  },
+});
 
 export const updateTaskDifficulty = internalMutation({
   args: {
