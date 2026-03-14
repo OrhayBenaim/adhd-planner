@@ -26,7 +26,10 @@
         "tinted": "./assets/ios-tinted.png"
       },
       "entitlements": {
-        "com.apple.security.application-groups": ["group.com.ottersprod.lullio.widgets"]
+        "com.apple.security.application-groups": [
+          "group.com.ottersprod.lullio.widgets",
+          "group.com.ottersprod.lullio.widgets"
+        ]
       },
       "infoPlist": {
         "NSSpeechRecognitionUsageDescription": "Allow $(PRODUCT_NAME) to use speech recognition.",
@@ -43,6 +46,7 @@
       "package": "com.ottersprod.lullio",
       "googleServicesFile": "./google-services.json",
       "permissions": [
+        "android.permission.RECORD_AUDIO",
         "android.permission.RECORD_AUDIO"
       ]
     },
@@ -81,6 +85,12 @@
         "projectId": "8c79385d-5d58-4bc4-aab7-d31b537c7bad"
       }
     },
-    "owner": "ottersprod"
+    "owner": "ottersprod",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/8c79385d-5d58-4bc4-aab7-d31b537c7bad"
+    }
   }
 }
