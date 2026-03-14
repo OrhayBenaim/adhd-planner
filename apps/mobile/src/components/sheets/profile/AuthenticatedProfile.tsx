@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { View, Text, Image, Alert } from "react-native";
+import { useRouter } from "expo-router";
 import { AppPressable as Pressable } from "../../AppPressable";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { Ionicons } from "@expo/vector-icons";
@@ -7,6 +8,7 @@ import * as Sentry from "@sentry/react-native";
 import { useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { authClient } from "../../../lib/authClient";
+import { usePremium } from "../../../hooks/usePremium";
 
 interface SessionUser {
   name?: string | null;
@@ -27,6 +29,8 @@ export function AuthenticatedProfile({
   onEditNameChange,
   onClose,
 }: AuthenticatedProfileProps) {
+  const router = useRouter();
+  const { isPremium } = usePremium();
   const deleteAccountMutation = useMutation(api.account.deleteAccount);
   const [busy, setBusy] = useState(false);
 
@@ -127,6 +131,25 @@ export function AuthenticatedProfile({
           </View>
         )}
       </View>
+
+      {/* Achievements (premium only) */}
+      {isPremium && (
+        <Pressable
+          onPress={() => {
+            onClose();
+            setTimeout(() => router.push("/achievements"), 300);
+          }}
+          className="bg-[#f5f7fa] rounded-3xl px-4 py-4 flex-row items-center mb-3"
+          style={{ gap: 12 }}
+        >
+          <View className="w-10 h-10 rounded-full bg-[#cdb4db] items-center justify-center">
+            <Ionicons name="trophy-outline" size={20} color="#fff" />
+          </View>
+          <Text className="text-sm font-medium text-[#1e2939]">Achievements</Text>
+          <View className="flex-1" />
+          <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
+        </Pressable>
+      )}
 
       {/* Sign Out */}
       <Pressable

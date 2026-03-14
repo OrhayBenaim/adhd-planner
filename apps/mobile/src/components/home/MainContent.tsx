@@ -152,7 +152,6 @@ export function MainContent() {
         {isPremium && streakData && (
           <StreakBadge
             streak={streakData.currentStreak}
-            onPress={() => openSheet("achievements")}
           />
         )}
 
