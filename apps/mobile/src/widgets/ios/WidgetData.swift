@@ -46,18 +46,18 @@ struct WidgetData: Codable {
     }
 
     var moodEmoji: String {
-        if moodLevel >= 80 { return "😊" }
-        if moodLevel >= 60 { return "🙂" }
-        if moodLevel >= 40 { return "😐" }
-        if moodLevel >= 20 { return "😔" }
+        if moodLevel > 80 { return "😊" }
+        if moodLevel > 60 { return "🙂" }
+        if moodLevel > 40 { return "😐" }
+        if moodLevel > 20 { return "😔" }
         return "😢"
     }
 
     var moodLabel: String {
-        if moodLevel >= 80 { return "Great" }
-        if moodLevel >= 60 { return "Good" }
-        if moodLevel >= 40 { return "Okay" }
-        if moodLevel >= 20 { return "Low" }
-        return "Rough"
+        if moodLevel > 80 { return "Super Motivated" }
+        if moodLevel > 60 { return "Motivated" }
+        if moodLevel > 40 { return "Focused" }
+        if moodLevel > 20 { return "Low Energy" }
+        return "Exhausted"
     }
 }
