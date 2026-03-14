@@ -24,7 +24,7 @@ class StreakWidgetProvider : AppWidgetProvider() {
             } else {
                 RemoteViews(packageName, R.layout.widget_streak).apply {
                     setTextViewText(R.id.streak_count, "${data.streak}")
-                    setTextViewText(R.id.level_text, "Lvl ${data.level}")
+                    setTextViewText(R.id.level_text, "Level ${data.level}")
                     val progress = if (data.pointsToNextLevel > 0) {
                         (data.points * 100) / data.pointsToNextLevel
                     } else 0

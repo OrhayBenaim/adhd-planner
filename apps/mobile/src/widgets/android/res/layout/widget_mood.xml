@@ -12,61 +12,66 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="😐"
-        android:textSize="32sp" />
+        android:textSize="28sp" />
     <TextView
         android:id="@+id/mood_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Okay"
-        android:textSize="14sp"
+        android:text="Focused"
+        android:textSize="13sp"
         android:textStyle="bold"
         android:textColor="#1E3A5F"
-        android:layout_marginTop="6dp" />
+        android:layout_marginTop="4dp" />
+    <!-- Mood bar selector -->
     <LinearLayout
         android:id="@+id/mood_buttons"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
         android:orientation="horizontal"
         android:layout_marginTop="8dp"
-        android:gravity="center">
+        android:background="@drawable/mood_bar_segment"
+        android:gravity="center"
+        android:paddingStart="2dp"
+        android:paddingEnd="2dp">
         <TextView
             android:id="@+id/mood_btn_1"
-            android:layout_width="28dp"
+            android:layout_width="0dp"
             android:layout_height="28dp"
+            android:layout_weight="1"
             android:gravity="center"
             android:text="😢"
-            android:textSize="18sp"
-            android:layout_marginEnd="4dp" />
+            android:textSize="16sp" />
         <TextView
             android:id="@+id/mood_btn_2"
-            android:layout_width="28dp"
+            android:layout_width="0dp"
             android:layout_height="28dp"
+            android:layout_weight="1"
             android:gravity="center"
             android:text="😔"
-            android:textSize="18sp"
-            android:layout_marginEnd="4dp" />
+            android:textSize="16sp" />
         <TextView
             android:id="@+id/mood_btn_3"
-            android:layout_width="28dp"
+            android:layout_width="0dp"
             android:layout_height="28dp"
+            android:layout_weight="1"
             android:gravity="center"
             android:text="😐"
-            android:textSize="18sp"
-            android:layout_marginEnd="4dp" />
+            android:textSize="16sp" />
         <TextView
             android:id="@+id/mood_btn_4"
-            android:layout_width="28dp"
+            android:layout_width="0dp"
             android:layout_height="28dp"
+            android:layout_weight="1"
             android:gravity="center"
             android:text="🙂"
-            android:textSize="18sp"
-            android:layout_marginEnd="4dp" />
+            android:textSize="16sp" />
         <TextView
             android:id="@+id/mood_btn_5"
-            android:layout_width="28dp"
+            android:layout_width="0dp"
             android:layout_height="28dp"
+            android:layout_weight="1"
             android:gravity="center"
             android:text="😊"
-            android:textSize="18sp" />
+            android:textSize="16sp" />
     </LinearLayout>
 </LinearLayout>

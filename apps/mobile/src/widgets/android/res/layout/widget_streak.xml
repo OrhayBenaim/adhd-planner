@@ -2,47 +2,92 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
     android:background="@drawable/widget_background"
-    android:padding="12dp"
     android:id="@+id/widget_root">
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="🔥"
-        android:textSize="20sp" />
-    <TextView
-        android:id="@+id/streak_count"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="0"
-        android:textSize="36sp"
-        android:textStyle="bold"
-        android:textColor="#1E3A5F"
-        android:layout_marginTop="4dp" />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Day Streak"
-        android:textSize="11sp"
-        android:textColor="#64748B"
-        android:layout_marginTop="2dp" />
-    <ProgressBar
-        android:id="@+id/xp_progress"
-        style="?android:attr/progressBarStyleHorizontal"
+
+    <!-- Top half: Streak info (2-column grid) -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="6dp"
-        android:progressDrawable="@drawable/widget_progress_bar"
-        android:max="100"
-        android:progress="0"
-        android:layout_marginTop="6dp" />
-    <TextView
-        android:id="@+id/level_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Lvl 1"
-        android:textSize="10sp"
-        android:textColor="#94A3B8"
-        android:layout_marginTop="2dp" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="12dp">
+
+        <!-- Left: streak count + fire -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/streak_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:textColor="#1E3A5F" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔥"
+                android:textSize="24sp"
+                android:layout_marginStart="4dp" />
+        </LinearLayout>
+
+        <!-- Right: "Streak" label -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Day"
+                android:textSize="13sp"
+                android:textColor="#64748B" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Streak"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#1E3A5F" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Bottom half: XP bar -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <ProgressBar
+            android:id="@+id/xp_progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:progressDrawable="@drawable/widget_xp_bar"
+            android:max="100"
+            android:progress="0"
+            android:layout_gravity="fill" />
+
+        <TextView
+            android:id="@+id/level_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Level 1"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:textColor="#1E3A5F"
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_marginBottom="6dp" />
+    </FrameLayout>
 </LinearLayout>
