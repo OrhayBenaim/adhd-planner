@@ -13,8 +13,9 @@ export default function SignInGateScreen() {
   const [view, setView] = useState<GateView>("options");
 
   const handleAuthSuccess = useCallback(() => {
-    // After signing in, go straight to paywall
-    router.replace("/paywall");
+    // Delay navigation to let auth state re-renders settle before replacing the screen.
+    // Immediate replace causes a Fabric "child already has a parent" crash on Android.
+    setTimeout(() => router.replace("/paywall"), 500);
   }, []);
 
   return (

@@ -56,14 +56,18 @@ export function SignUpWithEmail({
       const { error: authError } = await authClient.signUp.email({
         email: trimmedEmail,
         password,
-        name: name ?? "",
+        name: name || trimmedEmail.split("@")[0],
       });
       if (authError) {
         Sentry.captureMessage(
           `Sign-up failed: ${authError.message ?? "unknown"}`,
           "error",
         );
-        setError("Sign-up failed. Please try again.");
+        const userMessage =
+          authError.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL"
+            ? "An account with this email already exists. Try signing in instead."
+            : "Sign-up failed. Please try again.";
+        setError(userMessage);
         return;
       }
       setPassword("");

@@ -164,7 +164,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     function handleUrl(event: { url: string }) {
       const parsed = Linking.parse(event.url);
-      if (parsed.path === "paywall") {
+      if (parsed.hostname === "paywall" || parsed.path === "paywall") {
         showPaywall();
       }
     }
