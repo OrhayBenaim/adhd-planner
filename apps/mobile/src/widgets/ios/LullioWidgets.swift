@@ -14,6 +14,7 @@ struct PremiumUpsellView: View {
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
+        .widgetURL(URL(string: "lullio://paywall"))
         .containerBackground(.fill.tertiary, for: .widget)
     }
 }
