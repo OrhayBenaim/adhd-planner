@@ -148,6 +148,14 @@ export function MainContent() {
           </Text>
         </View>
 
+        {/* Streak badge (premium) */}
+        {isPremium && streakData && (
+          <StreakBadge
+            streak={streakData.currentStreak}
+            onPress={() => openSheet("achievements")}
+          />
+        )}
+
         {/* XP bar */}
         <View className="py-6">
           <View className="relative">
@@ -158,17 +166,7 @@ export function MainContent() {
               onDone={hideToast}
             />
           </View>
-
-        
         </View>
-
-        {/* Streak badge (premium) */}
-        {isPremium && streakData && (
-          <StreakBadge
-            streak={streakData.currentStreak}
-            onPress={() => openSheet("achievements")}
-          />
-        )}
 
         {/* Mood slider */}
         <View className="px-6 pt-2 pb-8">
