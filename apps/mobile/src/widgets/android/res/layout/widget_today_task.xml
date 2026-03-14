@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@drawable/widget_background"
-    android:padding="16dp"
+    android:padding="12dp"
     android:id="@+id/widget_root">
     <!-- Header row -->
     <RelativeLayout
@@ -27,7 +27,14 @@
             android:textColor="#64748B"
             android:layout_alignParentEnd="true" />
     </RelativeLayout>
-    <!-- Task card -->
+    <!-- Task list container -->
+    <LinearLayout
+        android:id="@+id/task_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="6dp" />
+    <!-- Fallback when no tasks array -->
     <TextView
         android:id="@+id/suggested_task"
         android:layout_width="match_parent"
@@ -39,5 +46,6 @@
         android:ellipsize="end"
         android:background="@drawable/widget_background_premium_upsell"
         android:padding="10dp"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="8dp"
+        android:visibility="gone" />
 </LinearLayout>

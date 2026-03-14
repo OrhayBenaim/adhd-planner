@@ -96,6 +96,48 @@ const withAndroidWidgetManifest = (config) => {
       });
     }
 
+    // Register MoodWidgetReceiver for interactive mood buttons
+    const moodReceiverName = "com.ottersprod.lullio.widget.MoodWidgetReceiver";
+    const moodReceiverExists = mainApp.receiver.some(
+      (r) => r.$?.["android:name"] === moodReceiverName
+    );
+    if (!moodReceiverExists) {
+      mainApp.receiver.push({
+        $: {
+          "android:name": moodReceiverName,
+          "android:exported": "false",
+        },
+        "intent-filter": [
+          {
+            action: [
+              { $: { "android:name": "com.ottersprod.lullio.SET_MOOD" } },
+            ],
+          },
+        ],
+      });
+    }
+
+    // Register TaskWidgetReceiver for interactive task completion
+    const taskReceiverName = "com.ottersprod.lullio.widget.TaskWidgetReceiver";
+    const taskReceiverExists = mainApp.receiver.some(
+      (r) => r.$?.["android:name"] === taskReceiverName
+    );
+    if (!taskReceiverExists) {
+      mainApp.receiver.push({
+        $: {
+          "android:name": taskReceiverName,
+          "android:exported": "false",
+        },
+        "intent-filter": [
+          {
+            action: [
+              { $: { "android:name": "com.ottersprod.lullio.COMPLETE_TASK" } },
+            ],
+          },
+        ],
+      });
+    }
+
     return config;
   });
 };
