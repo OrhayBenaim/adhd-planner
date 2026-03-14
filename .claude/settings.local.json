@@ -65,7 +65,14 @@
       "Bash(cd C:/Users/Orhay/git/adhd-planner/apps/mobile && npx -y react-doctor@latest . 2>&1 | grep -i \"warn\\\\|⚠\\\\|InsightsSheet\\\\|icon\")",
       "Bash(cd C:/Users/Orhay/git/adhd-planner/apps/mobile && npm run typecheck 2>&1 | tail -3)",
       "Bash(grep \"previewLayout\\\\|previewImage\" apps/mobile/src/widgets/android/res/xml/*.xml)",
-      "Bash(cd apps/mobile && npx -y react-doctor@latest . 2>&1 | tail -20)"
+      "Bash(cd apps/mobile && npx -y react-doctor@latest . 2>&1 | tail -20)",
+      "Bash(cd:*)",
+      "Bash(npx:*)",
+      "Bash(adb logcat:*)",
+      "Bash(adb devices:*)",
+      "mcp__plugin_context-mode_context-mode__ctx_execute",
+      "mcp__plugin_context-mode_context-mode__ctx_execute_file",
+      "Bash(npm run:*)"
     ]
   }
 }
