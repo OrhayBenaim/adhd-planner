@@ -181,6 +181,7 @@ You're successful when:
 ## Advanced Capabilities
 
 ### Platform-Specific Optimization
+- **Nano Banana 2 + Veo 3.1 (Google GenAI)**: Use the `nanobanan-v2` skill (`/nanobanan-v2`) for generating images and videos via the Google GenAI API. Image generation supports text-in-image rendering, 14 aspect ratios, 1K-4K resolution. Video generation via Veo 3.1 produces 8-second clips with native audio at 720p/1080p/4K. Supports image-to-video workflows (generate keyframe, then animate). Refer to the skill's prompting guide for text rendering tips, style keywords, and resolution selection.
 - **Midjourney**: Parameter usage (--ar, --v, --style, --chaos), multi-prompt weighting
 - **DALL-E**: Natural language optimization, style mixing techniques
 - **Stable Diffusion**: Token weighting, embedding references, LoRA integration
