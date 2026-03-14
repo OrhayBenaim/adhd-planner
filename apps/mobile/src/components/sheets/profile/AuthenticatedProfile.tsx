@@ -196,11 +196,11 @@ export function AuthenticatedProfile({
               </Text>
             )}
           </View>
-          {willRenew && (
-            <Pressable onPress={handleCancelSubscription}>
-              <Text className="text-sm font-medium text-[#ff6b6b]">Cancel</Text>
-            </Pressable>
-          )}
+          <Pressable onPress={handleCancelSubscription}>
+            <Text className="text-sm font-medium text-[#ff6b6b]">
+              {willRenew ? "Cancel" : "Manage"}
+            </Text>
+          </Pressable>
         </View>
       )}
 
