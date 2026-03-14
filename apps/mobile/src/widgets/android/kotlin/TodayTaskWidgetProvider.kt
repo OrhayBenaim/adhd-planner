@@ -5,6 +5,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.view.View
 import android.widget.RemoteViews
 import com.ottersprod.lullio.R
@@ -68,11 +69,17 @@ class TodayTaskWidgetProvider : AppWidgetProvider() {
                 }
             }
 
-            // Click on root to open app
-            val launchIntent = context.packageManager.getLaunchIntentForPackage(packageName)
-            if (launchIntent != null) {
+            // Click on root: non-premium opens paywall deep link, premium opens app
+            val rootIntent = if (!data.isPremium) {
+                Intent(Intent.ACTION_VIEW, Uri.parse("lullio://paywall")).apply {
+                    setPackage(packageName)
+                }
+            } else {
+                context.packageManager.getLaunchIntentForPackage(packageName)
+            }
+            if (rootIntent != null) {
                 val pendingIntent = PendingIntent.getActivity(
-                    context, appWidgetId, launchIntent,
+                    context, appWidgetId, rootIntent,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
                 views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
