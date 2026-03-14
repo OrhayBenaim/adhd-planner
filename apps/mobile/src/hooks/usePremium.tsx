@@ -10,6 +10,7 @@ import { Platform } from "react-native";
 import Purchases, { type CustomerInfo } from "react-native-purchases";
 import { useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
+import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { authClient } from "../lib/authClient";
 import { getDeviceId } from "../lib/deviceId";
@@ -133,6 +134,26 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       router.push("/paywall");
     }
   }, [isAnonymous]);
+
+  // Handle lullio://paywall deep link from widgets
+  useEffect(() => {
+    function handleUrl(event: { url: string }) {
+      const parsed = Linking.parse(event.url);
+      if (parsed.path === "paywall") {
+        showPaywall();
+      }
+    }
+
+    // Handle URL when app is already open
+    const subscription = Linking.addEventListener("url", handleUrl);
+
+    // Handle URL that launched the app (cold start)
+    Linking.getInitialURL().then((url) => {
+      if (url) handleUrl({ url });
+    });
+
+    return () => subscription.remove();
+  }, [showPaywall]);
 
   return (
     <PremiumContext value={{ isPremium, isAnonymous, isLoading, showPaywall }}>
