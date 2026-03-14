@@ -3,6 +3,12 @@ package com.ottersprod.lullio.widget
 import android.content.Context
 import org.json.JSONObject
 
+data class TaskItem(
+    val id: String,
+    val title: String,
+    val completed: Boolean
+)
+
 data class WidgetData(
     val isPremium: Boolean,
     val streak: Int,
@@ -12,7 +18,8 @@ data class WidgetData(
     val pointsToNextLevel: Int,
     val moodLevel: Int,
     val todayTaskCount: Int,
-    val todayCompletedCount: Int
+    val todayCompletedCount: Int,
+    val tasks: List<TaskItem>
 ) {
     companion object {
         private const val PREFS_NAME = "widget_data"
@@ -23,6 +30,18 @@ data class WidgetData(
             val json = prefs.getString(KEY, null) ?: return default()
             return try {
                 val obj = JSONObject(json)
+                val tasksArray = obj.optJSONArray("tasks")
+                val taskList = mutableListOf<TaskItem>()
+                if (tasksArray != null) {
+                    for (i in 0 until tasksArray.length()) {
+                        val t = tasksArray.getJSONObject(i)
+                        taskList.add(TaskItem(
+                            id = t.getString("id"),
+                            title = t.getString("title"),
+                            completed = t.optBoolean("completed", false)
+                        ))
+                    }
+                }
                 WidgetData(
                     isPremium = obj.optBoolean("isPremium", false),
                     streak = obj.optInt("streak", 0),
@@ -32,7 +51,8 @@ data class WidgetData(
                     pointsToNextLevel = obj.optInt("pointsToNextLevel", 100),
                     moodLevel = obj.optInt("moodLevel", 50),
                     todayTaskCount = obj.optInt("todayTaskCount", 0),
-                    todayCompletedCount = obj.optInt("todayCompletedCount", 0)
+                    todayCompletedCount = obj.optInt("todayCompletedCount", 0),
+                    tasks = taskList
                 )
             } catch (e: Exception) {
                 default()
@@ -48,7 +68,8 @@ data class WidgetData(
             pointsToNextLevel = 100,
             moodLevel = 50,
             todayTaskCount = 0,
-            todayCompletedCount = 0
+            todayCompletedCount = 0,
+            tasks = emptyList()
         )
     }
 

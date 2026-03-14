@@ -22,11 +22,51 @@
         android:textStyle="bold"
         android:textColor="#1E3A5F"
         android:layout_marginTop="6dp" />
-    <TextView
+    <LinearLayout
+        android:id="@+id/mood_buttons"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Tap to check in"
-        android:textSize="10sp"
-        android:textColor="#94A3B8"
-        android:layout_marginTop="4dp" />
+        android:orientation="horizontal"
+        android:layout_marginTop="8dp"
+        android:gravity="center">
+        <TextView
+            android:id="@+id/mood_btn_1"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:gravity="center"
+            android:text="😢"
+            android:textSize="18sp"
+            android:layout_marginEnd="4dp" />
+        <TextView
+            android:id="@+id/mood_btn_2"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:gravity="center"
+            android:text="😔"
+            android:textSize="18sp"
+            android:layout_marginEnd="4dp" />
+        <TextView
+            android:id="@+id/mood_btn_3"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:gravity="center"
+            android:text="😐"
+            android:textSize="18sp"
+            android:layout_marginEnd="4dp" />
+        <TextView
+            android:id="@+id/mood_btn_4"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:gravity="center"
+            android:text="🙂"
+            android:textSize="18sp"
+            android:layout_marginEnd="4dp" />
+        <TextView
+            android:id="@+id/mood_btn_5"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:gravity="center"
+            android:text="😊"
+            android:textSize="18sp" />
+    </LinearLayout>
 </LinearLayout>

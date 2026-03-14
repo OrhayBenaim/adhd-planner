@@ -1,7 +1,7 @@
 // apps/mobile/src/components/home/MainContent.tsx
 import { View, ScrollView, Text } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
-import { useCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -44,6 +44,33 @@ export function MainContent() {
   const flow = useSheetFlow();
   const { isPremium, showPaywall } = usePremium();
   const streakData = useQuery(api.streaks.get);
+  const ceilingStatus = useQuery(api.ai.getCeilingStatus);
+  const creditBalance = useQuery(api.credits.getMyBalance);
+
+  // Debounce: only show banner if tasks have had difficulty === -1 for >5 minutes
+  const hasUnscoredTasks = useMemo(
+    () => tasks.some((t) => !t.completed && t.difficulty === -1),
+    [tasks],
+  );
+  const [showUnscoredBanner, setShowUnscoredBanner] = useState(false);
+  const unscoredTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!hasUnscoredTasks) {
+      if (unscoredTimerRef.current) clearTimeout(unscoredTimerRef.current);
+      unscoredTimerRef.current = null;
+      setShowUnscoredBanner(false);
+      return;
+    }
+    unscoredTimerRef.current = setTimeout(() => {
+      setShowUnscoredBanner(true);
+    }, 5 * 60 * 1000);
+    return () => {
+      if (unscoredTimerRef.current) clearTimeout(unscoredTimerRef.current);
+    };
+  }, [hasUnscoredTasks]);
+
+  const showCeilingBanner = ceilingStatus?.atCeiling === true || showUnscoredBanner;
 
   // AI button animation — local to this component
   const aiScale = useSharedValue(1);
@@ -172,10 +199,14 @@ export function MainContent() {
         </View>
 
         {/* AI ceiling banner */}
-        {/*TODO change to use debounce and check difficulty -1 */}
-        {!isPremium && tasks.some((t) => !t.completed && t.difficulty === -1) && (
+        {showCeilingBanner && (
           <View className="px-6 pb-2">
-            <AiCeilingBanner onUpgrade={showPaywall} />
+            <AiCeilingBanner
+              onUpgrade={showPaywall}
+              onBuyCredits={showPaywall}
+              reason={ceilingStatus?.atCeiling ? ceilingStatus.reason : undefined}
+              creditBalance={creditBalance ?? undefined}
+            />
           </View>
         )}
 
