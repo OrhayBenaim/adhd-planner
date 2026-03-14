@@ -63,3 +63,9 @@ struct StreakWidget: Widget {
         .supportedFamilies([.systemSmall])
     }
 }
+
+#Preview(as: .systemSmall) {
+    StreakWidget()
+} timeline: {
+    StreakEntry(date: Date(), data: .placeholder)
+}

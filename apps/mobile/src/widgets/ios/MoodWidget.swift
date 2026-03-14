@@ -58,3 +58,9 @@ struct MoodWidget: Widget {
         .supportedFamilies([.systemSmall])
     }
 }
+
+#Preview(as: .systemSmall) {
+    MoodWidget()
+} timeline: {
+    MoodEntry(date: Date(), data: .placeholder)
+}
