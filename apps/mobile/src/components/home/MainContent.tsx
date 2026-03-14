@@ -46,6 +46,7 @@ export function MainContent() {
   const streakData = useQuery(api.streaks.get);
   const ceilingStatus = useQuery(api.ai.getCeilingStatus);
   const creditBalance = useQuery(api.credits.getMyBalance);
+  const aiPickDaysAhead = useQuery(api.appConfig.getPublic, { key: "aiPickDaysAhead" }) ?? 7;
 
   // Debounce: only show banner if tasks have had difficulty === -1 for >5 minutes
   const hasUnscoredTasks = useMemo(
@@ -78,10 +79,9 @@ export function MainContent() {
 
   const handleAIPick = useCallback(() => {
     const now = new Date();
-    const maxDaysAhead = 3; // Mirrors Convex env MAX_DUE_DATE_RANGE_DAYS
 
     const cutoff = new Date(now);
-    cutoff.setDate(cutoff.getDate() + maxDaysAhead);
+    cutoff.setDate(cutoff.getDate() + aiPickDaysAhead);
     const cutoffStr = cutoff.toISOString().slice(0, 10);
     const todayStr = now.toISOString().slice(0, 10);
 
@@ -114,7 +114,7 @@ export function MainContent() {
         : prev,
     );
     setTimeout(() => setSelectedTask(best), 500);
-  }, [tasks, moodLevel, setSelectedTask, aiRotate, aiScale]);
+  }, [tasks, moodLevel, setSelectedTask, aiRotate, aiScale, aiPickDaysAhead]);
 
   const handleComplete = useCallback(
     async (task: typeof selectedTask) => {

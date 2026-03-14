@@ -257,7 +257,6 @@ export const scoreTaskDifficulty = internalAction({
     const settings = await ctx.runQuery(internal.ai.getUserAiEnabled, { userId });
     if (!settings) {
       await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
-      await sentryCaptureEvent("warning", `[AI] aiEnabled=false for user ${userId}, task ${taskId} set to 0`, { userId, taskId });
       return;
     }
 
