@@ -13,6 +13,21 @@ import { getDifficultyLabel } from "../../lib/moodLabels";
 import { useHome } from "../home/HomeProvider";
 import { useSheetFlow } from "../home/SheetFlowProvider";
 
+function formatDueDate(dueDate: string): string {
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+
+  if (dueDate === todayStr) return "Today";
+  if (dueDate === tomorrowStr) return "Tomorrow";
+
+  const [y, m, d] = dueDate.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
 interface TaskItemProps {
   task: Task;
   onDelete: (id: string) => void;
@@ -33,7 +48,12 @@ function TaskItem({ task, onDelete, onEdit }: TaskItemProps) {
           {task.description ? (
             <Text className="text-sm text-[#4a5565] mb-1">{task.description}</Text>
           ) : null}
-          <Text className="text-xs text-[#6a7282]">{getDifficultyLabel(task.difficulty)}</Text>
+          <View className="flex-row items-center gap-2">
+            <Text className="text-xs text-[#6a7282]">{getDifficultyLabel(task.difficulty)}</Text>
+            {task.dueDate ? (
+              <Text className="text-xs text-[#6a7282]">· {formatDueDate(task.dueDate)}</Text>
+            ) : null}
+          </View>
         </View>
         <View className="flex-row gap-2">
           <Pressable
