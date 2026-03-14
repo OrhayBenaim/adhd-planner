@@ -99,11 +99,11 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
           </View>
           <View className="gap-3">
             <View className="flex-row gap-3">
-              <GradientOption label="By Noon" colors={["#bde0fe", "#a2d2ff"]} onPress={() => handleSelect("noon")} selected={isSelected("noon")} />
+              <GradientOption label="By Morning" colors={["#bde0fe", "#a2d2ff"]} onPress={() => handleSelect("noon")} selected={isSelected("noon")} />
               <GradientOption label="By Afternoon" colors={["#a2d2ff", "#cdb4db"]} onPress={() => handleSelect("afternoon")} selected={isSelected("afternoon")} />
             </View>
             <View className="flex-row gap-3">
-              <GradientOption label="By End of Day" colors={["#cdb4db", "#ffc8dd"]} onPress={() => handleSelect("end_of_day")} selected={isSelected("end_of_day")} />
+              <GradientOption label="By Evening" colors={["#cdb4db", "#ffc8dd"]} onPress={() => handleSelect("end_of_day")} selected={isSelected("end_of_day")} />
               <GradientOption label="Custom" colors={["#ffc8dd", "#ffafcc"]} onPress={() => handleSelect("custom")} />
             </View>
             {showCustomInput && (
