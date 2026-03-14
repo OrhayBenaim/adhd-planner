@@ -19,21 +19,36 @@ const ENTITLEMENT_ID = "Lullio Pro";
 interface PremiumState {
   isPremium: boolean;
   isLoading: boolean;
+  expiresAt: string | null;
+  willRenew: boolean;
+  managementURL: string | null;
 }
 
 type PremiumAction =
-  | { type: "INIT_DONE"; isPremium: boolean }
+  | { type: "INIT_DONE"; isPremium: boolean; expiresAt: string | null; willRenew: boolean; managementURL: string | null }
   | { type: "INIT_FAILED" }
-  | { type: "PREMIUM_CHANGED"; isPremium: boolean };
+  | { type: "PREMIUM_CHANGED"; isPremium: boolean; expiresAt: string | null; willRenew: boolean; managementURL: string | null };
 
 function premiumReducer(_state: PremiumState, action: PremiumAction): PremiumState {
   switch (action.type) {
     case "INIT_DONE":
-      return { isPremium: action.isPremium, isLoading: false };
+      return {
+        isPremium: action.isPremium,
+        isLoading: false,
+        expiresAt: action.expiresAt,
+        willRenew: action.willRenew,
+        managementURL: action.managementURL,
+      };
     case "INIT_FAILED":
-      return { isPremium: false, isLoading: false };
+      return { isPremium: false, isLoading: false, expiresAt: null, willRenew: false, managementURL: null };
     case "PREMIUM_CHANGED":
-      return { ..._state, isPremium: action.isPremium };
+      return {
+        ..._state,
+        isPremium: action.isPremium,
+        expiresAt: action.expiresAt,
+        willRenew: action.willRenew,
+        managementURL: action.managementURL,
+      };
   }
 }
 
@@ -41,6 +56,9 @@ interface PremiumContextValue {
   isPremium: boolean;
   isAnonymous: boolean;
   isLoading: boolean;
+  expiresAt: string | null;
+  willRenew: boolean;
+  managementURL: string | null;
   showPaywall: () => void;
 }
 
@@ -53,15 +71,28 @@ export function usePremium() {
 }
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
-  const [{ isPremium, isLoading }, dispatch] = useReducer(premiumReducer, {
+  const [{ isPremium, isLoading, expiresAt, willRenew, managementURL }, dispatch] = useReducer(premiumReducer, {
     isPremium: false,
     isLoading: true,
+    expiresAt: null,
+    willRenew: false,
+    managementURL: null,
   });
 
   const session = authClient.useSession();
   const isAnonymous =
     (session.data?.user as any)?.isAnonymous ?? true;
   const registerDeviceIdMutation = useMutation(api.settings.registerDeviceId);
+
+  const extractSubscriptionInfo = useCallback((info: CustomerInfo) => {
+    const entitlement = info.entitlements.active[ENTITLEMENT_ID];
+    return {
+      isPremium: !!entitlement,
+      expiresAt: entitlement?.expirationDate ?? null,
+      willRenew: entitlement?.willRenew ?? false,
+      managementURL: info.managementURL ?? null,
+    };
+  }, []);
 
   useEffect(() => {
     async function init() {
@@ -92,10 +123,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       }
 
       const info = await Purchases.getCustomerInfo();
-      dispatch({
-        type: "INIT_DONE",
-        isPremium: !!info.entitlements.active[ENTITLEMENT_ID],
-      });
+      dispatch({ type: "INIT_DONE", ...extractSubscriptionInfo(info) });
     }
 
     init().catch(() => dispatch({ type: "INIT_FAILED" }));
@@ -117,10 +145,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     if (!apiKey) return;
 
     const listener = (info: CustomerInfo) => {
-      dispatch({
-        type: "PREMIUM_CHANGED",
-        isPremium: !!info.entitlements.active[ENTITLEMENT_ID],
-      });
+      dispatch({ type: "PREMIUM_CHANGED", ...extractSubscriptionInfo(info) });
     };
     Purchases.addCustomerInfoUpdateListener(listener);
     return () => { Purchases.removeCustomerInfoUpdateListener(listener); };
@@ -135,7 +160,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   }, [isAnonymous]);
 
   return (
-    <PremiumContext value={{ isPremium, isAnonymous, isLoading, showPaywall }}>
+    <PremiumContext value={{ isPremium, isAnonymous, isLoading, expiresAt, willRenew, managementURL, showPaywall }}>
       {children}
     </PremiumContext>
   );
