@@ -77,6 +77,15 @@ export function MainContent() {
   const aiScale = useSharedValue(1);
   const aiRotate = useSharedValue(0);
 
+  // "No tasks" toast
+  const [noTasksMsg, setNoTasksMsg] = useState<string | null>(null);
+  const noTasksOpacity = useSharedValue(0);
+  const noTasksTranslateY = useSharedValue(0);
+  const noTasksAnimStyle = useAnimatedStyle(() => ({
+    opacity: noTasksOpacity.value,
+    transform: [{ translateY: noTasksTranslateY.value }],
+  }));
+
   const handleAIPick = useCallback(() => {
     const now = new Date();
 
@@ -95,8 +104,6 @@ export function MainContent() {
       )
       .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 
-    if (!eligible.length) return;
-
     const ease = { duration: 300, easing: Easing.out(Easing.quad) };
     const settle = { duration: 400, easing: Easing.inOut(Easing.quad) };
 
@@ -107,6 +114,18 @@ export function MainContent() {
     );
     aiScale.value = withSequence(withTiming(1.06, ease), withTiming(1, settle));
 
+    if (!eligible.length) {
+      setNoTasksMsg(`No tasks in the next ${aiPickDaysAhead} day${aiPickDaysAhead === 1 ? "" : "s"}`);
+      noTasksTranslateY.value = 0;
+      noTasksOpacity.value = withSequence(
+        withTiming(1, { duration: 200 }),
+        withTiming(1, { duration: 2000 }),
+        withTiming(0, { duration: 300 }),
+      );
+      noTasksTranslateY.value = withTiming(-30, { duration: 2500 });
+      return;
+    }
+
     const best = eligible.reduce((prev, curr) =>
       Math.abs(curr.difficulty - moodLevel) <
       Math.abs(prev.difficulty - moodLevel)
@@ -114,7 +133,7 @@ export function MainContent() {
         : prev,
     );
     setTimeout(() => setSelectedTask(best), 500);
-  }, [tasks, moodLevel, setSelectedTask, aiRotate, aiScale, aiPickDaysAhead]);
+  }, [tasks, moodLevel, setSelectedTask, aiRotate, aiScale, aiPickDaysAhead, noTasksOpacity, noTasksTranslateY]);
 
   const handleComplete = useCallback(
     async (task: typeof selectedTask) => {
@@ -209,6 +228,16 @@ export function MainContent() {
               </View>
             </Pressable>
           </Animated.View>
+
+          {/* No-tasks toast */}
+          {noTasksMsg && (
+            <Animated.View
+              style={noTasksAnimStyle}
+              className="absolute -bottom-2 self-center bg-white rounded-full px-4 py-1.5 shadow-sm"
+            >
+              <Text className="text-[#6a7282] font-medium text-sm">{noTasksMsg}</Text>
+            </Animated.View>
+          )}
         </View>
 
         {/* AI ceiling banner */}
