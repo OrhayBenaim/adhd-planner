@@ -64,7 +64,7 @@ export function MainContent() {
           !t.completed &&
           t.difficulty >= 0 &&
           t.dueDate >= todayStr &&
-          t.dueDate <= cutoffStr
+          t.dueDate <= cutoffStr,
       )
       .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 
@@ -76,17 +76,15 @@ export function MainContent() {
     aiRotate.value = withSequence(
       withTiming(0.04, ease),
       withTiming(-0.04, ease),
-      withTiming(0, settle)
+      withTiming(0, settle),
     );
-    aiScale.value = withSequence(
-      withTiming(1.06, ease),
-      withTiming(1, settle)
-    );
+    aiScale.value = withSequence(withTiming(1.06, ease), withTiming(1, settle));
 
     const best = eligible.reduce((prev, curr) =>
-      Math.abs(curr.difficulty - moodLevel) < Math.abs(prev.difficulty - moodLevel)
+      Math.abs(curr.difficulty - moodLevel) <
+      Math.abs(prev.difficulty - moodLevel)
         ? curr
-        : prev
+        : prev,
     );
     setTimeout(() => setSelectedTask(best), 500);
   }, [tasks, moodLevel, setSelectedTask, aiRotate, aiScale]);
@@ -99,14 +97,11 @@ export function MainContent() {
       setSelectedTask(null);
       showToast(result?.earned ?? 0);
     },
-    [completeTask, setSelectedTask, showToast]
+    [completeTask, setSelectedTask, showToast],
   );
 
   const aiAnimStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: aiScale.value },
-      { rotate: `${aiRotate.value}rad` },
-    ],
+    transform: [{ scale: aiScale.value }, { rotate: `${aiRotate.value}rad` }],
   }));
 
   return (
@@ -118,8 +113,12 @@ export function MainContent() {
       >
         {/* Header */}
         <View className="items-center pt-8 pb-4 px-6">
-          <Text className="text-2xl font-medium text-[#0a0a0a] text-center">How are you feeling?</Text>
-          <Text className="text-sm text-[#6a7282] text-center mt-1">Let's find the perfect task for you</Text>
+          <Text className="text-2xl font-medium text-[#0a0a0a] text-center">
+            How are you feeling?
+          </Text>
+          <Text className="text-sm text-[#6a7282] text-center mt-1">
+            Let's find the perfect task for you
+          </Text>
         </View>
 
         {/* XP bar */}
@@ -132,22 +131,9 @@ export function MainContent() {
               onDone={hideToast}
             />
           </View>
-        </View>
 
-        {/* View Insights button (premium only) */}
-        {isPremium && (
-          <View className="items-center mb-2">
-            <Pressable
-              onPress={() => openSheet("insights")}
-              className="flex-row items-center gap-1.5 bg-[#f0f4ff] px-4 py-2 rounded-full"
-            >
-              <Ionicons name="bar-chart-outline" size={14} color="#5b8def" />
-              <Text className="text-sm font-medium text-[#5b8def]">
-                View Insights
-              </Text>
-            </Pressable>
-          </View>
-        )}
+        
+        </View>
 
         {/* Streak badge (premium) */}
         {isPremium && streakData && (
@@ -166,13 +152,32 @@ export function MainContent() {
         <View className="items-center pb-6">
           <Animated.View style={aiAnimStyle}>
             <Pressable onPress={handleAIPick}>
-              <View style={{ width: 154, height: 154, borderRadius: 77, backgroundColor: "#b9cbea", boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)" }}>
-                <View style={{ width: 154, height: 154, borderRadius: 77, overflow: "hidden" }}>
+              <View
+                style={{
+                  width: 154,
+                  height: 154,
+                  borderRadius: 77,
+                  backgroundColor: "#b9cbea",
+                  boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)",
+                }}
+              >
+                <View
+                  style={{
+                    width: 154,
+                    height: 154,
+                    borderRadius: 77,
+                    overflow: "hidden",
+                  }}
+                >
                   <LinearGradient
                     colors={["#a2d2ff", "#cdb4db"]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+                    style={{
+                      flex: 1,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
                   >
                     <Ionicons name="sparkles-outline" size={58} color="#fff" />
                   </LinearGradient>
@@ -184,11 +189,12 @@ export function MainContent() {
 
         {/* AI ceiling banner */}
         {/*TODO change to use debounce and check difficulty -1 */}
-        {!isPremium && tasks.some((t) => !t.completed && t.difficulty === -1) && (
-          <View className="px-6 pb-2">
-            <AiCeilingBanner onUpgrade={showPaywall} />
-          </View>
-        )}
+        {!isPremium &&
+          tasks.some((t) => !t.completed && t.difficulty === -1) && (
+            <View className="px-6 pb-2">
+              <AiCeilingBanner onUpgrade={showPaywall} />
+            </View>
+          )}
 
         {/* Task card */}
         <View className="px-6">

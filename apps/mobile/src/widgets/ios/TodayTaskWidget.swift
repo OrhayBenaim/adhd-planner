@@ -74,3 +74,15 @@ struct TodayTaskWidget: Widget {
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
+
+#Preview(as: .systemSmall) {
+    TodayTaskWidget()
+} timeline: {
+    TodayTaskEntry(date: Date(), data: .placeholder)
+}
+
+#Preview(as: .systemMedium) {
+    TodayTaskWidget()
+} timeline: {
+    TodayTaskEntry(date: Date(), data: .placeholder)
+}

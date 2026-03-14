@@ -43,6 +43,7 @@ google-service-account.json
 /ios
 /android
 
+
 # Expo module build artifacts
 modules/*/android/build/
 modules/*/ios/build/
