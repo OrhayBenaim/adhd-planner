@@ -19,6 +19,7 @@ export async function sentryCaptureEvent(
       event_id: crypto.randomUUID().replace(/-/g, ""),
       timestamp: new Date().toISOString(),
       level,
+      environment: "production",
       logger: "convex",
       message: { formatted: message },
       extra,
