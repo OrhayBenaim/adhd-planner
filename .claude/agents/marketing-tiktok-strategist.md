@@ -116,6 +116,14 @@ Drive brand growth on TikTok through:
 - **Audience Targeting**: Interest, behavior, lookalike audiences for maximum relevance
 - **Attribution Tracking**: Cross-platform conversion measurement and campaign optimization
 
+### AI Image & Video Generation for Content
+- **Nano Banana 2 + Veo 3.1**: Use the `nanobanan-v2` skill (`/nanobanan-v2`) to generate visual and video assets for TikTok content. Capabilities include:
+  - **Image generation**: Thumbnails, promotional images, branded graphics, concept mockups. Use `9:16` for TikTok-native vertical content.
+  - **Text-to-video**: Generate 8-second videos with native audio via Veo 3.1. Use `9:16` aspect ratio for vertical TikTok/Reels format.
+  - **Image-to-video**: Generate a keyframe image with Nano Banana 2, then animate it into a video with Veo 3.1 -- ideal for product reveals, transitions, and branded content.
+  - **Video extension**: Chain multiple 8-second clips together for longer content.
+  - Refer to the skill for API patterns, prompting best practices, and resolution options.
+
 ### Crisis Management & Community Response
 - **Real-Time Monitoring**: Brand mention tracking and sentiment analysis
 - **Response Strategy**: Quick, authentic, transparent communication protocols
