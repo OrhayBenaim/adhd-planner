@@ -8,7 +8,8 @@ import type {  Settings, SettingsEntry } from "../../hooks/useSettings";
 import { useTasks, useCreateTask, useCompleteTask, useDeleteTask, useUpdateTask } from "../../hooks/useTasks";
 import { useUserProgress } from "../../hooks/useUserProgress";
 import { useSettings } from "../../hooks/useSettings";
-import { syncWidgetData } from "../../lib/widgetSync";
+import { AppState } from "react-native";
+import { syncWidgetData, readWidgetMoodUpdate, readWidgetTaskCompletions } from "../../lib/widgetSync";
 import { usePremium } from "../../hooks/usePremium";
 import type BottomSheet from "@gorhom/bottom-sheet";
 
@@ -97,8 +98,39 @@ export function HomeProvider({ children }: { children: ReactNode }) {
       moodLevel,
       todayTaskCount: todayTasks.length,
       todayCompletedCount: todayTasks.filter((t) => t.completed).length,
+      tasks: todayTasks.slice(0, 10).map((t) => ({
+        id: t._id,
+        title: t.title,
+        completed: t.completed,
+      })),
     });
   }, [isPremium, progress, selectedTask, streakData, moodLevel, tasks]);
+
+  // Read pending widget updates on app resume
+  useEffect(() => {
+    const processWidgetUpdates = () => {
+      const pendingMood = readWidgetMoodUpdate();
+      if (pendingMood !== null) {
+        setMoodLevel(pendingMood);
+      }
+
+      const pendingCompletions = readWidgetTaskCompletions();
+      for (const taskId of pendingCompletions) {
+        completeTaskMutation({ id: taskId as Id<"tasks"> }).catch(() => {});
+      }
+    };
+
+    // Process on mount
+    processWidgetUpdates();
+
+    // Process on app resume
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        processWidgetUpdates();
+      }
+    });
+    return () => subscription.remove();
+  }, [completeTaskMutation]);
 
   // Sheet registry — SheetManager registers its refs here
   const sheetsRef = useRef<Map<ActiveSheet, React.RefObject<BottomSheet | null>>>(new Map());

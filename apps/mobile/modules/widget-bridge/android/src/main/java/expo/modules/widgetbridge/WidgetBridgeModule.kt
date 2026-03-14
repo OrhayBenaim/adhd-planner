@@ -18,6 +18,20 @@ class WidgetBridgeModule : Module() {
             }
         }
 
+        Function("getItem") { key: String ->
+            appContext.reactContext?.let { context ->
+                val prefs = context.getSharedPreferences("widget_data", Context.MODE_PRIVATE)
+                prefs.getString(key, null)
+            }
+        }
+
+        Function("removeItem") { key: String ->
+            appContext.reactContext?.let { context ->
+                val prefs = context.getSharedPreferences("widget_data", Context.MODE_PRIVATE)
+                prefs.edit().remove(key).apply()
+            }
+        }
+
         Function("reloadWidgets") {
             appContext.reactContext?.let { context ->
                 val appWidgetManager = AppWidgetManager.getInstance(context)

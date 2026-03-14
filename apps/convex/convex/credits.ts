@@ -1,5 +1,18 @@
 import { v } from "convex/values";
-import { internalMutation, internalQuery } from "./_generated/server";
+import { internalMutation, internalQuery, query } from "./_generated/server";
+import { requireAuth } from "./lib/auth";
+
+export const getMyBalance = query({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
+    const row = await ctx.db
+      .query("aiCredits")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    return row?.balance ?? 0;
+  },
+});
 
 export const getBalance = internalQuery({
   args: { userId: v.string() },

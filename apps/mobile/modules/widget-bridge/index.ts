@@ -1,1 +1,1 @@
-export { setWidgetData, reloadWidgets } from "./src/WidgetBridgeModule";
+export { setWidgetData, getWidgetData, clearWidgetData, reloadWidgets } from "./src/WidgetBridgeModule";

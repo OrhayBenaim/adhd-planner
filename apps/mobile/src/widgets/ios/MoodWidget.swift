@@ -22,6 +22,14 @@ struct MoodProvider: TimelineProvider {
     }
 }
 
+private let moodOptions: [(emoji: String, level: Int)] = [
+    ("😢", 10),
+    ("😔", 30),
+    ("😐", 50),
+    ("🙂", 70),
+    ("😊", 90),
+]
+
 struct MoodWidgetView: View {
     let entry: MoodEntry
 
@@ -31,14 +39,27 @@ struct MoodWidgetView: View {
         } else {
             VStack(spacing: 6) {
                 Text(entry.data.moodEmoji)
-                    .font(.system(size: 36))
+                    .font(.system(size: 28))
                 Text(entry.data.moodLabel)
-                    .font(.subheadline)
+                    .font(.caption)
                     .bold()
                     .foregroundColor(Color(red: 0.12, green: 0.23, blue: 0.37))
-                Text("Tap to check in")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
+
+                if #available(iOS 17.0, *) {
+                    HStack(spacing: 4) {
+                        ForEach(moodOptions, id: \.level) { option in
+                            Button(intent: SetMoodIntent(moodLevel: option.level)) {
+                                Text(option.emoji)
+                                    .font(.system(size: 16))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                } else {
+                    Text("Tap to check in")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
             }
             .padding()
             .containerBackground(.fill.tertiary, for: .widget)
