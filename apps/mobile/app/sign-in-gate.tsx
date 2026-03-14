@@ -39,7 +39,7 @@ export default function SignInGateScreen() {
             Sign in to unlock
           </Text>
           <Text className="text-sm text-[#6a7282] text-center px-6">
-            Create an account or sign in to access premium features and make purchases
+            Create an account or sign in to access Pro features and make purchases
           </Text>
         </View>
 
@@ -55,7 +55,7 @@ export default function SignInGateScreen() {
             <SignUpWithEmail
               onSuccess={handleAuthSuccess}
               title="Create your account"
-              subtitle="Sign up to unlock premium features"
+              subtitle="Sign up to unlock Pro features"
               onSwitchToSignIn={() => setView("signIn")}
             />
           )}
