@@ -3,18 +3,14 @@
 ## Critical Agent Rules
 
 ### Worktree Requirement
-**ALWAYS use git worktrees when spawning agents for implementation work.** Pass `isolation: ".worktree"` when using the Agent tool for any task that writes code. This prevents agents from stepping on each other or the main workspace. Only skip worktrees for read-only research/exploration agents.
-
-**If you are already in a worktree** (check the working directory path and environment info), do NOT call `EnterWorktree` or create another worktree. Work directly in the current worktree on its existing branch.
-
-### Token Conservation
-Do NOT explore the codebase to understand the project. Everything you need is in this file and `AGENTS.md`. Jump straight to the task. If you need to find a specific file, use Glob/Grep — do not do broad codebase exploration.
+**ALWAYS use git worktrees over creating branch when spawning agents for implementation work.**
+all worktrees should be created under .worktree/ in the root directory
 
 ---
 
 ## Project Overview
 
-**Lullio** (package name: `com.ottersprod.lullio`) — a planning/productivity mobile app. TypeScript monorepo using Turborepo + npm workspaces.
+**Lullio** (package name: `adhd-planner`) — a planning/productivity mobile app. TypeScript monorepo using Turborepo + npm workspaces.
 
 **App name**: Lullio | **Bundle ID**: `com.ottersprod.lullio`
 
@@ -53,99 +49,16 @@ docs/
 | Build | EAS Build (mobile), Wrangler (portfolio) |
 | Package Manager | npm 11.6.2 |
 
-## Commands
-
-```bash
-# Root (Turbo)
-npm run dev           # Start all apps
-npm run typecheck     # Type-check all apps
-npm run build         # Build all
-npm run lint          # Lint all
-
-# Mobile (apps/mobile/)
-npx expo start        # Expo dev server
-npm test              # Jest tests
-npm run typecheck     # Type-check
-
-# Backend (apps/convex/)
-npx convex dev        # Convex dev server
-npx convex deploy     # Deploy functions
-```
 
 ## Mobile App Structure (apps/mobile/)
 
 ### Routing (Expo Router — file-based)
-```
-app/
-  _layout.tsx          # Root layout — all providers (Gesture, Auth, Convex, Premium, PostHog, Sentry)
-  index.tsx            # Auth gate → onboarding redirect or HomeScreen
-  paywall.tsx          # Premium paywall modal
-  sign-in-gate.tsx     # Auth required modal
-  (onboarding)/        # Onboarding flow (6 screens)
-    welcome.tsx, sign-in.tsx, difficulties.tsx, strengths.tsx, work-time.tsx, notifications.tsx
-```
-
-### Key Source Directories (src/)
-```
-components/
-  home/
-    HomeScreen.tsx        # Main screen
-    HomeProvider.tsx       # Context: tasks, progress, settings, mutations, sheet management
-    SheetFlowProvider.tsx  # Multi-step task creation state machine (useReducer)
-    SheetManager.tsx       # Mounts all 10 bottom sheets
-    MainContent.tsx        # Task list, mood slider, daily view
-  sheets/
-    AddTaskSheet.tsx       # Text/voice task input
-    AllTasksSheet.tsx      # View all tasks
-    SelectDaySheet.tsx     # Date picker
-    SelectTimeSheet.tsx    # Time picker
-    TaskSummarySheet.tsx   # Batch task review
-    SettingsSheet.tsx      # App settings
-    PreferencesSheet.tsx   # User preferences
-    ProfileSheet.tsx       # User profile
-    AchievementsSheet.tsx  # Achievement badges
-    InsightsSheet.tsx      # Usage insights
-  auth/                   # Email forms, social auth, account linking
-  onboarding/             # Layout, provider, chip grid, progress bar
-  settings/               # VoiceLanguages.tsx
-  [reusable]              # TaskCard, BottomNav, XPBar, StreakBadge, MoodSlider, ScrollingWaveform, AppPressable
-
-hooks/
-  useTasks.ts             # Task CRUD hooks (wraps Convex)
-  usePreferences.ts       # Onboarding preferences
-  useSettings.ts          # Local + remote settings (useReducer)
-  useSpeechRecognition.ts # Voice input
-  usePremium.tsx          # RevenueCat subscription state
-  useUserProgress.ts      # XP/level tracking
-  usePushToken.ts         # Push notification token
-
-lib/
-  authClient.ts           # Better Auth client config
-  convexClient.ts         # ConvexProviderWithAuth (session refresh on app resume)
-  taskSplitter.ts         # Smart transcription splitting (conjunctions, verbs, numbers)
-  dateTimeConvert.ts      # Date/time formatting
-  posthog.ts              # PostHog analytics init
-  deviceId.ts             # Device ID management
-  soundStore.ts           # Audio playback
-  googleSignIn.ts         # Google OAuth
-  widgetSync.ts           # Home screen widget sync
-  __tests__/              # Unit tests (taskSplitter, moodLabels)
-```
 
 ### State Management Patterns
 1. **Server state**: Convex `useQuery()` / `useMutation()` — real-time, auto-cached
 2. **UI state**: React Context (`HomeProvider`, `SheetFlowProvider`, `PremiumProvider`)
 3. **Complex local state**: `useReducer` (settings, input modes, flow steps)
 4. **Persistence**: `expo-secure-store` (settings, device ID)
-
-### Task Creation Flow
-1. User taps "+" → `SheetFlowProvider.start("addTask")`
-2. `AddTaskSheet` → text or voice input
-3. Voice → `splitTranscription()` for smart splitting
-4. Batch tasks → `TaskSummarySheet` for review
-5. `SelectDaySheet` → pick date
-6. `SelectTimeSheet` → pick time
-7. Mutation → `api.tasks.create()` → AI difficulty scoring scheduled
 
 ### Auth Flow
 1. App launch → check `authClient.useSession()`
