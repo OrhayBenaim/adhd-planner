@@ -12,6 +12,8 @@ interface Props {
   onClose: () => void;
 }
 
+const BAR_COLORS = ["#bde0fe", "#cdb4db", "#ffafcc", "#ffc8dd", "#bde0fe", "#cdb4db", "#ffafcc"];
+
 function MiniBarChart({ data }: { data: Record<string, number> }) {
   const last7 = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(Date.now() - (6 - i) * 86400000);
@@ -24,7 +26,7 @@ function MiniBarChart({ data }: { data: Record<string, number> }) {
       className="flex-row items-end justify-between gap-1 px-4"
       style={{ height: 120 }}
     >
-      {last7.map((date) => {
+      {last7.map((date, i) => {
         const count = data[date] ?? 0;
         const height = (count / max) * 80 + 4;
         const dayLabel = new Date(date + "T00:00:00Z").toLocaleDateString(
@@ -34,14 +36,14 @@ function MiniBarChart({ data }: { data: Record<string, number> }) {
         return (
           <View key={date} className="items-center flex-1">
             {count > 0 && (
-              <Text className="text-xs font-semibold text-[#1e2939] mb-1">
+              <Text className="text-xs font-semibold text-[#0a0a0a] mb-1">
                 {count}
               </Text>
             )}
             <View
               style={{
                 height,
-                backgroundColor: count > 0 ? "#a2d2ff" : "#e5e7eb",
+                backgroundColor: count > 0 ? BAR_COLORS[i % BAR_COLORS.length] : "#e5e7eb",
                 borderRadius: 6,
                 width: "100%",
               }}
@@ -84,7 +86,7 @@ export const InsightsSheet = forwardRef<BottomSheet, Props>(
           <View className="px-6 pt-6">
             {/* Header */}
             <View className="flex-row items-center justify-between mb-8">
-              <Text className="text-lg font-medium text-[#1e2939]">
+              <Text className="text-lg font-medium text-[#0a0a0a]">
                 Your Insights
               </Text>
               <Pressable onPress={closeSheet}>
@@ -92,41 +94,52 @@ export const InsightsSheet = forwardRef<BottomSheet, Props>(
               </Pressable>
             </View>
 
-            {/* Tasks completed this week */}
-            <View className="bg-[#f5f7fa] rounded-2xl p-4 mb-4">
-              <Text className="text-3xl font-bold text-[#1e2939]">
-                {report?.tasksCompletedThisWeek ?? 0}
-              </Text>
-              <Text className="text-sm text-[#6a7282] mt-1">
-                tasks completed this week
-              </Text>
+            {/* This week + Last week row */}
+            <View className="flex-row gap-3 mb-4">
+              <View className="flex-1 bg-[#bde0fe]/20 rounded-2xl p-4">
+                <Text className="text-2xl font-bold text-[#0a0a0a]">
+                  {report?.tasksCompletedThisWeek ?? 0}
+                </Text>
+                <Text className="text-sm text-[#6a7282] mt-1">
+                  completed this week
+                </Text>
+              </View>
+
+              <View className="flex-1 bg-[#cdb4db]/20 rounded-2xl p-4">
+                <Text className="text-2xl font-bold text-[#0a0a0a]">
+                  {report?.tasksCompletedLastWeek ?? 0}
+                </Text>
+                <Text className="text-sm text-[#6a7282] mt-1">
+                  completed last week
+                </Text>
+              </View>
             </View>
 
             {/* Best day + Streak row */}
             <View className="flex-row gap-3 mb-4">
               {/* Best day */}
-              <View className="flex-1 bg-[#f5f7fa] rounded-2xl p-4">
-                <Text className="text-xl font-bold text-[#1e2939]">
+              <View className="flex-1 bg-[#ffafcc]/20 rounded-2xl p-4">
+                <Text className="text-xl font-bold text-[#0a0a0a]">
                   {report?.mostProductiveDay ?? "—"}
                 </Text>
                 <Text className="text-sm text-[#6a7282] mt-1">
-                  your most productive day
+                  most productive day
                 </Text>
               </View>
 
               {/* Streak */}
-              <View className="flex-1 bg-[#f5f7fa] rounded-2xl p-4">
-                <Text className="text-xl font-bold text-[#1e2939]">
+              <View className="flex-1 bg-[#ffc8dd]/20 rounded-2xl p-4">
+                <Text className="text-xl font-bold text-[#0a0a0a]">
                   {report?.currentStreak ?? 0} days
                 </Text>
                 <Text className="text-sm text-[#6a7282] mt-1">
-                  current streak — best: {report?.longestStreak ?? 0}
+                  streak — best: {report?.longestStreak ?? 0}
                 </Text>
               </View>
             </View>
 
             {/* Bar chart */}
-            <Text className="text-sm font-medium text-[#1e2939] mb-3">
+            <Text className="text-sm font-medium text-[#0a0a0a] mb-3">
               This Week
             </Text>
             <View className="bg-[#f5f7fa] rounded-2xl py-4">
