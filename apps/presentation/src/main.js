@@ -4,10 +4,11 @@ import { createCameraPath } from './camera-path.js'
 import { createTimeline } from './timeline.js'
 import { createOverlay } from './overlay.js'
 import { createPostFX } from './postfx.js'
+import { createBackground } from './background.js'
 
 // Scene
 const scene = new THREE.Scene()
-scene.fog = new THREE.FogExp2(0x1a0f0a, 0.008)
+scene.fog = new THREE.FogExp2(0x0a0604, 0.005)
 
 // Camera
 const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000)
@@ -26,6 +27,9 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 renderer.toneMapping = THREE.ACESFilmicToneMapping
 renderer.toneMappingExposure = 1.2
 renderer.outputColorSpace = THREE.SRGBColorSpace
+
+// Background system (skydome, stars, fog, aurora, dust)
+const background = createBackground(scene)
 
 // Build world
 const world = createWorld(scene)
@@ -59,6 +63,7 @@ function animate() {
   const elapsed = clock.getElapsedTime()
 
   timeline.update(delta)
+  background.update(elapsed, delta, timeline.progress)
   world.update(elapsed, delta, timeline.progress)
   postfx.render()
 }
