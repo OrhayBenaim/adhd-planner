@@ -82,27 +82,32 @@ export function HomeProvider({ children }: { children: ReactNode }) {
   const streakData = useQuery(api.streaks.get);
   const { isPremium } = usePremium();
 
-  // Sync data to shared storage for home screen widgets
+  // Sync data to shared storage for home screen widgets (debounced to avoid
+  // flooding the main thread with rapid successive widget reloads)
   useEffect(() => {
-    const todayStr = new Date().toISOString().split("T")[0];
-    const todayTasks = tasks.filter((t) => t.dueDate === todayStr);
+    const timer = setTimeout(() => {
+      const todayStr = new Date().toISOString().split("T")[0];
+      const todayTasks = tasks.filter((t) => t.dueDate === todayStr);
 
-    syncWidgetData({
-      isPremium,
-      streak: streakData?.currentStreak ?? 0,
-      suggestedTask: selectedTask?.title ?? null,
-      level: progress.level,
-      points: progress.points,
-      pointsToNextLevel: progress.pointsToNextLevel,
-      moodLevel,
-      todayTaskCount: todayTasks.length,
-      todayCompletedCount: todayTasks.filter((t) => t.completed).length,
-      tasks: todayTasks.slice(0, 10).map((t) => ({
-        id: t._id,
-        title: t.title,
-        completed: t.completed,
-      })),
-    });
+      syncWidgetData({
+        isPremium,
+        streak: streakData?.currentStreak ?? 0,
+        suggestedTask: selectedTask?.title ?? null,
+        level: progress.level,
+        points: progress.points,
+        pointsToNextLevel: progress.pointsToNextLevel,
+        moodLevel,
+        todayTaskCount: todayTasks.length,
+        todayCompletedCount: todayTasks.filter((t) => t.completed).length,
+        tasks: todayTasks.slice(0, 10).map((t) => ({
+          id: t._id,
+          title: t.title,
+          completed: t.completed,
+        })),
+      });
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, [isPremium, progress, selectedTask, streakData, moodLevel, tasks]);
 
   // Read pending widget updates on app resume
