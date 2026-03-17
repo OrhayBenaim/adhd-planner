@@ -13,6 +13,7 @@ import { api } from "@adhd-planner/convex/convex/_generated/api";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { authClient } from "../lib/authClient";
+import { posthog } from "../lib/posthog";
 import { getDeviceId } from "../lib/deviceId";
 
 const ENTITLEMENT_ID = "Lullio Pro";
@@ -165,7 +166,15 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const listener = (info: CustomerInfo) => {
-      dispatch({ type: "PREMIUM_CHANGED", ...extractSubscriptionInfo(info) });
+      const subInfo = extractSubscriptionInfo(info);
+      dispatch({ type: "PREMIUM_CHANGED", ...subInfo });
+
+      // Track new subscription purchase (free → premium transition)
+      if (subInfo.isPremium && !isPremium) {
+        posthog.capture("subscription_purchased", {
+          variant: String(posthog.getFeatureFlag("profile-upgrade-variant") ?? "unknown"),
+        });
+      }
     };
     if (!isAnonymous && session?.data?.user.id) {
       const apiKey =
