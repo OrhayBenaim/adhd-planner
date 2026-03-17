@@ -25,7 +25,7 @@ export async function syncWidgetData(data: WidgetData) {
   try {
     const { setWidgetData, reloadWidgets } = require("../../modules/widget-bridge");
     setWidgetData(WIDGET_KEY, json);
-    reloadWidgets();
+    await reloadWidgets();
   } catch {
     // WidgetBridge not available (e.g. Expo Go) — no-op
   }
