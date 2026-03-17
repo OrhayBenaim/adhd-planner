@@ -32,7 +32,7 @@ class WidgetBridgeModule : Module() {
             }
         }
 
-        Function("reloadWidgets") {
+        AsyncFunction("reloadWidgets") {
             appContext.reactContext?.let { context ->
                 val appWidgetManager = AppWidgetManager.getInstance(context)
 
