@@ -1,6 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { View, Text, Image, Alert, Linking, Platform } from "react-native";
 import { useRouter } from "expo-router";
+import { useFeatureFlag } from "posthog-react-native";
 import { AppPressable as Pressable } from "../../AppPressable";
 import { BottomSheetTextInput } from "@gorhom/bottom-sheet";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,7 +9,10 @@ import * as Sentry from "@sentry/react-native";
 import { useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { authClient } from "../../../lib/authClient";
+import { posthog } from "../../../lib/posthog";
 import { usePremium } from "../../../hooks/usePremium";
+import { UpgradeFeatureCard } from "./UpgradeFeatureCard";
+import { UpgradeLockedTeasers } from "./UpgradeLockedTeasers";
 
 interface SessionUser {
   name?: string | null;
@@ -30,9 +34,25 @@ export function AuthenticatedProfile({
   onClose,
 }: AuthenticatedProfileProps) {
   const router = useRouter();
-  const { isPremium, expiresAt, willRenew, managementURL } = usePremium();
+  const { isPremium, expiresAt, willRenew, managementURL, showPaywall } = usePremium();
   const deleteAccountMutation = useMutation(api.account.deleteAccount);
+  const upgradeVariant = useFeatureFlag("profile-upgrade-variant");
   const [busy, setBusy] = useState(false);
+
+  // Fire upgrade_cta_viewed when non-premium user sees the profile
+  useEffect(() => {
+    if (!isPremium && upgradeVariant) {
+      posthog.capture("upgrade_cta_viewed", { variant: String(upgradeVariant) });
+    }
+  }, [isPremium, upgradeVariant]);
+
+  const handleUpgrade = useCallback(
+    (source: string = "feature_card") => {
+      posthog.capture("paywall_opened", { variant: String(upgradeVariant), source });
+      showPaywall();
+    },
+    [upgradeVariant, showPaywall],
+  );
 
   const getProviderBadge = () => {
     const image = session?.user?.image ?? "";
@@ -163,45 +183,52 @@ export function AuthenticatedProfile({
         )}
       </View>
 
-      {/* Achievements (premium only) */}
+      {/* Premium: show achievements + subscription management */}
       {isPremium && (
-        <Pressable
-          onPress={() => {
-            onClose();
-            setTimeout(() => router.push("/achievements"), 300);
-          }}
-          className="bg-[#f5f7fa] rounded-3xl px-4 py-4 flex-row items-center mb-3"
-          style={{ gap: 12 }}
-        >
-          <View className="w-10 h-10 rounded-full bg-[#cdb4db] items-center justify-center">
-            <Ionicons name="trophy-outline" size={20} color="#fff" />
+        <>
+          <Pressable
+            onPress={() => {
+              onClose();
+              setTimeout(() => router.push("/achievements"), 300);
+            }}
+            className="bg-[#f5f7fa] rounded-3xl px-4 py-4 flex-row items-center mb-3"
+            style={{ gap: 12 }}
+          >
+            <View className="w-10 h-10 rounded-full bg-[#cdb4db] items-center justify-center">
+              <Ionicons name="trophy-outline" size={20} color="#fff" />
+            </View>
+            <Text className="text-sm font-medium text-[#1e2939]">Achievements</Text>
+            <View className="flex-1" />
+            <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
+          </Pressable>
+
+          <View className="bg-[#f5f7fa] rounded-3xl px-4 py-4 flex-row items-center mb-3" style={{ gap: 12 }}>
+            <View className="w-10 h-10 rounded-full bg-[#ffafcc] items-center justify-center">
+              <Ionicons name="card-outline" size={20} color="#fff" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-sm font-medium text-[#1e2939]">Subscription</Text>
+              {expiresAt && (
+                <Text className="text-xs text-[#6a7282]">
+                  {willRenew ? "Renews" : "Expires"} {formatExpiryDate(expiresAt)}
+                </Text>
+              )}
+            </View>
+            <Pressable onPress={handleCancelSubscription}>
+              <Text className="text-sm font-medium text-[#ff6b6b]">
+                {willRenew ? "Cancel" : "Manage"}
+              </Text>
+            </Pressable>
           </View>
-          <Text className="text-sm font-medium text-[#1e2939]">Achievements</Text>
-          <View className="flex-1" />
-          <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
-        </Pressable>
+        </>
       )}
 
-      {/* Subscription (premium only) */}
-      {isPremium && (
-        <View className="bg-[#f5f7fa] rounded-3xl px-4 py-4 flex-row items-center mb-3" style={{ gap: 12 }}>
-          <View className="w-10 h-10 rounded-full bg-[#ffafcc] items-center justify-center">
-            <Ionicons name="card-outline" size={20} color="#fff" />
-          </View>
-          <View className="flex-1">
-            <Text className="text-sm font-medium text-[#1e2939]">Subscription</Text>
-            {expiresAt && (
-              <Text className="text-xs text-[#6a7282]">
-                {willRenew ? "Renews" : "Expires"} {formatExpiryDate(expiresAt)}
-              </Text>
-            )}
-          </View>
-          <Pressable onPress={handleCancelSubscription}>
-            <Text className="text-sm font-medium text-[#ff6b6b]">
-              {willRenew ? "Cancel" : "Manage"}
-            </Text>
-          </Pressable>
-        </View>
+      {/* Non-premium: show upgrade variant */}
+      {!isPremium && upgradeVariant === "feature-card" && (
+        <UpgradeFeatureCard onUpgrade={() => handleUpgrade("feature_card")} />
+      )}
+      {!isPremium && upgradeVariant === "locked-teasers" && (
+        <UpgradeLockedTeasers onUpgrade={handleUpgrade} />
       )}
 
       {/* Sign Out */}
