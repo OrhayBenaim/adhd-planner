@@ -1,17 +1,27 @@
 import { ActivityIndicator, View } from "react-native";
 import * as Sentry from "@sentry/react-native";
-import { useEffect } from "react";
-import { Redirect } from "expo-router";
+import { useEffect, useState } from "react";
+import { Redirect, useLocalSearchParams } from "expo-router";
 import { useConvexAuth } from "convex/react";
 import { authClient } from "../src/lib/authClient";
 import { useNeedsOnboarding } from "../src/hooks/usePreferences";
 import { HomeScreen } from "../src/components/home/HomeScreen";
+import { CelebrationOverlay } from "../src/components/CelebrationOverlay";
 import { posthog } from "../src/lib/posthog";
 
 export default function IndexPage() {
   const { data: session, isPending } = authClient.useSession();
   const { isLoading: isConvexLoading, isAuthenticated } = useConvexAuth();
   const needsOnboarding = useNeedsOnboarding();
+  const { celebrate } = useLocalSearchParams<{ celebrate?: string }>();
+  const [showCelebration, setShowCelebration] = useState(false);
+
+  // Trigger celebration overlay when arriving from onboarding
+  useEffect(() => {
+    if (celebrate === "true") {
+      setShowCelebration(true);
+    }
+  }, [celebrate]);
 
   // Trigger anonymous sign-in when there's no session
   useEffect(() => {
@@ -42,5 +52,12 @@ export default function IndexPage() {
 
   if (needsOnboarding === true) return <Redirect href={"/(onboarding)/welcome"} />;
 
-  return <HomeScreen />;
+  return (
+    <View className="flex-1">
+      <HomeScreen />
+      {showCelebration && (
+        <CelebrationOverlay onComplete={() => setShowCelebration(false)} />
+      )}
+    </View>
+  );
 }

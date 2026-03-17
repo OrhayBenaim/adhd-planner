@@ -97,7 +97,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     setIsSubmitting(true);
     try {
       await saveOnboardingData();
-      router.replace("/");
+      router.replace({ pathname: "/", params: { celebrate: "true" } });
     } catch (error) {
       Sentry.captureException(error);
     } finally {
