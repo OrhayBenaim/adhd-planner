@@ -82,7 +82,7 @@ interface PremiumContextValue {
   expiresAt: string | null;
   willRenew: boolean;
   managementURL: string | null;
-  showPaywall: () => void;
+  showPaywall: (offering?: string) => void;
 }
 
 const PremiumContext = createContext<PremiumContextValue | null>(null);
@@ -192,13 +192,17 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     };
   }, [isAnonymous, session.data?.user?.id]);
 
-  const showPaywall = useCallback(() => {
-    if (isAnonymous) {
-      router.push("/sign-in-gate");
-    } else {
-      router.push("/paywall");
-    }
-  }, [isAnonymous]);
+  const showPaywall = useCallback(
+    (offering?: string) => {
+      const params = offering ? `?offering=${offering}` : "";
+      if (isAnonymous) {
+        router.push(`/sign-in-gate${params}` as any);
+      } else {
+        router.push(`/paywall${params}` as any);
+      }
+    },
+    [isAnonymous],
+  );
 
   // Handle lullio://paywall deep link from widgets
   useEffect(() => {
