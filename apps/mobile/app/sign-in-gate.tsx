@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { View, Text, ScrollView } from "react-native";
 import { AppPressable as Pressable } from "../src/components/AppPressable";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { LinkAccountOptions } from "../src/components/auth/LinkAccountOptions";
 import { SignUpWithEmail } from "../src/components/auth/SignUpWithEmail";
 import { SignInWithEmail } from "../src/components/auth/SignInWithEmail";
@@ -10,13 +10,15 @@ import { SignInWithEmail } from "../src/components/auth/SignInWithEmail";
 type GateView = "options" | "signUp" | "signIn";
 
 export default function SignInGateScreen() {
+  const { offering } = useLocalSearchParams<{ offering?: string }>();
   const [view, setView] = useState<GateView>("options");
 
   const handleAuthSuccess = useCallback(() => {
     // Delay navigation to let auth state re-renders settle before replacing the screen.
     // Immediate replace causes a Fabric "child already has a parent" crash on Android.
-    setTimeout(() => router.replace("/paywall"), 500);
-  }, []);
+    const params = offering ? `?offering=${offering}` : "";
+    setTimeout(() => router.replace(`/paywall${params}` as any), 500);
+  }, [offering]);
 
   return (
     <View className="flex-1 bg-[#f5f7fa]">
