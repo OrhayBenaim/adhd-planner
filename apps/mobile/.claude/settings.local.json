@@ -7,7 +7,12 @@
       "mcp__plugin_context-mode_context-mode__ctx_execute_file",
       "mcp__plugin_context-mode_context-mode__ctx_index",
       "mcp__plugin_context-mode_context-mode__ctx_execute",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(node -e \"const p=require\\(''''C:/Users/Orhay/git/adhd-planner/apps/mobile/node_modules/lottie-react-native/package.json''''\\); console.log\\(''''version:'''', p.version\\); console.log\\(''''main:'''', p.main\\)\")",
+      "Read(//c/Users/Orhay/git/adhd-planner/node_modules/lottie-react-native/android/**)",
+      "Read(//c/Users/Orhay/git/adhd-planner/node_modules/lottie-react-native/**)",
+      "Bash(node -e \"const p=require\\(''C:/Users/Orhay/git/adhd-planner/node_modules/lottie-react-native/package.json''\\); console.log\\(''version:'', p.version\\)\")",
+      "Bash(node -e \"const d=require\\(''''fs''''\\).readFileSync\\(''''/dev/stdin'''',''''utf8''''\\);const j=JSON.parse\\(d\\);console.log\\(Object.keys\\(j.dependencies\\).filter\\(k=>k.includes\\(''''lottie''''\\)\\)\\)\")"
     ]
   }
 }

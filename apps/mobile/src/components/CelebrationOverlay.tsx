@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { StyleSheet, View, Text } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import LottieView from "lottie-react-native";
 import Animated, {
   useSharedValue,
@@ -20,6 +20,7 @@ const FADE_OUT_MS = 500;
 const VISIBLE_MS = TOTAL_DURATION_MS - FADE_IN_MS - FADE_OUT_MS;
 
 export function CelebrationOverlay({ onComplete }: CelebrationOverlayProps) {
+  const overlayOpacity = useSharedValue(1);
   const textOpacity = useSharedValue(0);
 
   useEffect(() => {
@@ -30,54 +31,49 @@ export function CelebrationOverlay({ onComplete }: CelebrationOverlayProps) {
       withDelay(VISIBLE_MS, withTiming(0, { duration: FADE_OUT_MS }))
     );
 
-    const timer = setTimeout(() => {
-      onComplete();
-    }, TOTAL_DURATION_MS);
+    // Fade out the entire overlay before unmounting
+    overlayOpacity.value = withDelay(
+      TOTAL_DURATION_MS - FADE_OUT_MS,
+      withTiming(0, { duration: FADE_OUT_MS })
+    );
 
+    const timer = setTimeout(onComplete, TOTAL_DURATION_MS);
     return () => clearTimeout(timer);
   }, []);
+
+  const overlayStyle = useAnimatedStyle(() => ({
+    opacity: overlayOpacity.value,
+  }));
 
   const textStyle = useAnimatedStyle(() => ({
     opacity: textOpacity.value,
   }));
 
   return (
-    <View style={styles.overlay} pointerEvents="none">
+    <Animated.View
+      className="absolute inset-0 z-[999] items-center justify-center bg-white"
+      style={overlayStyle}
+      pointerEvents="none"
+    >
       <LottieView
         source={require("../../assets/animations/confetti.json")}
         autoPlay
         loop={false}
-        style={styles.lottie}
+        style={{
+          position: "absolute",
+          width: "150%",
+          height: "150%",
+          alignSelf: "center",
+          top: "-25%",
+          left: "-25%",
+        }}
       />
-      <Animated.View style={[styles.textContainer, textStyle]}>
-        <Text style={styles.title}>Let's gooo!</Text>
-        <Text style={styles.subtitle}>Time to crush it!</Text>
+      <Animated.View className="items-center" style={textStyle}>
+        <Text className="text-[32px] font-bold text-[#0A0A0A]">
+          Let's gooo!
+        </Text>
+        <Text className="mt-1 text-lg text-[#6A7282]">Time to crush it!</Text>
       </Animated.View>
-    </View>
+    </Animated.View>
   );
 }
-
-const styles = StyleSheet.create({
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 999,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  lottie: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  textContainer: {
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#0A0A0A",
-  },
-  subtitle: {
-    fontSize: 18,
-    color: "#6A7282",
-    marginTop: 4,
-  },
-});

@@ -49,7 +49,7 @@ export function AuthenticatedProfile({
   const handleUpgrade = useCallback(
     (source: string = "feature_card") => {
       posthog.capture("paywall_opened", { variant: String(upgradeVariant), source });
-      const offering = upgradeVariant === "locked-teasers" ? "pro_value" : undefined;
+      const offering = upgradeVariant === "locked-teasers" ? "feature_value" : undefined;
       showPaywall(offering);
     },
     [upgradeVariant, showPaywall],

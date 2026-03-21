@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/react-native";
 import { useSavePreferences } from "../../hooks/usePreferences";
 import { router } from "expo-router";
 import { posthog } from "../../lib/posthog";
+import { setPendingCelebration } from "../../lib/celebration";
 
 interface OnboardingState {
   name: string;
@@ -97,7 +98,8 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     setIsSubmitting(true);
     try {
       await saveOnboardingData();
-      router.replace({ pathname: "/", params: { celebrate: "true" } });
+      setPendingCelebration();
+      router.replace("/");
     } catch (error) {
       Sentry.captureException(error);
     } finally {
