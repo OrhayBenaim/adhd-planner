@@ -75,7 +75,18 @@
       "Bash(npm run:*)",
       "mcp__plugin_context-mode_context-mode__ctx_fetch_and_index",
       "mcp__plugin_context-mode_context-mode__ctx_search",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(pip show:*)",
+      "Bash(pip install:*)",
+      "Bash(claude plugin:*)",
+      "Read(//c/Users/Orhay/git/adhd-planner/$LOCALAPPDATA/**)",
+      "Read(//c/Users/Orhay/git/adhd-planner/$APPDATA/**)",
+      "Bash(find:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_console_messages",
+      "Bash(git branch:*)",
+      "mcp__posthog__create-feature-flag"
     ]
   }
 }

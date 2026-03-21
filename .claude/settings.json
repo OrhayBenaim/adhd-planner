@@ -1,4 +1,7 @@
 {
+  "env": {
+    "GEMINI_API_KEY":""
+  },
   "hooks": {
     "PreToolUse": [
       {

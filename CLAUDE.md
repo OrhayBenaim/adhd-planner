@@ -2,9 +2,13 @@
 
 ## Critical Agent Rules
 
-### Worktree Requirement
-**ALWAYS use git worktrees over creating branch when spawning agents for implementation work.**
-all worktrees should be created under .worktree/ in the root directory
+Every time you execute a plan always create a worktree for it.
+**NEVER use the `EnterWorktree` tool** (it creates worktrees under `.claude/worktrees/` which is not our convention).
+Instead, use git commands directly:
+```
+git worktree add .worktrees/<feature-name> -b <feature-name>
+```
+Then edit files inside that worktree directory. To clean up: `git worktree remove .worktrees/<feature-name>`
 
 ---
 
