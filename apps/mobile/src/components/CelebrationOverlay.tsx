@@ -12,6 +12,7 @@ import { posthog } from "../lib/posthog";
 
 interface CelebrationOverlayProps {
   onComplete: () => void;
+  name?: string;
 }
 
 const TOTAL_DURATION_MS = 3000;
@@ -19,7 +20,7 @@ const FADE_IN_MS = 400;
 const FADE_OUT_MS = 500;
 const VISIBLE_MS = TOTAL_DURATION_MS - FADE_IN_MS - FADE_OUT_MS;
 
-export function CelebrationOverlay({ onComplete }: CelebrationOverlayProps) {
+export function CelebrationOverlay({ onComplete, name }: CelebrationOverlayProps) {
   const overlayOpacity = useSharedValue(1);
   const textOpacity = useSharedValue(0);
 
@@ -70,9 +71,8 @@ export function CelebrationOverlay({ onComplete }: CelebrationOverlayProps) {
       />
       <Animated.View className="items-center" style={textStyle}>
         <Text className="text-[32px] font-bold text-[#0A0A0A]">
-          Let's gooo!
+          {name ? `You're all set, ${name}!` : "You're all set!"}
         </Text>
-        <Text className="mt-1 text-lg text-[#6A7282]">Time to crush it!</Text>
       </Animated.View>
     </Animated.View>
   );
