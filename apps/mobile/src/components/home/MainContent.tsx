@@ -1,7 +1,7 @@
 // apps/mobile/src/components/home/MainContent.tsx
 import { View, ScrollView, Text, type LayoutRectangle } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -53,29 +53,40 @@ export function MainContent() {
   const moodSliderRef = useRef<View>(null);
   const aiButtonRef = useRef<View>(null);
   const taskCardRef = useRef<View>(null);
-  const [moodLayout, setMoodLayout] = useState<LayoutRectangle | null>(null);
-  const [aiButtonLayout, setAiButtonLayout] = useState<LayoutRectangle | null>(null);
-  const [taskCardLayout, setTaskCardLayout] = useState<LayoutRectangle | null>(null);
 
-  const measureElement = useCallback(
-    (ref: React.RefObject<View | null>, setter: (layout: LayoutRectangle) => void) => {
-      ref.current?.measureInWindow((x, y, width, height) => {
-        setter({ x, y, width, height });
-      });
-    },
-    []
+  type TourLayoutState = {
+    mood: LayoutRectangle | null;
+    aiButton: LayoutRectangle | null;
+    taskCard: LayoutRectangle | null;
+  };
+  type TourLayoutAction =
+    | { type: "mood"; layout: LayoutRectangle }
+    | { type: "aiButton"; layout: LayoutRectangle }
+    | { type: "taskCard"; layout: LayoutRectangle };
+
+  const [tourLayouts, dispatchTourLayout] = useReducer(
+    (state: TourLayoutState, action: TourLayoutAction): TourLayoutState => ({
+      ...state,
+      [action.type]: action.layout,
+    }),
+    { mood: null, aiButton: null, taskCard: null }
   );
 
   useEffect(() => {
     if (!tour) return;
+    const measure = (ref: React.RefObject<View | null>, type: TourLayoutAction["type"]) => {
+      ref.current?.measureInWindow((x, y, width, height) => {
+        dispatchTourLayout({ type, layout: { x, y, width, height } });
+      });
+    };
     if (tour.isTourStep("moodMeter")) {
-      measureElement(moodSliderRef, setMoodLayout);
+      measure(moodSliderRef, "mood");
     } else if (tour.isTourStep("aiPick")) {
-      measureElement(aiButtonRef, setAiButtonLayout);
+      measure(aiButtonRef, "aiButton");
     } else if (tour.isTourStep("completeTask")) {
-      measureElement(taskCardRef, setTaskCardLayout);
+      measure(taskCardRef, "taskCard");
     }
-  }, [tour?.currentStepIndex, measureElement]);
+  }, [tour?.currentStepIndex]);
 
   useEffect(() => {
     if (tour?.isTourStep("moodMeter")) {
@@ -354,7 +365,7 @@ export function MainContent() {
       {/* Tour overlays */}
       {tour?.isTourStep("moodMeter") && (
         <TourOverlay
-          targetLayout={moodLayout}
+          targetLayout={tourLayouts.mood}
           title={TOUR_STEPS[4].title}
           description={TOUR_STEPS[4].description}
           buttonLabel={TOUR_STEPS[4].buttonLabel}
@@ -364,7 +375,7 @@ export function MainContent() {
       )}
       {tour?.isTourStep("aiPick") && (
         <TourOverlay
-          targetLayout={aiButtonLayout}
+          targetLayout={tourLayouts.aiButton}
           title={TOUR_STEPS[5].title}
           description={TOUR_STEPS[5].description}
           tooltipPosition="below"
@@ -372,7 +383,7 @@ export function MainContent() {
       )}
       {tour?.isTourStep("completeTask") && (
         <TourOverlay
-          targetLayout={taskCardLayout}
+          targetLayout={tourLayouts.taskCard}
           title={TOUR_STEPS[6].title}
           description={TOUR_STEPS[6].description}
           tooltipPosition="above"
