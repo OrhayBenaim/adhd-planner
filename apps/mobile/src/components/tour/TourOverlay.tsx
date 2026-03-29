@@ -1,9 +1,8 @@
-import { View, Dimensions, type LayoutRectangle } from "react-native";
+import { View, useWindowDimensions, type LayoutRectangle } from "react-native";
 import { BlurView } from "expo-blur";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { TourTooltip } from "./TourTooltip";
 
-const SCREEN = Dimensions.get("window");
 const CUTOUT_PADDING = 12;
 
 interface Props {
@@ -23,6 +22,8 @@ export function TourOverlay({
   onPress,
   tooltipPosition = "below",
 }: Props) {
+  const screen = useWindowDimensions();
+
   if (!targetLayout) return null;
 
   const cutout = {
@@ -95,7 +96,7 @@ export function TourOverlay({
           left: 0,
           right: 0,
           ...(tooltipPosition === "above"
-            ? { bottom: SCREEN.height - cutout.y + 16 }
+            ? { bottom: screen.height - cutout.y + 16 }
             : { top: cutout.y + cutout.height + 16 }),
         }}
       >
