@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { posthog } from "../../lib/posthog";
@@ -26,17 +26,14 @@ interface Props {
 
 export function GuidedTourProvider({ children, enabled }: Props) {
   const [stepIndex, setStepIndex] = useState(0);
-  const [isActive, setIsActive] = useState(enabled);
+  const [dismissed, setDismissed] = useState(false);
   const completeTourMutation = useMutation(api.preferences.completeTour);
 
-  useEffect(() => {
-    if (enabled) setIsActive(true);
-  }, [enabled]);
-
+  const isActive = enabled && !dismissed;
   const currentStep = TOUR_STEPS[stepIndex];
 
   const completeTour = useCallback(() => {
-    setIsActive(false);
+    setDismissed(true);
     completeTourMutation().catch(() => {});
   }, [completeTourMutation]);
 
