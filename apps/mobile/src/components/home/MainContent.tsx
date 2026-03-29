@@ -1,5 +1,5 @@
 // apps/mobile/src/components/home/MainContent.tsx
-import { View, ScrollView, Text } from "react-native";
+import { View, ScrollView, Text, type LayoutRectangle } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Animated, {
@@ -26,6 +26,11 @@ import { useHome } from "./HomeProvider";
 import { useSheetFlow } from "./SheetFlowProvider";
 import { usePremium } from "../../hooks/usePremium";
 import { posthog } from "../../lib/posthog";
+import { useGuidedTour } from "../tour/GuidedTourProvider";
+import { TourIntroCard } from "../tour/TourIntroCard";
+import { TourOverlay } from "../tour/TourOverlay";
+import { TourCelebration } from "../tour/TourCelebration";
+import { TOUR_STEPS } from "../tour/constants";
 
 export function MainContent() {
   const {
@@ -42,6 +47,41 @@ export function MainContent() {
     openSheet,
   } = useHome();
   const flow = useSheetFlow();
+  const tour = useGuidedTour();
+
+  // Tour target refs and layouts
+  const moodSliderRef = useRef<View>(null);
+  const aiButtonRef = useRef<View>(null);
+  const taskCardRef = useRef<View>(null);
+  const [moodLayout, setMoodLayout] = useState<LayoutRectangle | null>(null);
+  const [aiButtonLayout, setAiButtonLayout] = useState<LayoutRectangle | null>(null);
+  const [taskCardLayout, setTaskCardLayout] = useState<LayoutRectangle | null>(null);
+
+  const measureElement = useCallback(
+    (ref: React.RefObject<View | null>, setter: (layout: LayoutRectangle) => void) => {
+      ref.current?.measureInWindow((x, y, width, height) => {
+        setter({ x, y, width, height });
+      });
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (!tour) return;
+    if (tour.isTourStep("moodMeter")) {
+      measureElement(moodSliderRef, setMoodLayout);
+    } else if (tour.isTourStep("aiPick")) {
+      measureElement(aiButtonRef, setAiButtonLayout);
+    } else if (tour.isTourStep("completeTask")) {
+      measureElement(taskCardRef, setTaskCardLayout);
+    }
+  }, [tour?.currentStepIndex, measureElement]);
+
+  useEffect(() => {
+    if (tour?.isTourStep("moodMeter")) {
+      posthog.capture("guided_tour_task_created");
+    }
+  }, [tour?.currentStepIndex]);
   const { isPremium, showPaywall } = usePremium();
   const streakData = useQuery(api.streaks.get);
   const ceilingStatus = useQuery(api.ai.getCeilingStatus);
@@ -87,6 +127,15 @@ export function MainContent() {
   }));
 
   const handleAIPick = useCallback(() => {
+    if (tour?.isTourStep("aiPick")) {
+      const firstTask = tasks.find((t) => !t.completed);
+      if (firstTask) {
+        setSelectedTask(firstTask);
+        tour.advance();
+      }
+      return;
+    }
+
     const now = new Date();
 
     const cutoff = new Date(now);
@@ -142,6 +191,10 @@ export function MainContent() {
       posthog.capture("task_completed");
       setSelectedTask(null);
       showToast(result?.earned ?? 0);
+      if (tour?.isTourStep("completeTask")) {
+        posthog.capture("guided_tour_task_completed");
+        tour.advance();
+      }
     },
     [completeTask, setSelectedTask, showToast],
   );
@@ -187,12 +240,12 @@ export function MainContent() {
         </View>
 
         {/* Mood slider */}
-        <View className="px-6 pt-2 pb-8">
+        <View ref={moodSliderRef} className="px-6 pt-2 pb-8">
           <MoodSlider value={moodLevel} onChange={setMoodLevel} />
         </View>
 
         {/* AI button */}
-        <View className="items-center pb-6">
+        <View ref={aiButtonRef} className="items-center pb-6">
           <Animated.View style={aiAnimStyle}>
             <Pressable onPress={handleAIPick}>
               <View
@@ -252,8 +305,44 @@ export function MainContent() {
           </View>
         )}
 
+        {/* Tour: Intro card (step 0) */}
+        {tour?.isTourStep("intro") && (
+          <View className="px-0 py-4">
+            <TourIntroCard
+              onStart={() => {
+                posthog.capture("guided_tour_started");
+                tour.advance();
+              }}
+              onSkip={tour.skip}
+            />
+          </View>
+        )}
+
+        {/* Tour: Create first task CTA (step 1) */}
+        {tour?.isTourStep("createTask") && (
+          <View className="px-6 py-4">
+            <Pressable
+              onPress={() => {
+                posthog.capture("guided_tour_step_viewed", { step: 1, stepName: "createTask" });
+                flow.start("addTask");
+                tour.advance();
+              }}
+            >
+              <LinearGradient
+                colors={["#a2d2ff", "#cdb4db"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={{ borderRadius: 24, paddingVertical: 16, alignItems: "center" }}
+              >
+                <Text className="text-white font-semibold text-lg">Add your first task</Text>
+                <Text className="text-white/80 text-sm mt-1">What do you need to get done? Tap to get started.</Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
+        )}
+
         {/* Task card */}
-        <View className="px-6">
+        <View ref={taskCardRef} className="px-6">
           <TaskCard
             task={selectedTask}
             onComplete={handleComplete}
@@ -261,6 +350,37 @@ export function MainContent() {
           />
         </View>
       </ScrollView>
+
+      {/* Tour overlays */}
+      {tour?.isTourStep("moodMeter") && (
+        <TourOverlay
+          targetLayout={moodLayout}
+          title={TOUR_STEPS[4].title}
+          description={TOUR_STEPS[4].description}
+          buttonLabel={TOUR_STEPS[4].buttonLabel}
+          onPress={tour.advance}
+          tooltipPosition="below"
+        />
+      )}
+      {tour?.isTourStep("aiPick") && (
+        <TourOverlay
+          targetLayout={aiButtonLayout}
+          title={TOUR_STEPS[5].title}
+          description={TOUR_STEPS[5].description}
+          tooltipPosition="below"
+        />
+      )}
+      {tour?.isTourStep("completeTask") && (
+        <TourOverlay
+          targetLayout={taskCardLayout}
+          title={TOUR_STEPS[6].title}
+          description={TOUR_STEPS[6].description}
+          tooltipPosition="above"
+        />
+      )}
+      {tour?.isTourStep("celebration") && (
+        <TourCelebration onFinish={tour.advance} />
+      )}
 
       {/* Bottom nav */}
       <BottomNav
