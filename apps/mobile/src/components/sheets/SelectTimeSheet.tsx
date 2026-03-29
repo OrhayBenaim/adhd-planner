@@ -88,7 +88,7 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
         ref={ref}
         index={-1}
         snapPoints={["28%", "40%"]}
-        enablePanDownToClose
+        enablePanDownToClose={!tour?.isTourStep("pickTime")}
         onClose={onClose}
         keyboardBehavior="extend"
         keyboardBlurBehavior="restore"
@@ -99,9 +99,11 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
         <BottomSheetView className="px-6 pt-6">
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-xl font-semibold text-[#1e2939]">What time?</Text>
-            <Pressable onPress={() => { Keyboard.dismiss(); onClose(); }}>
-              <Ionicons name="close" size={24} color="#364153" />
-            </Pressable>
+            {!tour?.isTourStep("pickTime") && (
+              <Pressable onPress={() => { Keyboard.dismiss(); onClose(); }}>
+                <Ionicons name="close" size={24} color="#364153" />
+              </Pressable>
+            )}
           </View>
           <View className="gap-3">
             <View className="flex-row gap-3">
