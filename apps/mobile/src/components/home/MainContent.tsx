@@ -193,7 +193,7 @@ export function MainContent() {
         : prev,
     );
     setTimeout(() => setSelectedTask(best), 500);
-  }, [tasks, moodLevel, setSelectedTask, aiRotate, aiScale, aiPickDaysAhead, noTasksOpacity, noTasksTranslateY]);
+  }, [tour, tasks, moodLevel, setSelectedTask, aiRotate, aiScale, aiPickDaysAhead, noTasksOpacity, noTasksTranslateY]);
 
   const handleComplete = useCallback(
     async (task: typeof selectedTask) => {
@@ -207,7 +207,7 @@ export function MainContent() {
         tour.advance();
       }
     },
-    [completeTask, setSelectedTask, showToast],
+    [tour, completeTask, setSelectedTask, showToast],
   );
 
   const aiAnimStyle = useAnimatedStyle(() => ({

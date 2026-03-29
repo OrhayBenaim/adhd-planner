@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { StyleSheet, Text } from "react-native";
+import { Text } from "react-native";
 import LottieView from "lottie-react-native";
 import Animated, {
   useSharedValue,

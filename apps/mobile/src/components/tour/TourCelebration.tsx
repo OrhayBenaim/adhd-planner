@@ -1,4 +1,3 @@
-import { View } from "react-native";
 import { BlurView } from "expo-blur";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { TourTooltip } from "./TourTooltip";

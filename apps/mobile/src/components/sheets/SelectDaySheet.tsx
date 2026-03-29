@@ -112,7 +112,7 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
         ref={ref}
         index={-1}
         snapPoints={["28%", "40%"]}
-        enablePanDownToClose
+        enablePanDownToClose={!tour?.isTourStep("pickDay")}
         onClose={onClose}
         keyboardBehavior="extend"
         keyboardBlurBehavior="restore"
@@ -123,9 +123,11 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
         <BottomSheetView className="px-6 pt-6">
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-xl font-semibold text-[#1e2939]">When is this due?</Text>
-            <Pressable onPress={() => { Keyboard.dismiss(); onClose(); }}>
-              <Ionicons name="close" size={24} color="#364153" />
-            </Pressable>
+            {!tour?.isTourStep("pickDay") && (
+              <Pressable onPress={() => { Keyboard.dismiss(); onClose(); }}>
+                <Ionicons name="close" size={24} color="#364153" />
+              </Pressable>
+            )}
           </View>
 
           <View className="gap-3">
