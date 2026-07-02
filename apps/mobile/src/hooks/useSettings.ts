@@ -29,13 +29,14 @@ interface LocalSettings {
 
 type SettingsAction =
   | { type: "loaded"; stored: Partial<LocalSettings>; granted: boolean }
+  | { type: "server_sync"; desired: boolean; granted: boolean }
   | { type: "notifications_requested"; granted: boolean }
   | { type: "notifications_disabled" }
   | { type: "sound"; enabled: boolean }
   | { type: "coach"; enabled: boolean };
 
 const initialState: LocalSettings = {
-  notificationsDesired: true,
+  notificationsDesired: false,
   notificationsGranted: false,
   soundEffects: true,
   coachNotifications: false,
@@ -48,11 +49,14 @@ function settingsReducer(state: LocalSettings, action: SettingsAction): LocalSet
   switch (action.type) {
     case "loaded":
       changedState = {
-        notificationsDesired: action.stored.notificationsDesired ?? true,
+        notificationsDesired: action.stored.notificationsDesired ?? false,
         notificationsGranted: action.granted,
         soundEffects: action.stored.soundEffects ?? true,
         coachNotifications: action.stored.coachNotifications ?? false,
       };
+      break;
+    case "server_sync":
+      changedState = { notificationsDesired: action.desired, notificationsGranted: action.granted };
       break;
     case "notifications_requested":
       changedState = { notificationsDesired: true, notificationsGranted: action.granted };
@@ -87,6 +91,20 @@ export function useSettings() {
   // Admin override — if aiEnabled is false, smart scheduling is forced off
   const adminAiEnabled = convexSettings?.aiEnabled ?? true;
   const userAiEnabled = convexSettings?.userAiEnabled ?? true;
+
+  // Sync notification preference from server (source of truth)
+  const serverNotifications = convexSettings?.notificationsEnabled ?? undefined;
+  useEffect(() => {
+    if (serverNotifications != null) {
+      Notifications.getPermissionsAsync().then(({ status }) => {
+        dispatch({
+          type: "server_sync",
+          desired: serverNotifications,
+          granted: status === "granted",
+        });
+      });
+    }
+  }, [serverNotifications]);
 
   // Load stored preferences and OS permission status in a single effect
   useEffect(() => {
