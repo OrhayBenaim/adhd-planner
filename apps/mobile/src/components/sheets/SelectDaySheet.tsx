@@ -164,6 +164,7 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
               <TourTooltip
                 title={TOUR_STEPS[2].title}
                 description={TOUR_STEPS[2].description}
+                showMascot={false}
               />
             </View>
           )}

@@ -1,97 +1,90 @@
 import { View, Text, Pressable } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
-import { router } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
+import { MascotHeader } from "../../src/components/onboarding/MascotHeader";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { posthog } from "../../src/lib/posthog";
 
 export default function NotificationsStep() {
-  const { updateField } = useOnboarding();
+  const { updateField, submitOnboarding, isSubmitting } = useOnboarding();
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     posthog.capture("onboarding_step_viewed", { step: "notifications", step_number: 5 });
   }, []);
 
   const handleEnable = async () => {
+    setBusy(true);
+    let enabled = false;
     try {
       const { status } = await Notifications.requestPermissionsAsync();
-      updateField("notificationsEnabled", status === "granted");
+      enabled = status === "granted";
     } catch {
-      updateField("notificationsEnabled", false);
+      enabled = false;
     }
-    router.push("/(onboarding)/sign-in");
+    updateField("notificationsEnabled", enabled);
+    await submitOnboarding({ notificationsEnabled: enabled });
+    setBusy(false);
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
+    setBusy(true);
     updateField("notificationsEnabled", false);
-    router.push("/(onboarding)/sign-in");
+    await submitOnboarding({ notificationsEnabled: false });
+    setBusy(false);
   };
+
+  const disabled = busy || isSubmitting;
 
   return (
-    <OnboardingLayout
-      step={5}
-      onContinue={() => {}} // unused, footer hidden
-      continueEnabled={false}
-      showFooter={false}
-    >
+    <OnboardingLayout step={5} showFooter={false}>
       <View className="flex-1 items-center">
-        {/* Illustration placeholder */}
-        <View className="w-48 h-48 rounded-3xl bg-[#ffc8dd]/20 items-center justify-center" style={{ marginBottom: 32 }}>
-          <Text className="text-6xl">🔔</Text>
-        </View>
+        <MascotHeader
+          pose="wave"
+          title="One last thing!"
+          subtitle="I can send you a gentle nudge when it's a good time to tackle a task. No spam, no guilt — promise."
+          mascotSize={170}
+        />
 
-        {/* Bell icon badge */}
-        <LinearGradient
-          colors={["#ffc8dd", "#ffafcc"]}
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 32,
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 24,
-            boxShadow: "0px 10px 15px rgba(0,0,0,0.1)",
-          }}
+        <Animated.View
+          entering={FadeInDown.duration(400).delay(200)}
+          className="w-full items-center mt-10"
         >
-          <Ionicons name="notifications-outline" size={28} color="#fff" />
-        </LinearGradient>
+          {/* Enable button */}
+          <LinearGradient
+            colors={["#a2d2ff", "#cdb4db"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 0, y: 1 }}
+            style={{
+              width: "100%",
+              height: 56,
+              borderRadius: 9999,
+              marginBottom: 16,
+              opacity: disabled ? 0.6 : 1,
+              boxShadow: "0px 4px 8px rgba(0,0,0,0.15)",
+            }}
+          >
+            <Pressable
+              onPress={handleEnable}
+              disabled={disabled}
+              className="flex-1 items-center justify-center"
+            >
+              <Text className="text-white font-semibold text-base">
+                {disabled ? "Getting things ready..." : "Enable gentle reminders"}
+              </Text>
+            </Pressable>
+          </LinearGradient>
 
-        <Text className="text-3xl font-bold text-[#1e2939] text-center mb-2">
-          Stay on track 🔔
-        </Text>
-        <Text className="text-lg text-[#4a5565] text-center mb-10 px-4">
-          Enable notifications to get gentle reminders when it's time to tackle your tasks
-        </Text>
-
-        {/* Enable button */}
-        <LinearGradient
-          colors={["#a2d2ff", "#cdb4db"]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0, y: 1 }}
-          style={{
-            width: "100%",
-            height: 56,
-            borderRadius: 9999,
-            marginBottom: 16,
-            boxShadow: "0px 4px 8px rgba(0,0,0,0.15)",
-          }}
-        >
-          <Pressable onPress={handleEnable} className="flex-1 items-center justify-center">
-            <Text className="text-white font-semibold text-base">
-              Enable Notifications
+          {/* Skip button */}
+          <Pressable onPress={handleSkip} disabled={disabled}>
+            <Text className="text-base font-medium text-[#6a7282]">
+              Maybe later
             </Text>
           </Pressable>
-        </LinearGradient>
-
-        {/* Skip button */}
-        <Pressable onPress={handleSkip}>
-          <Text className="text-base font-medium text-[#6a7282]">
-            Skip for now
-          </Text>
-        </Pressable>
+        </Animated.View>
       </View>
     </OnboardingLayout>
   );

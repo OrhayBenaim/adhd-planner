@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
+import { authClient } from "../../lib/authClient";
 import { posthog } from "../../lib/posthog";
 import { TOUR_STEPS, type TourStepName } from "./constants";
 
@@ -28,6 +29,9 @@ export function GuidedTourProvider({ children, enabled }: Props) {
   const [stepIndex, setStepIndex] = useState(0);
   const [dismissed, setDismissed] = useState(false);
   const completeTourMutation = useMutation(api.preferences.completeTour);
+  const { data: session } = authClient.useSession();
+  const isAnonymous =
+    (session?.user as { isAnonymous?: boolean | null } | undefined)?.isAnonymous ?? true;
 
   const isActive = enabled && !dismissed;
   const currentStep = TOUR_STEPS[stepIndex];
@@ -38,10 +42,23 @@ export function GuidedTourProvider({ children, enabled }: Props) {
   }, [completeTourMutation]);
 
   const advance = useCallback(() => {
-    const nextIndex = stepIndex + 1;
-    if (nextIndex >= TOUR_STEPS.length) {
+    // Leaving the celebration: the tour proper is done. Persist completion,
+    // then offer account linking to anonymous users before dismissing.
+    if (currentStep?.name === "celebration") {
       posthog.capture("guided_tour_completed");
-      completeTour();
+      completeTourMutation().catch(() => {});
+      if (!isAnonymous) {
+        setDismissed(true);
+        return;
+      }
+      posthog.capture("onboarding_save_progress_shown");
+      setStepIndex((prev) => prev + 1);
+      return;
+    }
+
+    const nextIndex = stepIndex + 1;
+    if (currentStep?.name === "saveProgress" || nextIndex >= TOUR_STEPS.length) {
+      setDismissed(true);
       return;
     }
     const nextStep = TOUR_STEPS[nextIndex];
@@ -49,8 +66,8 @@ export function GuidedTourProvider({ children, enabled }: Props) {
       step: nextStep.step,
       stepName: nextStep.name,
     });
-    setStepIndex(nextIndex);
-  }, [stepIndex, completeTour]);
+    setStepIndex((prev) => prev + 1);
+  }, [stepIndex, currentStep, isAnonymous, completeTourMutation]);
 
   const skip = useCallback(() => {
     posthog.capture("guided_tour_skipped");

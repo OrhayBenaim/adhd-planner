@@ -1,7 +1,9 @@
-import { View, Text, ScrollView } from "react-native";
+import { View, ScrollView } from "react-native";
 import { router } from "expo-router";
 import { useEffect } from "react";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
+import { MascotHeader } from "../../src/components/onboarding/MascotHeader";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { ChipGrid } from "../../src/components/onboarding/ChipGrid";
 import { STRENGTHS } from "../../src/constants/onboarding";
@@ -23,24 +25,21 @@ export default function StrengthsStep() {
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         <View className="items-center">
-          {/* Illustration placeholder */}
-          <View className="w-40 h-40 rounded-3xl bg-[#a2d2ff]/20 items-center justify-center mb-6">
-            <Text className="text-5xl">😊</Text>
-          </View>
-
-          <Text className="text-3xl font-bold text-[#1e2939] text-center mb-2">
-            What do you enjoy? 😊
-          </Text>
-          <Text className="text-lg text-[#4a5565] text-center mb-8">
-            Select tasks that come naturally to you
-          </Text>
-
-          <ChipGrid
-            items={STRENGTHS}
-            selected={state.strengths}
-            onToggle={(label) => toggleArrayItem("strengths", label)}
-            variant="strengths"
+          <MascotHeader
+            pose="wave"
+            title="And what do you enjoy?"
+            subtitle="When your energy is low, I'll lean on the things that come naturally to you."
+            mascotSize={110}
           />
+
+          <Animated.View entering={FadeInDown.duration(400).delay(200)} className="w-full mt-8">
+            <ChipGrid
+              items={STRENGTHS}
+              selected={state.strengths}
+              onToggle={(label) => toggleArrayItem("strengths", label)}
+              variant="strengths"
+            />
+          </Animated.View>
         </View>
       </ScrollView>
     </OnboardingLayout>

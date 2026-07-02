@@ -139,6 +139,7 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
               <TourTooltip
                 title={TOUR_STEPS[3].title}
                 description={TOUR_STEPS[3].description}
+                showMascot={false}
               />
             </View>
           )}
