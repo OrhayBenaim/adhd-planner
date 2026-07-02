@@ -76,14 +76,16 @@ export const SettingsSheet = forwardRef<BottomSheet, Props>(
           </View>
           <SettingRow icon="notifications-outline" color="#a2d2ff" title="Notifications" subtitle="Task reminders"
             value={settings.notifications} onChange={(v) => updateSetting("notifications", v)} />
+          {settings.notifications && (
+            <SettingRow icon="chatbubble-ellipses-outline" color="#cdb4db" title="AI Coach" subtitle="Personalized nudges & tips"
+              value={settings.coachNotifications} isPro
+              onChange={(v) => { isPremium ? updateSetting("coachNotifications", v) : showPaywall(); }} />
+          )}
           <SettingRow icon="volume-high-outline" color="#ffc8dd" title="Sound Effects" subtitle="Haptic & sound feedback"
             value={settings.soundEffects} onChange={(v) => updateSetting("soundEffects", v)} />
           <SettingRow icon="flash-outline" color="#bde0fe" title="Smart Scheduling" subtitle="AI-powered task scoring"
             value={settings.smartScheduling} onChange={(v) => updateSetting("smartScheduling", v)}
             disabled={!adminAiEnabled} />
-          <SettingRow icon="chatbubble-ellipses-outline" color="#cdb4db" title="AI Coach" subtitle="Personalized nudges & tips"
-            value={settings.coachNotifications} isPro
-            onChange={(v) => { isPremium ? updateSetting("coachNotifications", v) : showPaywall(); }} />
           <VoiceLanguagesHeader expanded={voice.expanded} onToggle={voice.toggleExpanded} />
         </View>
       ),
