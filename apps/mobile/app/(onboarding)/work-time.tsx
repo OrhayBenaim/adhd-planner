@@ -2,7 +2,9 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect } from "react";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
+import { MascotHeader } from "../../src/components/onboarding/MascotHeader";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { PRODUCTIVE_TIMES } from "../../src/constants/onboarding";
 import { posthog } from "../../src/lib/posthog";
@@ -14,6 +16,8 @@ export default function WorkTimeStep() {
     posthog.capture("onboarding_step_viewed", { step: "work_time", step_number: 2 });
   }, []);
 
+  const firstName = state.name.trim().split(" ")[0];
+
   return (
     <OnboardingLayout
       step={2}
@@ -23,19 +27,17 @@ export default function WorkTimeStep() {
     >
       <ScrollView showsVerticalScrollIndicator={false}>
         <View className="items-center">
-          {/* Illustration placeholder */}
-          <View className="w-48 h-48 rounded-3xl bg-[#cdb4db]/20 items-center justify-center mb-8">
-            <Text className="text-6xl">⏰</Text>
-          </View>
+          <MascotHeader
+            pose="wave"
+            title={firstName ? `Nice to meet you, ${firstName}!` : "Nice to meet you!"}
+            subtitle="When does your brain work best? I'll suggest tasks at those times."
+            mascotSize={130}
+          />
 
-          <Text className="text-3xl font-bold text-[#1e2939] text-center mb-2">
-            When do you work best? ⏰
-          </Text>
-          <Text className="text-lg text-[#4a5565] text-center mb-8">
-            Help us schedule tasks when you're most productive
-          </Text>
-
-          <View className="w-full gap-3">
+          <Animated.View
+            entering={FadeInDown.duration(400).delay(200)}
+            className="w-full gap-3 mt-8"
+          >
             {PRODUCTIVE_TIMES.map((time) => {
               const isSelected = state.bestWorkTimes.includes(time.label);
               return isSelected ? (
@@ -68,7 +70,7 @@ export default function WorkTimeStep() {
                 </Pressable>
               );
             })}
-          </View>
+          </Animated.View>
         </View>
       </ScrollView>
     </OnboardingLayout>

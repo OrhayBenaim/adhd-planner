@@ -6,7 +6,8 @@ export type TourStepName =
   | "moodMeter"
   | "aiPick"
   | "completeTask"
-  | "celebration";
+  | "celebration"
+  | "saveProgress";
 
 export type TourStepType = "action" | "button";
 
@@ -25,8 +26,8 @@ export const TOUR_STEPS: TourStepDef[] = [
     name: "intro",
     step: 0,
     type: "button",
-    title: "Let me show you around",
-    description: "It'll take 30 seconds.",
+    title: "Let's set up your first task together",
+    description: "It only takes 30 seconds, and then this place is all yours.",
     buttonLabel: "Let's go",
     posthogEvent: "guided_tour_shown",
   },
@@ -35,7 +36,7 @@ export const TOUR_STEPS: TourStepDef[] = [
     step: 1,
     type: "action",
     title: "Add your first task",
-    description: "What do you need to get done? Tap below to get started.",
+    description: "What do you need to get done? Anything counts — big or tiny.",
     posthogEvent: "guided_tour_step_viewed",
   },
   {
@@ -43,7 +44,7 @@ export const TOUR_STEPS: TourStepDef[] = [
     step: 2,
     type: "action",
     title: "When do you want to do this?",
-    description: "Pick a day. We'll use this to plan your schedule and send reminders.",
+    description: "Pick a day. I'll use this to plan your schedule and send reminders.",
     posthogEvent: "guided_tour_step_viewed",
   },
   {
@@ -51,7 +52,7 @@ export const TOUR_STEPS: TourStepDef[] = [
     step: 3,
     type: "action",
     title: "What time works best?",
-    description: "We'll match this to your focus times from onboarding.",
+    description: "I'll match this to the focus times you told me about.",
     posthogEvent: "guided_tour_step_viewed",
   },
   {
@@ -59,7 +60,7 @@ export const TOUR_STEPS: TourStepDef[] = [
     step: 4,
     type: "button",
     title: "How are you feeling?",
-    description: "Slide to set your energy level. We'll suggest tasks that match how you're feeling right now.",
+    description: "Slide to set your energy level. I'll suggest tasks that match how you're feeling right now.",
     buttonLabel: "Got it",
     posthogEvent: "guided_tour_step_viewed",
   },
@@ -68,7 +69,7 @@ export const TOUR_STEPS: TourStepDef[] = [
     step: 5,
     type: "action",
     title: "Your personal task picker",
-    description: "Tap here and we'll find the best task for your mood and energy.",
+    description: "Tap here and I'll fetch the best task for your mood and energy.",
     posthogEvent: "guided_tour_step_viewed",
   },
   {
@@ -83,9 +84,17 @@ export const TOUR_STEPS: TourStepDef[] = [
     name: "celebration",
     step: 7,
     type: "button",
-    title: "You're ready!",
-    description: "That's the core loop. Add tasks, match your mood, and get things done.",
+    title: "You did it!",
+    description: "That's the whole loop. Add tasks, match your mood, and get things done.",
     buttonLabel: "Let's start!",
     posthogEvent: "guided_tour_completed",
+  },
+  {
+    name: "saveProgress",
+    step: 8,
+    type: "button",
+    title: "Save your progress",
+    description: "Link an account so your tasks and XP are safe across devices.",
+    posthogEvent: "onboarding_save_progress_shown",
   },
 ];

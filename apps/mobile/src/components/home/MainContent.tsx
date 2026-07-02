@@ -30,6 +30,7 @@ import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { TourIntroCard } from "../tour/TourIntroCard";
 import { TourOverlay } from "../tour/TourOverlay";
 import { TourCelebration } from "../tour/TourCelebration";
+import { SaveProgressOverlay } from "../tour/SaveProgressOverlay";
 import { TOUR_STEPS } from "../tour/constants";
 
 export function MainContent() {
@@ -391,6 +392,9 @@ export function MainContent() {
       )}
       {tour?.isTourStep("celebration") && (
         <TourCelebration onFinish={tour.advance} />
+      )}
+      {tour?.isTourStep("saveProgress") && (
+        <SaveProgressOverlay onDone={tour.advance} />
       )}
 
       {/* Bottom nav */}

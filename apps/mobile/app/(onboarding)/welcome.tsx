@@ -1,7 +1,9 @@
 import { View, Text, TextInput, KeyboardAvoidingView, Platform, ScrollView, Pressable } from "react-native";
 import { router } from "expo-router";
 import { useEffect, useState, useCallback } from "react";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
+import { MascotHeader } from "../../src/components/onboarding/MascotHeader";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { useNeedsOnboarding } from "../../src/hooks/usePreferences";
 import { SignInOptions } from "../../src/components/auth/SignInOptions";
@@ -31,12 +33,7 @@ export default function WelcomeStep() {
 
   if (subView === "signInEmail") {
     return (
-      <OnboardingLayout
-        step={1}
-        onContinue={() => {}}
-        continueEnabled={false}
-        showFooter={false}
-      >
+      <OnboardingLayout step={1} showFooter={false}>
         <KeyboardAvoidingView
           className="flex-1"
           behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -68,12 +65,7 @@ export default function WelcomeStep() {
 
   if (subView === "signIn") {
     return (
-      <OnboardingLayout
-        step={1}
-        onContinue={() => {}}
-        continueEnabled={false}
-        showFooter={false}
-      >
+      <OnboardingLayout step={1} showFooter={false}>
         <View className="flex-1 justify-center">
           <SignInOptions
             onSuccess={handleSignInSuccess}
@@ -108,25 +100,22 @@ export default function WelcomeStep() {
           keyboardShouldPersistTaps="handled"
         >
           <View className="items-center">
-            {/* Illustration placeholder */}
-            <View className="w-48 h-48 rounded-3xl bg-[#ffc8dd]/20 items-center justify-center mb-8">
-              <Text className="text-6xl">👋</Text>
-            </View>
-
-            <Text className="text-3xl font-bold text-[#1e2939] text-center mb-2">
-              Welcome! 👋
-            </Text>
-            <Text className="text-lg text-[#4a5565] text-center mb-10">
-              Let's personalize your experience.{"\n"}What should we call you?
-            </Text>
-
-            <TextInput
-              value={state.name}
-              onChangeText={(text) => updateField("name", text)}
-              placeholder="Enter your name"
-              placeholderTextColor="#99a1af"
-              className="w-full border border-[#e5e7eb] rounded-3xl px-5 py-5 text-lg text-[#1e2939]"
+            <MascotHeader
+              pose="wave"
+              title="Hi! I'm Lulli"
+              subtitle={"I'll help you get things done, one small step at a time.\nWhat should I call you?"}
+              mascotSize={190}
             />
+
+            <Animated.View entering={FadeInDown.duration(400).delay(240)} className="w-full mt-8">
+              <TextInput
+                value={state.name}
+                onChangeText={(text) => updateField("name", text)}
+                placeholder="Enter your name"
+                placeholderTextColor="#99a1af"
+                className="w-full border border-[#e5e7eb] rounded-3xl px-5 py-5 text-lg text-[#1e2939]"
+              />
+            </Animated.View>
 
             <Pressable
               onPress={() => setSubView("signIn")}
