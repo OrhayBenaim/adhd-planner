@@ -12,7 +12,10 @@ import { requireAuth } from "./lib/auth";
 export const get = query({
   args: {},
   handler: async (ctx) => {
-    const userId = await requireAuth(ctx);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    const userId = identity.subject;
     return await ctx.db
       .query("userPreferences")
       .withIndex("by_user", (q) => q.eq("userId", userId))

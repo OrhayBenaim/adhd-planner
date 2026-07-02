@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 
 export function useNeedsOnboarding() {
@@ -14,10 +14,12 @@ export function useUpdatePreferences() {
 }
 
 export function usePreferences() {
-  return useQuery(api.preferences.get);
+  const { isAuthenticated } = useConvexAuth();
+  return useQuery(api.preferences.get, isAuthenticated ? {} : "skip");
 }
 
 export function useHasCompletedTour() {
-  const prefs = useQuery(api.preferences.get);
+  const { isAuthenticated } = useConvexAuth();
+  const prefs = useQuery(api.preferences.get, isAuthenticated ? {} : "skip");
   return prefs?.hasCompletedTour ?? false;
 }
