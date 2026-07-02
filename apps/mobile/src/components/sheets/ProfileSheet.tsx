@@ -6,11 +6,9 @@ import BottomSheet, {
   BottomSheetScrollView,
   BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
-import { useQuery } from "convex/react";
-import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { authClient } from "../../lib/authClient";
 import { useHome } from "../home/HomeProvider";
-import { useUpdatePreferences } from "../../hooks/usePreferences";
+import { usePreferences, useUpdatePreferences } from "../../hooks/usePreferences";
 import { AnonymousProfile } from "./profile/AnonymousProfile";
 import { AuthenticatedProfile } from "./profile/AuthenticatedProfile";
 import { LinkAccountOptions } from "../auth/LinkAccountOptions";
@@ -62,7 +60,7 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const { closeSheet } = useHome();
     const { data: session } = authClient.useSession();
-    const preferences = useQuery(api.preferences.get);
+    const preferences = usePreferences();
 
     const [subView, setSubView] = useState<SubView>("main");
     const updatePreferences = useUpdatePreferences();
