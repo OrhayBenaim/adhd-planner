@@ -8,6 +8,9 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-na
 import { SPRING_BOUNCY } from "../../animations/springs";
 import { useSheetFlow } from "../home/SheetFlowProvider";
 import { daySelectionToDate } from "../../lib/dateTimeConvert";
+import { useGuidedTour } from "../tour/GuidedTourProvider";
+import { TourTooltip } from "../tour/TourTooltip";
+import { TOUR_STEPS } from "../tour/constants";
 
 type GradientPair = [string, string];
 
@@ -72,6 +75,7 @@ interface Props {
 export const SelectDaySheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const flow = useSheetFlow();
+    const tour = useGuidedTour();
     const isSelected = (day: string) => {
       if (!flow.editingExistingTaskId || !flow.selectedDay) return false;
       return daySelectionToDate(day) === flow.selectedDay;
@@ -89,6 +93,7 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
       const dateStr = daySelectionToDate(day);
       flow.setDay(dateStr);
       flow.next();
+      if (tour?.isTourStep("pickDay")) tour.advance();
     };
 
     const handleCustomSubmit = () => {
@@ -97,6 +102,7 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
         const dateStr = daySelectionToDate(customValue.trim());
         flow.setDay(dateStr);
         flow.next();
+        if (tour?.isTourStep("pickDay")) tour.advance();
         setCustomValue("");
       }
     };
@@ -106,7 +112,7 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
         ref={ref}
         index={-1}
         snapPoints={["28%", "40%"]}
-        enablePanDownToClose
+        enablePanDownToClose={!tour?.isTourStep("pickDay")}
         onClose={onClose}
         keyboardBehavior="extend"
         keyboardBlurBehavior="restore"
@@ -117,9 +123,11 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
         <BottomSheetView className="px-6 pt-6">
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-xl font-semibold text-[#1e2939]">When is this due?</Text>
-            <Pressable onPress={() => { Keyboard.dismiss(); onClose(); }}>
-              <Ionicons name="close" size={24} color="#364153" />
-            </Pressable>
+            {!tour?.isTourStep("pickDay") && (
+              <Pressable onPress={() => { Keyboard.dismiss(); onClose(); }}>
+                <Ionicons name="close" size={24} color="#364153" />
+              </Pressable>
+            )}
           </View>
 
           <View className="gap-3">
@@ -151,6 +159,14 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
               </View>
             )}
           </View>
+          {tour?.isTourStep("pickDay") && (
+            <View className="mt-4">
+              <TourTooltip
+                title={TOUR_STEPS[2].title}
+                description={TOUR_STEPS[2].description}
+              />
+            </View>
+          )}
         </BottomSheetView>
       </BottomSheet>
     );

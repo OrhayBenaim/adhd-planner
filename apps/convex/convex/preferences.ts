@@ -156,3 +156,17 @@ export const update = mutation({
     }
   },
 });
+
+export const completeTour = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
+    const existing = await ctx.db
+      .query("userPreferences")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (!existing) throw new ConvexError("No preferences found");
+    await ctx.db.patch(existing._id, { hasCompletedTour: true });
+  },
+});
