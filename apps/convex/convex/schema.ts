@@ -59,6 +59,7 @@ export default defineSchema({
     strengths: v.array(v.string()),
     notificationsEnabled: v.optional(v.boolean()),
     onboardingCompleted: v.boolean(),
+    hasCompletedTour: v.optional(v.boolean()),
   }).index("by_user", ["userId"]),
 
   subscriptions: defineTable({

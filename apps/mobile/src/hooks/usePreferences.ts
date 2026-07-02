@@ -16,3 +16,8 @@ export function useUpdatePreferences() {
 export function usePreferences() {
   return useQuery(api.preferences.get);
 }
+
+export function useHasCompletedTour() {
+  const prefs = useQuery(api.preferences.get);
+  return prefs?.hasCompletedTour ?? false;
+}

@@ -8,6 +8,9 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-na
 import { SPRING_BOUNCY } from "../../animations/springs";
 import { useSheetFlow } from "../home/SheetFlowProvider";
 import { timeSelectionToTime } from "../../lib/dateTimeConvert";
+import { useGuidedTour } from "../tour/GuidedTourProvider";
+import { TourTooltip } from "../tour/TourTooltip";
+import { TOUR_STEPS } from "../tour/constants";
 
 function GradientOption({ label, colors, onPress, selected }: { label: string; colors: [string, string]; onPress: () => void; selected?: boolean }) {
   const scale = useSharedValue(1);
@@ -48,6 +51,7 @@ interface Props {
 export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const flow = useSheetFlow();
+    const tour = useGuidedTour();
     const isSelected = (time: string) => {
       if (!flow.editingExistingTaskId || !flow.selectedTime) return false;
       return timeSelectionToTime(time) === flow.selectedTime;
@@ -65,6 +69,7 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
       const timeStr = timeSelectionToTime(time);
       flow.setTime(timeStr);
       flow.next();
+      if (tour?.isTourStep("pickTime")) tour.advance();
     };
 
     const handleCustomSubmit = () => {
@@ -73,6 +78,7 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
         const timeStr = timeSelectionToTime(customValue.trim());
         flow.setTime(timeStr);
         flow.next();
+        if (tour?.isTourStep("pickTime")) tour.advance();
         setCustomValue("");
       }
     };
@@ -82,7 +88,7 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
         ref={ref}
         index={-1}
         snapPoints={["28%", "40%"]}
-        enablePanDownToClose
+        enablePanDownToClose={!tour?.isTourStep("pickTime")}
         onClose={onClose}
         keyboardBehavior="extend"
         keyboardBlurBehavior="restore"
@@ -93,9 +99,11 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
         <BottomSheetView className="px-6 pt-6">
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-xl font-semibold text-[#1e2939]">What time?</Text>
-            <Pressable onPress={() => { Keyboard.dismiss(); onClose(); }}>
-              <Ionicons name="close" size={24} color="#364153" />
-            </Pressable>
+            {!tour?.isTourStep("pickTime") && (
+              <Pressable onPress={() => { Keyboard.dismiss(); onClose(); }}>
+                <Ionicons name="close" size={24} color="#364153" />
+              </Pressable>
+            )}
           </View>
           <View className="gap-3">
             <View className="flex-row gap-3">
@@ -126,6 +134,14 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
               </View>
             )}
           </View>
+          {tour?.isTourStep("pickTime") && (
+            <View className="mt-4">
+              <TourTooltip
+                title={TOUR_STEPS[3].title}
+                description={TOUR_STEPS[3].description}
+              />
+            </View>
+          )}
         </BottomSheetView>
       </BottomSheet>
     );
