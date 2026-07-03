@@ -37,6 +37,7 @@ class TodayTaskWidgetProvider : AppWidgetProvider() {
 
                     if (uncompletedTasks.isNotEmpty()) {
                         // Show task list
+                        setViewVisibility(R.id.task_list, View.VISIBLE)
                         setViewVisibility(R.id.suggested_task, View.GONE)
 
                         for ((index, task) in uncompletedTasks.take(MAX_VISIBLE_TASKS).withIndex()) {
@@ -59,11 +60,15 @@ class TodayTaskWidgetProvider : AppWidgetProvider() {
                             addView(R.id.task_list, row)
                         }
                     } else {
-                        // Show fallback message
+                        // No uncompleted task rows: show fallback message
+                        setViewVisibility(R.id.task_list, View.GONE)
                         setViewVisibility(R.id.suggested_task, View.VISIBLE)
-                        val remaining = data.todayTaskCount - data.todayCompletedCount
-                        val taskText = data.suggestedTask
-                            ?: if (remaining > 0) "$remaining tasks remaining" else "All done! 🎉"
+                        val taskText = when {
+                            data.todayTaskCount > 0 && data.todayCompletedCount >= data.todayTaskCount ->
+                                "All done — nice work!"
+                            data.suggestedTask != null -> data.suggestedTask
+                            else -> "No tasks for today"
+                        }
                         setTextViewText(R.id.suggested_task, taskText)
                     }
                 }

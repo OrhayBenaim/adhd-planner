@@ -73,19 +73,11 @@ data class WidgetData(
         )
     }
 
-    val moodEmoji: String get() = when {
-        moodLevel > 80 -> "😊"
-        moodLevel > 60 -> "🙂"
-        moodLevel > 40 -> "😐"
-        moodLevel > 20 -> "😔"
-        else -> "😢"
-    }
-
     val moodLabel: String get() = when {
-        moodLevel > 80 -> "Super Motivated"
-        moodLevel > 60 -> "Motivated"
-        moodLevel > 40 -> "Focused"
-        moodLevel > 20 -> "Low Energy"
-        else -> "Exhausted"
+        moodLevel <= 20 -> "Exhausted"
+        moodLevel <= 40 -> "Low Energy"
+        moodLevel <= 60 -> "Focused"
+        moodLevel <= 80 -> "Motivated"
+        else -> "Super Motivated"
     }
 }

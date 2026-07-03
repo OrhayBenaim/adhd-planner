@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.TypedValue
 import android.widget.RemoteViews
 import com.ottersprod.lullio.R
 
@@ -25,7 +26,17 @@ class StreakWidgetProvider : AppWidgetProvider() {
                 RemoteViews(packageName, R.layout.widget_premium_upsell)
             } else {
                 RemoteViews(packageName, R.layout.widget_streak).apply {
-                    setTextViewText(R.id.streak_count, "${data.streak}")
+                    if (data.streak > 0) {
+                        setImageViewResource(R.id.streak_mascot, R.drawable.widget_mascot_celebrate)
+                        setTextViewText(R.id.streak_count, "${data.streak}")
+                        setTextViewTextSize(R.id.streak_count, TypedValue.COMPLEX_UNIT_SP, 30f)
+                        setTextViewText(R.id.streak_caption, "day streak")
+                    } else {
+                        setImageViewResource(R.id.streak_mascot, R.drawable.widget_mascot_wave)
+                        setTextViewText(R.id.streak_count, "Start today!")
+                        setTextViewTextSize(R.id.streak_count, TypedValue.COMPLEX_UNIT_SP, 16f)
+                        setTextViewText(R.id.streak_caption, "build your streak")
+                    }
                     setTextViewText(R.id.level_text, "Level ${data.level}")
                     val progress = if (data.pointsToNextLevel > 0) {
                         (data.points * 100) / data.pointsToNextLevel

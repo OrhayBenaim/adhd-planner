@@ -1,77 +1,154 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
     android:orientation="vertical"
     android:background="@drawable/widget_background"
-    android:padding="12dp"
-    android:id="@+id/widget_root">
-    <TextView
-        android:id="@+id/mood_emoji"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="😐"
-        android:textSize="28sp" />
-    <TextView
-        android:id="@+id/mood_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Focused"
-        android:textSize="13sp"
-        android:textStyle="bold"
-        android:textColor="#1E3A5F"
-        android:layout_marginTop="4dp" />
-    <!-- Mood bar selector -->
+    android:padding="14dp">
+
+    <!-- Header row: text stack (left) + waving mascot (right) -->
     <LinearLayout
-        android:id="@+id/mood_buttons"
         android:layout_width="match_parent"
-        android:layout_height="32dp"
-        android:orientation="horizontal"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/mood_bar_segment"
-        android:gravity="center"
-        android:paddingStart="2dp"
-        android:paddingEnd="2dp">
-        <TextView
-            android:id="@+id/mood_btn_1"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="28dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:gravity="center"
-            android:text="😢"
-            android:textSize="16sp" />
-        <TextView
-            android:id="@+id/mood_btn_2"
-            android:layout_width="0dp"
-            android:layout_height="28dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="😔"
-            android:textSize="16sp" />
-        <TextView
-            android:id="@+id/mood_btn_3"
-            android:layout_width="0dp"
-            android:layout_height="28dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="😐"
-            android:textSize="16sp" />
-        <TextView
-            android:id="@+id/mood_btn_4"
-            android:layout_width="0dp"
-            android:layout_height="28dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="🙂"
-            android:textSize="16sp" />
-        <TextView
-            android:id="@+id/mood_btn_5"
-            android:layout_width="0dp"
-            android:layout_height="28dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="😊"
-            android:textSize="16sp" />
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="How are you feeling?"
+                android:textSize="11sp"
+                android:textColor="#6a7282" />
+
+            <TextView
+                android:id="@+id/mood_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Focused"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:textColor="#0a0a0a"
+                android:layout_marginTop="2dp" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:layout_gravity="top"
+            android:adjustViewBounds="true"
+            android:scaleType="fitEnd"
+            android:src="@drawable/widget_mascot_wave"
+            android:contentDescription="Lullio mascot" />
     </LinearLayout>
+
+    <!-- Flexible spacer pushes the slider to the bottom -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical" />
+
+    <!-- Slider block -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="28dp"
+        android:layout_marginBottom="2dp">
+
+        <!-- Layer 1: gradient track -->
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="14dp"
+            android:layout_gravity="center_vertical"
+            android:scaleType="fitXY"
+            android:src="@drawable/widget_track_mood_gradient"
+            android:contentDescription="Mood level track" />
+
+        <!-- Layer 2: five equal-weight tap zones, each holding a thumb -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:id="@+id/mood_tap_1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+                <ImageView
+                    android:id="@+id/mood_thumb_1"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/widget_thumb"
+                    android:visibility="gone"
+                    android:contentDescription="Exhausted" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/mood_tap_2"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+                <ImageView
+                    android:id="@+id/mood_thumb_2"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/widget_thumb"
+                    android:visibility="gone"
+                    android:contentDescription="Low Energy" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/mood_tap_3"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+                <ImageView
+                    android:id="@+id/mood_thumb_3"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/widget_thumb"
+                    android:visibility="visible"
+                    android:contentDescription="Focused" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/mood_tap_4"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+                <ImageView
+                    android:id="@+id/mood_thumb_4"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/widget_thumb"
+                    android:visibility="gone"
+                    android:contentDescription="Motivated" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/mood_tap_5"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+                <ImageView
+                    android:id="@+id/mood_thumb_5"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/widget_thumb"
+                    android:visibility="gone"
+                    android:contentDescription="Super Motivated" />
+            </FrameLayout>
+        </LinearLayout>
+    </FrameLayout>
 </LinearLayout>

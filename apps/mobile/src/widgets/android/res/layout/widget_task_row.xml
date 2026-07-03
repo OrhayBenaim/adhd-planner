@@ -4,24 +4,24 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:paddingStart="4dp"
-    android:paddingEnd="4dp"
-    android:paddingTop="4dp"
-    android:paddingBottom="4dp">
+    android:background="@drawable/widget_task_row_bg"
+    android:padding="8dp"
+    android:layout_marginBottom="6dp">
     <ImageView
         android:id="@+id/task_checkbox"
         android:layout_width="20dp"
         android:layout_height="20dp"
-        android:src="@android:drawable/checkbox_off_background"
+        android:layout_marginEnd="8dp"
+        android:src="@drawable/widget_checkbox_unchecked"
         android:contentDescription="Complete task" />
     <TextView
         android:id="@+id/task_title"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_marginStart="8dp"
         android:textSize="13sp"
-        android:textColor="#1E3A5F"
+        android:textColor="#0a0a0a"
         android:maxLines="1"
+        android:singleLine="true"
         android:ellipsize="end" />
 </LinearLayout>
