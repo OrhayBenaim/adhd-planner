@@ -3,7 +3,10 @@ import { internalAction, internalMutation, internalQuery, query } from "./_gener
 import { internal } from "./_generated/api";
 import { sanitizeForPrompt, MAX_TITLE } from "./lib/validation";
 import { sentryCaptureEvent } from "./lib/sentry";
-import { AI_RATE_LIMIT_WINDOW_MS, AI_MAX_SCORES_PER_WINDOW } from "./lib/constants";
+import {
+  AI_RATE_LIMIT_WINDOW_MS,
+  AI_MAX_SCORES_PER_WINDOW,
+} from "./lib/constants";
 import { requireAuth } from "./lib/auth";
 
 const CEILING_DEFAULTS: Record<string, number> = {

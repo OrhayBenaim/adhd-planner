@@ -62,6 +62,16 @@ describe("splitTranscription", () => {
       expect(splitTranscription("buy groceries and call the dentist and finish the report"))
         .toEqual(["buy groceries", "call the dentist", "finish the report"]);
     });
+
+    it("splits when the second clause has 3+ words without a listed verb", () => {
+      expect(splitTranscription("finish homework and study for the test"))
+        .toEqual(["finish homework", "study for the test"]);
+    });
+
+    it("splits gerund-led clauses", () => {
+      expect(splitTranscription("pack lunch and preparing dinner"))
+        .toEqual(["pack lunch", "preparing dinner"]);
+    });
   });
 
   describe("comma splitting with verbs", () => {

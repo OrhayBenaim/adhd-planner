@@ -69,18 +69,28 @@ function splitByConjunctions(text: string, config: LocaleSplitConfig): string[] 
   for (const conj of sorted) {
     const newParts: string[] = [];
     for (const part of parts) {
-      // Split on conjunction, but only if what follows starts with a verb
+      // Split on conjunction when both sides look like separate tasks
       const regex = new RegExp(`\\b${conj}\\b\\s+`, "gi");
       let lastIndex = 0;
       let match: RegExpExecArray | null;
       let didSplit = false;
 
       while ((match = regex.exec(part)) !== null) {
+        const before = part.slice(lastIndex, match.index).trim();
         const after = part.slice(match.index + match[0].length).trim();
-        const firstWord = after.split(/\s+/)[0]?.toLowerCase();
+        const beforeWords = before.split(/\s+/).filter(Boolean);
+        const afterWords = after.split(/\s+/).filter(Boolean);
+        const firstWord = afterWords[0]?.toLowerCase();
 
-        if (firstWord && commonVerbs.has(firstWord)) {
-          newParts.push(part.slice(lastIndex, match.index).trim());
+        const looksLikeSeparateTask =
+          beforeWords.length >= MIN_WORDS &&
+          afterWords.length >= MIN_WORDS &&
+          (Boolean(firstWord && commonVerbs.has(firstWord)) ||
+            afterWords.length >= 3 ||
+            Boolean(firstWord?.endsWith("ing")));
+
+        if (looksLikeSeparateTask) {
+          newParts.push(before);
           lastIndex = match.index + match[0].length;
           didSplit = true;
         }

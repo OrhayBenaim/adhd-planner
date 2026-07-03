@@ -6,6 +6,8 @@ type MoodLabel =
   | "Super Motivated";
 
 type DifficultyLabel =
+  | "Scoring..."
+  | "Not rated"
   | "Very Easy"
   | "Easy"
   | "Medium"
@@ -21,6 +23,8 @@ export function getMoodLabel(value: number): MoodLabel {
 }
 
 export function getDifficultyLabel(value: number): DifficultyLabel {
+  if (value < 0) return "Scoring...";
+  if (value === 0) return "Not rated";
   if (value <= 20) return "Very Easy";
   if (value <= 40) return "Easy";
   if (value <= 60) return "Medium";
