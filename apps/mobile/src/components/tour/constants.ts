@@ -36,7 +36,7 @@ export const TOUR_STEPS: TourStepDef[] = [
     step: 1,
     type: "action",
     title: "Add your first task",
-    description: "What do you need to get done? Anything counts — big or tiny.",
+    description: "Tap the + button to add something you need to get done. Anything counts — big or tiny.",
     posthogEvent: "guided_tour_step_viewed",
   },
   {
@@ -69,7 +69,7 @@ export const TOUR_STEPS: TourStepDef[] = [
     step: 5,
     type: "action",
     title: "Your personal task picker",
-    description: "Tap here and I'll fetch the best task for your mood and energy.",
+    description: "Tap the sparkles and I'll fetch the best task for your mood and energy.",
     posthogEvent: "guided_tour_step_viewed",
   },
   {
@@ -77,7 +77,7 @@ export const TOUR_STEPS: TourStepDef[] = [
     step: 6,
     type: "action",
     title: "Nice! Now let's crush it",
-    description: "When you're done, tap the task to mark it complete and earn XP.",
+    description: "When you're done, tap Complete on the task to earn your first XP.",
     posthogEvent: "guided_tour_step_viewed",
   },
   {
@@ -98,3 +98,6 @@ export const TOUR_STEPS: TourStepDef[] = [
     posthogEvent: "onboarding_save_progress_shown",
   },
 ];
+
+/** Number of user-facing numbered steps (createTask..completeTask). */
+export const VISIBLE_TOUR_STEP_COUNT = 6;

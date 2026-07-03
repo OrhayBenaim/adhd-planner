@@ -10,7 +10,7 @@ import { useSheetFlow } from "../home/SheetFlowProvider";
 import { daySelectionToDate } from "../../lib/dateTimeConvert";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { TourTooltip } from "../tour/TourTooltip";
-import { TOUR_STEPS } from "../tour/constants";
+import { TOUR_STEPS, VISIBLE_TOUR_STEP_COUNT } from "../tour/constants";
 
 type GradientPair = [string, string];
 
@@ -165,6 +165,9 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
                 title={TOUR_STEPS[2].title}
                 description={TOUR_STEPS[2].description}
                 showMascot={false}
+                stepNumber={TOUR_STEPS[2].step}
+                totalSteps={VISIBLE_TOUR_STEP_COUNT}
+                arrow="up"
               />
             </View>
           )}

@@ -15,6 +15,8 @@ interface Props {
   onAddPress: () => void;
   onSettingsPress: () => void;
   onProfilePress: () => void;
+  /** Ref to the add (+) button wrapper, used by the guided tour spotlight. */
+  addButtonRef?: React.Ref<View>;
 }
 
 function NavButton({
@@ -59,7 +61,7 @@ function NavButton({
   );
 }
 
-export function BottomNav({ onListPress, onPreferencesPress, onAddPress, onSettingsPress, onProfilePress }: Props) {
+export function BottomNav({ onListPress, onPreferencesPress, onAddPress, onSettingsPress, onProfilePress, addButtonRef }: Props) {
   return (
     <View className="absolute bottom-0 left-0 right-0 bg-white/80 border-t border-[#f3f4f6] px-6 pt-6 pb-8">
       <View className="flex-row items-center justify-center gap-6">
@@ -71,9 +73,11 @@ export function BottomNav({ onListPress, onPreferencesPress, onAddPress, onSetti
           <Ionicons name="color-palette-outline" size={24} color="#364153" />
         </NavButton>
 
-        <NavButton onPress={onAddPress} gradient>
-          <Ionicons name="add" size={28} color="#fff" />
-        </NavButton>
+        <View ref={addButtonRef} collapsable={false}>
+          <NavButton onPress={onAddPress} gradient>
+            <Ionicons name="add" size={28} color="#fff" />
+          </NavButton>
+        </View>
 
         <NavButton onPress={onSettingsPress}>
           <Ionicons name="settings-outline" size={24} color="#364153" />

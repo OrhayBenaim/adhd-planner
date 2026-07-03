@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { authClient } from "../../lib/authClient";
@@ -28,12 +28,19 @@ interface Props {
 export function GuidedTourProvider({ children, enabled }: Props) {
   const [stepIndex, setStepIndex] = useState(0);
   const [dismissed, setDismissed] = useState(false);
+  // Once the tour starts, keep it active until explicitly dismissed — even if
+  // `enabled` flips false after persisting completion mid-flow (save progress).
+  const [engaged, setEngaged] = useState(false);
   const completeTourMutation = useMutation(api.preferences.completeTour);
   const { data: session } = authClient.useSession();
   const isAnonymous =
     (session?.user as { isAnonymous?: boolean | null } | undefined)?.isAnonymous ?? true;
 
-  const isActive = enabled && !dismissed;
+  useEffect(() => {
+    if (enabled) setEngaged(true);
+  }, [enabled]);
+
+  const isActive = engaged && !dismissed;
   const currentStep = TOUR_STEPS[stepIndex];
 
   const completeTour = useCallback(() => {
@@ -42,13 +49,12 @@ export function GuidedTourProvider({ children, enabled }: Props) {
   }, [completeTourMutation]);
 
   const advance = useCallback(() => {
-    // Leaving the celebration: the tour proper is done. Persist completion,
-    // then offer account linking to anonymous users before dismissing.
+    // Leaving celebration: persist only for signed-in users; anonymous users
+    // see save-progress first, then we persist when they finish or skip.
     if (currentStep?.name === "celebration") {
       posthog.capture("guided_tour_completed");
-      completeTourMutation().catch(() => {});
       if (!isAnonymous) {
-        setDismissed(true);
+        completeTour();
         return;
       }
       posthog.capture("onboarding_save_progress_shown");
@@ -58,7 +64,7 @@ export function GuidedTourProvider({ children, enabled }: Props) {
 
     const nextIndex = stepIndex + 1;
     if (currentStep?.name === "saveProgress" || nextIndex >= TOUR_STEPS.length) {
-      setDismissed(true);
+      completeTour();
       return;
     }
     const nextStep = TOUR_STEPS[nextIndex];
@@ -67,7 +73,7 @@ export function GuidedTourProvider({ children, enabled }: Props) {
       stepName: nextStep.name,
     });
     setStepIndex((prev) => prev + 1);
-  }, [stepIndex, currentStep, isAnonymous, completeTourMutation]);
+  }, [stepIndex, currentStep, isAnonymous, completeTour]);
 
   const skip = useCallback(() => {
     posthog.capture("guided_tour_skipped");
@@ -76,7 +82,7 @@ export function GuidedTourProvider({ children, enabled }: Props) {
 
   const isTourStep = useCallback(
     (name: TourStepName) => isActive && currentStep?.name === name,
-    [isActive, currentStep]
+    [isActive, currentStep],
   );
 
   if (!isActive) {

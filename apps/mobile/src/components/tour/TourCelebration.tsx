@@ -47,13 +47,14 @@ export function TourCelebration({ onFinish }: Props) {
       />
 
       <Animated.View entering={FadeInDown.duration(400).delay(150)} className="mx-6 w-full max-w-[360px] px-6">
-        <View className="items-center z-10" style={{ marginBottom: -24 }}>
-          <Mascot pose="celebrate" size={180} />
-        </View>
+     
         <View
           className="bg-white rounded-3xl px-6 py-6"
           style={{ boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.12)" }}
         >
+             <View className="items-center z-10">
+          <Mascot pose="celebrate" size={180} />
+        </View>
           <Text className="text-2xl font-bold text-[#0A0A0A] text-center mb-2 mt-3">
             {firstName ? `You did it, ${firstName}!` : "You did it!"}
           </Text>
