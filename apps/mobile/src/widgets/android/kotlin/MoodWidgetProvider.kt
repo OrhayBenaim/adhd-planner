@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.view.View
 import android.widget.RemoteViews
 import com.ottersprod.lullio.R
 
@@ -17,13 +18,23 @@ class MoodWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
-        private val MOOD_BUTTONS = listOf(
-            Triple(R.id.mood_btn_1, 10, "😢"),
-            Triple(R.id.mood_btn_2, 30, "😔"),
-            Triple(R.id.mood_btn_3, 50, "😐"),
-            Triple(R.id.mood_btn_4, 70, "🙂"),
-            Triple(R.id.mood_btn_5, 90, "😊"),
+        // Each mood zone: (tap target id, mood level sent to receiver, thumb id shown when selected)
+        private val MOOD_ZONES = listOf(
+            Triple(R.id.mood_tap_1, 10, R.id.mood_thumb_1),
+            Triple(R.id.mood_tap_2, 30, R.id.mood_thumb_2),
+            Triple(R.id.mood_tap_3, 50, R.id.mood_thumb_3),
+            Triple(R.id.mood_tap_4, 70, R.id.mood_thumb_4),
+            Triple(R.id.mood_tap_5, 90, R.id.mood_thumb_5),
         )
+
+        // Nearest of the 5 snap levels for the current mood value (0-100).
+        private fun snapIndex(moodLevel: Int): Int = when {
+            moodLevel <= 20 -> 0
+            moodLevel <= 40 -> 1
+            moodLevel <= 60 -> 2
+            moodLevel <= 80 -> 3
+            else -> 4
+        }
 
         fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
             val data = WidgetData.load(context)
@@ -33,11 +44,15 @@ class MoodWidgetProvider : AppWidgetProvider() {
                 RemoteViews(packageName, R.layout.widget_premium_upsell)
             } else {
                 RemoteViews(packageName, R.layout.widget_mood).apply {
-                    setTextViewText(R.id.mood_emoji, data.moodEmoji)
                     setTextViewText(R.id.mood_label, data.moodLabel)
 
-                    // Set up mood button PendingIntents
-                    for ((viewId, level, _) in MOOD_BUTTONS) {
+                    val selected = snapIndex(data.moodLevel)
+
+                    MOOD_ZONES.forEachIndexed { index, (tapId, level, thumbId) ->
+                        // Show only the selected thumb; RemoteViews reapplies the whole
+                        // layout, so every thumb's visibility must be set explicitly.
+                        setViewVisibility(thumbId, if (index == selected) View.VISIBLE else View.GONE)
+
                         val intent = Intent(context, MoodWidgetReceiver::class.java).apply {
                             action = MoodWidgetReceiver.ACTION_SET_MOOD
                             putExtra(MoodWidgetReceiver.EXTRA_MOOD_LEVEL, level)
@@ -48,7 +63,7 @@ class MoodWidgetProvider : AppWidgetProvider() {
                             intent,
                             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                         )
-                        setOnClickPendingIntent(viewId, pendingIntent)
+                        setOnClickPendingIntent(tapId, pendingIntent)
                     }
                 }
             }
