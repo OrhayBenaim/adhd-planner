@@ -327,15 +327,21 @@ export const scoreTaskDifficulty = internalAction({
 
     const sanitizedTitle = sanitizeForPrompt(title).slice(0, MAX_TITLE);
     const prefs = await ctx.runQuery(internal.preferences.getByUserId, { userId });
-    let userPrompt = sanitizedTitle;
+
+    let systemPrompt =
+      "You are a task difficulty scorer for an ADHD planner app. " +
+      "Given a task title, rate its difficulty from 0 to 100. " +
+      "0 = trivially easy (e.g. drink water), 100 = extremely difficult (e.g. write a thesis). " +
+      "Consider cognitive load, time required, and executive function demand. " +
+      'Respond with JSON only: {"score": <number>, "reason": "<1-2 sentence explanation>"}';
 
     if (prefs) {
       const difficulties = prefs.difficulties.map(sanitizeForPrompt).join(", ");
       const strengths = prefs.strengths.map(sanitizeForPrompt).join(", ");
       const bestWorkTimes = prefs.bestWorkTimes.map(sanitizeForPrompt).join(", ");
 
-      userPrompt +=
-        "\n\nUser context for personalization:" +
+      systemPrompt +=
+        "\n\nUser context:" +
         `\n- Finds these challenging: ${difficulties}` +
         `\n- Enjoys and is good at: ${strengths}` +
         `\n- Most productive during: ${bestWorkTimes}` +
@@ -347,7 +353,8 @@ export const scoreTaskDifficulty = internalAction({
     const requestBody: Record<string, unknown> = {
       model: TASK_SCORING_MODEL,
       messages: [
-        { role: "user", content: userPrompt },
+        { role: "system", content: systemPrompt },
+        { role: "user", content: sanitizedTitle },
       ],
     };
 
