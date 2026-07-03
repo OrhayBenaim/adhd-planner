@@ -8,9 +8,9 @@ interface Props {
   step: number; // 1-based
   children: React.ReactNode;
   onBack?: () => void;
-  onContinue: () => void;
-  continueEnabled: boolean;
-  showFooter?: boolean; // default true, set false for notification/account steps
+  onContinue?: () => void;
+  continueEnabled?: boolean;
+  showFooter?: boolean; // default true
 }
 
 export function OnboardingLayout({
@@ -18,7 +18,7 @@ export function OnboardingLayout({
   children,
   onBack,
   onContinue,
-  continueEnabled,
+  continueEnabled = false,
   showFooter = true,
 }: Props) {
   return (
@@ -29,16 +29,16 @@ export function OnboardingLayout({
     >
       <SafeAreaView className="flex-1 mx-4 my-5">
         <View className="flex-1 bg-white rounded-[48px] overflow-hidden shadow-2xl">
-          {/* Progress bar */}
+          {/* Paw-print progress */}
           <ProgressBar currentStep={step} />
 
           {/* Content area */}
-          <View className="flex-1 px-6 pt-8">
+          <View className="flex-1 px-6 pt-6">
             {children}
           </View>
 
           {/* Footer */}
-          {showFooter && (
+          {showFooter && (onBack || onContinue) && (
             <View className="px-6 py-6 flex-row items-center justify-between">
               {/* Back button — hidden on first step */}
               {onBack ? (
@@ -53,24 +53,28 @@ export function OnboardingLayout({
               )}
 
               {/* Continue button */}
-              <LinearGradient
-                colors={["#a2d2ff", "#cdb4db"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                className="flex-1 ml-4 h-14 shadow-lg"
-                style={{ borderRadius: 9999, opacity: continueEnabled ? 1 : 0.5 }}
-              >
-                <Pressable
-                  onPress={onContinue}
-                  disabled={!continueEnabled}
-                  className="flex-1 flex-row items-center justify-center"
+              {onContinue ? (
+                <LinearGradient
+                  colors={["#a2d2ff", "#cdb4db"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  className="flex-1 ml-4 h-14 shadow-lg"
+                  style={{ borderRadius: 9999, opacity: continueEnabled ? 1 : 0.5 }}
                 >
-                  <Text className="text-white font-semibold text-base mr-1">
-                    Continue
-                  </Text>
-                  <Ionicons name="chevron-forward" size={20} color="#fff" />
-                </Pressable>
-              </LinearGradient>
+                  <Pressable
+                    onPress={onContinue}
+                    disabled={!continueEnabled}
+                    className="flex-1 flex-row items-center justify-center"
+                  >
+                    <Text className="text-white font-semibold text-base mr-1">
+                      Continue
+                    </Text>
+                    <Ionicons name="chevron-forward" size={20} color="#fff" />
+                  </Pressable>
+                </LinearGradient>
+              ) : (
+                <View className="flex-1 ml-4 h-14" />
+              )}
             </View>
           )}
         </View>
