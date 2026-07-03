@@ -14,6 +14,7 @@ import { AuthenticatedProfile } from "./profile/AuthenticatedProfile";
 import { AuthOptions } from "../auth/AuthOptions";
 import { SignUpWithEmail } from "../auth/SignUpWithEmail";
 import { SignInWithEmail } from "../auth/SignInWithEmail";
+import { getSessionAnonymousState } from "../../lib/sessionState";
 
 type SubView =
   | "main"
@@ -66,7 +67,7 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
     const [editName, setEditName] = useState("");
     const [nameLoaded, setNameLoaded] = useState(false);
 
-    const isAnonymous = (session?.user as any)?.isAnonymous ?? true;
+    const isAnonymous = getSessionAnonymousState(session);
     const userName = preferences?.name ?? session?.user?.name ?? "User";
 
     useEffect(() => {
@@ -94,7 +95,14 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
 
     let content;
 
-    if (subView === "signUpEmail" && isAnonymous) {
+    if (isAnonymous === undefined) {
+      content = (
+        <View className="px-6 pt-6">
+          <MainHeader onClose={closeSheet} />
+          <Text className="text-sm text-[#6a7282]">Loading profile...</Text>
+        </View>
+      );
+    } else if (subView === "signUpEmail" && isAnonymous) {
       content = (
         <View className="px-6 pt-6">
           <SubViewHeader onBack={() => setSubView("linkOptions")} onClose={closeSheet} />

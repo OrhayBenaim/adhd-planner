@@ -11,6 +11,7 @@ import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { authClient } from "../../../lib/authClient";
 import { posthog } from "../../../lib/posthog";
 import { usePremium } from "../../../hooks/usePremium";
+import { clearHadLinkedAccountMarker } from "../../../lib/sessionState";
 import { UpgradeFeatureCard } from "./UpgradeFeatureCard";
 import { UpgradeLockedTeasers } from "./UpgradeLockedTeasers";
 
@@ -68,6 +69,7 @@ export function AuthenticatedProfile({
     setBusy(true);
     try {
       await authClient.signOut();
+      await clearHadLinkedAccountMarker();
       onClose();
     } catch (e) {
       Sentry.captureException(e);
@@ -89,7 +91,10 @@ export function AuthenticatedProfile({
             setBusy(true);
             try {
               await deleteAccountMutation();
-              await authClient.deleteUser();
+              await Promise.all([
+                authClient.deleteUser(),
+                clearHadLinkedAccountMarker(),
+              ]);
               onClose();
             } catch (e) {
               Sentry.captureException(e);
