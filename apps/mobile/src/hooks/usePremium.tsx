@@ -15,6 +15,7 @@ import { router } from "expo-router";
 import { authClient } from "../lib/authClient";
 import { posthog } from "../lib/posthog";
 import { getDeviceId } from "../lib/deviceId";
+import { getSessionAnonymousState } from "../lib/sessionState";
 
 const ENTITLEMENT_ID = "Lullio Pro";
 
@@ -106,7 +107,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   });
 
   const session = authClient.useSession();
-  const isAnonymous = (session.data?.user as any)?.isAnonymous ?? true;
+  const isAnonymous = getSessionAnonymousState(session.data) ?? true;
   const registerDeviceIdMutation = useMutation(api.settings.registerDeviceId);
 
   const extractSubscriptionInfo = useCallback((info: CustomerInfo) => {

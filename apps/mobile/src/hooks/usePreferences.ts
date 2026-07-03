@@ -2,7 +2,8 @@ import { useQuery, useMutation, useConvexAuth } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 
 export function useNeedsOnboarding() {
-  return useQuery(api.preferences.needsOnboarding);
+  const { isAuthenticated } = useConvexAuth();
+  return useQuery(api.preferences.needsOnboarding, isAuthenticated ? {} : "skip");
 }
 
 export function useSavePreferences() {

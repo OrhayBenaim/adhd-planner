@@ -6,19 +6,40 @@ import { router, useLocalSearchParams } from "expo-router";
 import { AuthOptions } from "../src/components/auth/AuthOptions";
 import { SignUpWithEmail } from "../src/components/auth/SignUpWithEmail";
 import { SignInWithEmail } from "../src/components/auth/SignInWithEmail";
+import type { AuthOptionsMode } from "../src/components/auth/AuthOptions";
 
 type GateView = "options" | "signUp" | "signIn";
+type ReturnTo = "home" | "paywall";
 
 export default function SignInGateScreen() {
-  const { offering } = useLocalSearchParams<{ offering?: string }>();
+  const { offering, mode, reason, returnTo } = useLocalSearchParams<{
+    offering?: string;
+    mode?: AuthOptionsMode;
+    reason?: "session";
+    returnTo?: ReturnTo;
+  }>();
+  const authMode: AuthOptionsMode = mode === "signIn" ? "signIn" : "link";
   const [view, setView] = useState<GateView>("options");
 
   const handleAuthSuccess = useCallback(() => {
     // Delay navigation to let auth state re-renders settle before replacing the screen.
     // Immediate replace causes a Fabric "child already has a parent" crash on Android.
-    const params = offering ? `?offering=${offering}` : "";
-    setTimeout(() => router.replace(`/paywall${params}` as any), 500);
-  }, [offering]);
+    setTimeout(() => {
+      if (returnTo === "home" && !offering) {
+        router.replace("/" as any);
+        return;
+      }
+
+      const params = offering ? `?offering=${offering}` : "";
+      router.replace(`/paywall${params}` as any);
+    }, 500);
+  }, [offering, returnTo]);
+
+  const isSessionRecovery = reason === "session";
+  const title = isSessionRecovery ? "Welcome back" : "Sign in to unlock";
+  const subtitle = isSessionRecovery
+    ? "Your session needs to be refreshed. Sign in again to continue."
+    : "Create an account or sign in to access Pro features and make purchases";
 
   return (
     <View className="flex-1 bg-[#f5f7fa]">
@@ -39,10 +60,10 @@ export default function SignInGateScreen() {
             <Ionicons name="lock-open-outline" size={32} color="#fff" />
           </View>
           <Text className="text-2xl font-semibold text-[#1e2939] text-center mb-2">
-            Sign in to unlock
+            {title}
           </Text>
           <Text className="text-sm text-[#6a7282] text-center px-6">
-            Create an account or sign in to access Pro features and make purchases
+            {subtitle}
           </Text>
         </View>
 
@@ -50,9 +71,9 @@ export default function SignInGateScreen() {
         <View className="px-2">
           {view === "options" && (
             <AuthOptions
-              mode="link"
+              mode={authMode}
               onSuccess={handleAuthSuccess}
-              onEmailPress={() => setView("signUp")}
+              onEmailPress={() => setView(authMode === "signIn" ? "signIn" : "signUp")}
             />
           )}
           {view === "signUp" && (
