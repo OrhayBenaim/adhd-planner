@@ -3,7 +3,6 @@ import * as Sentry from "@sentry/react-native";
 import { useSavePreferences } from "../../hooks/usePreferences";
 import { router } from "expo-router";
 import { posthog } from "../../lib/posthog";
-import { setPendingCelebration } from "../../lib/celebration";
 
 interface OnboardingState {
   name: string;
@@ -17,8 +16,8 @@ interface OnboardingContextValue {
   state: OnboardingState;
   updateField: <K extends keyof OnboardingState>(key: K, value: OnboardingState[K]) => void;
   toggleArrayItem: (key: "bestWorkTimes" | "difficulties" | "strengths", item: string) => void;
-  saveOnboardingData: () => Promise<void>;
-  submitOnboarding: () => Promise<void>;
+  saveOnboardingData: (overrides?: Partial<OnboardingState>) => Promise<void>;
+  submitOnboarding: (overrides?: Partial<OnboardingState>) => Promise<void>;
   isSubmitting: boolean;
 }
 
@@ -83,29 +82,35 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const saveOnboardingData = useCallback(async () => {
-    await savePreferences({
-      name: state.name,
-      bestWorkTimes: state.bestWorkTimes,
-      difficulties: state.difficulties,
-      strengths: state.strengths,
-      notificationsEnabled: state.notificationsEnabled,
-    });
-    posthog.capture("onboarding_completed");
-  }, [state, savePreferences]);
+  const saveOnboardingData = useCallback(
+    async (overrides?: Partial<OnboardingState>) => {
+      const data = { ...state, ...overrides };
+      await savePreferences({
+        name: data.name,
+        bestWorkTimes: data.bestWorkTimes,
+        difficulties: data.difficulties,
+        strengths: data.strengths,
+        notificationsEnabled: data.notificationsEnabled,
+      });
+      posthog.capture("onboarding_completed");
+    },
+    [state, savePreferences]
+  );
 
-  const submitOnboarding = useCallback(async () => {
-    setIsSubmitting(true);
-    try {
-      await saveOnboardingData();
-      setPendingCelebration();
-      router.replace("/");
-    } catch (error) {
-      Sentry.captureException(error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [saveOnboardingData]);
+  const submitOnboarding = useCallback(
+    async (overrides?: Partial<OnboardingState>) => {
+      setIsSubmitting(true);
+      try {
+        await saveOnboardingData(overrides);
+        router.replace("/");
+      } catch (error) {
+        Sentry.captureException(error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [saveOnboardingData]
+  );
 
   return (
     <OnboardingContext.Provider

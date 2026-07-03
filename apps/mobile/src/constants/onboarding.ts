@@ -32,4 +32,4 @@ export const STRENGTHS = [
   { id: "reading_research", label: "Reading & research" },
 ] as const;
 
-export const TOTAL_STEPS = 6;
+export const TOTAL_STEPS = 5;

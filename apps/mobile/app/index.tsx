@@ -1,21 +1,18 @@
-import { ActivityIndicator, View } from "react-native";
 import * as Sentry from "@sentry/react-native";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Redirect } from "expo-router";
 import { useConvexAuth } from "convex/react";
 import { authClient } from "../src/lib/authClient";
 import { useNeedsOnboarding, usePreferences } from "../src/hooks/usePreferences";
 import { HomeScreen } from "../src/components/home/HomeScreen";
-import { CelebrationOverlay } from "../src/components/CelebrationOverlay";
+import { LoadingScreen } from "../src/components/LoadingScreen";
 import { posthog } from "../src/lib/posthog";
-import { consumePendingCelebration } from "../src/lib/celebration";
 
 export default function IndexPage() {
   const { data: session, isPending } = authClient.useSession();
   const { isLoading: isConvexLoading, isAuthenticated } = useConvexAuth();
   const needsOnboarding = useNeedsOnboarding();
   const preferences = usePreferences();
-  const [showCelebration, setShowCelebration] = useState(consumePendingCelebration);
 
   // Trigger anonymous sign-in when there's no session
   useEffect(() => {
@@ -36,25 +33,17 @@ export default function IndexPage() {
   // Show loader until both better-auth session AND Convex auth are ready.
   // This prevents auth-requiring queries from running during session transitions
   // (sign-out, account linking) when the Convex JWT is briefly invalid.
-  if (isPending || isConvexLoading || !isAuthenticated || needsOnboarding === undefined) {
-    return (
-      <View className="flex-1 bg-[#f5f7fa] items-center justify-center">
-        <ActivityIndicator size="large" color="#a2d2ff" />
-      </View>
-    );
+  if (
+    isPending ||
+    isConvexLoading ||
+    !isAuthenticated ||
+    needsOnboarding === undefined ||
+    preferences === undefined
+  ) {
+    return <LoadingScreen />;
   }
 
   if (needsOnboarding === true) return <Redirect href={"/(onboarding)/welcome"} />;
 
-  return (
-    <View className="flex-1">
-      <HomeScreen />
-      {showCelebration && (
-        <CelebrationOverlay
-          onComplete={() => setShowCelebration(false)}
-          name={preferences?.name}
-        />
-      )}
-    </View>
-  );
+  return <HomeScreen />;
 }

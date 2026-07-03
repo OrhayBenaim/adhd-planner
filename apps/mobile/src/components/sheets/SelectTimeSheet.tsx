@@ -8,7 +8,7 @@ import { timeSelectionToTime } from "../../lib/dateTimeConvert";
 import { GradientOption } from "../GradientOption";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { TourTooltip } from "../tour/TourTooltip";
-import { TOUR_STEPS } from "../tour/constants";
+import { TOUR_STEPS, VISIBLE_TOUR_STEP_COUNT } from "../tour/constants";
 
 interface Props {
   onClose: () => void;
@@ -101,6 +101,10 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
               <TourTooltip
                 title={TOUR_STEPS[3].title}
                 description={TOUR_STEPS[3].description}
+                showMascot={false}
+                stepNumber={TOUR_STEPS[3].step}
+                totalSteps={VISIBLE_TOUR_STEP_COUNT}
+                arrow="up"
               />
             </View>
           )}

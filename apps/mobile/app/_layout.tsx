@@ -5,13 +5,13 @@ import { ConvexBetterAuthProvider } from "@convex-dev/better-auth/react";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
-import { ActivityIndicator, View } from "react-native";
 import { ConvexReactClient } from "convex/react";
 import { authClient } from "../src/lib/authClient";
 import * as Sentry from "@sentry/react-native";
 import { PostHogProvider } from "posthog-react-native";
 import { posthog } from "../src/lib/posthog";
 import { PremiumProvider } from "../src/hooks/usePremium";
+import { LoadingScreen } from "../src/components/LoadingScreen";
 
 Sentry.init({
   dsn: process.env.EXPO_PUBLIC_SENTRY_DSN!,
@@ -30,11 +30,7 @@ function RootLayout() {
     ...Ionicons.font,
   });
   if (!fontsLoaded) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f5f7fa" }}>
-        <ActivityIndicator size="large" color="#a2d2ff" />
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   return (
