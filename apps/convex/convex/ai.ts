@@ -14,6 +14,8 @@ const CEILING_DEFAULTS: Record<string, number> = {
   premiumTierCostCeiling: 10.0,
 };
 
+const TASK_SCORING_MODEL = "@preset/task-scoring";
+
 export const getCeilingStatus = query({
   args: {},
   handler: async (ctx) => {
@@ -323,22 +325,17 @@ export const scoreTaskDifficulty = internalAction({
       return;
     }
 
+    const sanitizedTitle = sanitizeForPrompt(title).slice(0, MAX_TITLE);
     const prefs = await ctx.runQuery(internal.preferences.getByUserId, { userId });
-
-    let systemPrompt =
-      "You are a task difficulty scorer for an ADHD planner app. " +
-      "Given a task title, rate its difficulty from 0 to 100. " +
-      "0 = trivially easy (e.g. drink water), 100 = extremely difficult (e.g. write a thesis). " +
-      "Consider cognitive load, time required, and executive function demand. " +
-      'Respond with JSON only: {"score": <number>, "reason": "<1-2 sentence explanation>"}';
+    let userPrompt = sanitizedTitle;
 
     if (prefs) {
       const difficulties = prefs.difficulties.map(sanitizeForPrompt).join(", ");
       const strengths = prefs.strengths.map(sanitizeForPrompt).join(", ");
       const bestWorkTimes = prefs.bestWorkTimes.map(sanitizeForPrompt).join(", ");
 
-      systemPrompt +=
-        "\n\nUser context:" +
+      userPrompt +=
+        "\n\nUser context for personalization:" +
         `\n- Finds these challenging: ${difficulties}` +
         `\n- Enjoys and is good at: ${strengths}` +
         `\n- Most productive during: ${bestWorkTimes}` +
@@ -347,20 +344,12 @@ export const scoreTaskDifficulty = internalAction({
         "Tasks aligned with their strengths should score lower.";
     }
 
-    const sanitizedTitle = sanitizeForPrompt(title).slice(0, MAX_TITLE);
-
-    // Read model override for this user
-    const modelOverride = await ctx.runQuery(internal.ai.getUserModelOverride, { userId });
-
     const requestBody: Record<string, unknown> = {
+      model: TASK_SCORING_MODEL,
       messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: sanitizedTitle },
+        { role: "user", content: userPrompt },
       ],
     };
-    if (modelOverride) {
-      requestBody.model = modelOverride;
-    }
 
     try {
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
