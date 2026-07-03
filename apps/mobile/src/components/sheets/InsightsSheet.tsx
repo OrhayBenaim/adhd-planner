@@ -5,8 +5,9 @@ import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useQuery } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
-import { useHome } from "../home/HomeProvider";
+import { useSheetNav } from "../home/SheetNavProvider";
 import { usePremium } from "../../hooks/usePremium";
+import { getUtcDateString } from "../../lib/dateTimeConvert";
 
 interface Props {
   onClose: () => void;
@@ -15,9 +16,10 @@ interface Props {
 const BAR_COLORS = ["#bde0fe", "#cdb4db", "#ffafcc", "#ffc8dd", "#bde0fe", "#cdb4db", "#ffafcc"];
 
 function MiniBarChart({ data }: { data: Record<string, number> }) {
+  // Server keys completion trends by UTC date, so chart keys must be UTC too
   const last7 = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(Date.now() - (6 - i) * 86400000);
-    return d.toISOString().slice(0, 10);
+    return getUtcDateString(d);
   });
   const max = Math.max(...last7.map((d) => data[d] ?? 0), 1);
 
@@ -58,7 +60,7 @@ function MiniBarChart({ data }: { data: Record<string, number> }) {
 
 export const InsightsSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
-    const { closeSheet } = useHome();
+    const { closeSheet } = useSheetNav();
     const { isPremium } = usePremium();
     const report = useQuery(
       api.insights.getWeeklyReport,

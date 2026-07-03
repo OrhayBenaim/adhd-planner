@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { useNeedsOnboarding } from "../../src/hooks/usePreferences";
-import { SignInOptions } from "../../src/components/auth/SignInOptions";
+import { AuthOptions } from "../../src/components/auth/AuthOptions";
 import { SignInWithEmail } from "../../src/components/auth/SignInWithEmail";
 import { posthog } from "../../src/lib/posthog";
 
@@ -75,7 +75,8 @@ export default function WelcomeStep() {
         showFooter={false}
       >
         <View className="flex-1 justify-center">
-          <SignInOptions
+          <AuthOptions
+            mode="signIn"
             onSuccess={handleSignInSuccess}
             onEmailPress={() => setSubView("signInEmail")}
           />

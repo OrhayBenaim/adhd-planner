@@ -10,23 +10,10 @@ import Animated, {
 } from "react-native-reanimated";
 import type { Task } from "@adhd-planner/types";
 import { getDifficultyLabel } from "../../lib/moodLabels";
+import { formatDueDate } from "../../lib/dateTimeConvert";
 import { useHome } from "../home/HomeProvider";
-import { useSheetFlow } from "../home/SheetFlowProvider";
-
-function formatDueDate(dueDate: string): string {
-  const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStr = tomorrow.toISOString().slice(0, 10);
-
-  if (dueDate === todayStr) return "Today";
-  if (dueDate === tomorrowStr) return "Tomorrow";
-
-  const [y, m, d] = dueDate.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
+import { useSheetNav } from "../home/SheetNavProvider";
+import { useTaskCreationFlow } from "../home/TaskCreationFlowProvider";
 
 interface TaskItemProps {
   task: Task;
@@ -80,8 +67,9 @@ interface Props {
 
 export const AllTasksSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
-    const { tasks, deleteTask, closeSheet } = useHome();
-    const flow = useSheetFlow();
+    const { tasks, deleteTask } = useHome();
+    const { closeSheet } = useSheetNav();
+    const flow = useTaskCreationFlow();
     return (
       <BottomSheet
         ref={ref}

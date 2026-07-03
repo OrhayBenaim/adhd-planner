@@ -3,16 +3,12 @@ import { View, Text, Keyboard } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
-import { LinearGradient } from "expo-linear-gradient";
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from "react-native-reanimated";
-import { SPRING_BOUNCY } from "../../animations/springs";
-import { useSheetFlow } from "../home/SheetFlowProvider";
+import { useTaskCreationFlow } from "../home/TaskCreationFlowProvider";
 import { daySelectionToDate } from "../../lib/dateTimeConvert";
+import { GradientOption, type GradientPair } from "../GradientOption";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { TourTooltip } from "../tour/TourTooltip";
 import { TOUR_STEPS } from "../tour/constants";
-
-type GradientPair = [string, string];
 
 const DAY_GRADIENTS: GradientPair[] = [
   ["#bde0fe", "#a2d2ff"],
@@ -21,60 +17,13 @@ const DAY_GRADIENTS: GradientPair[] = [
   ["#ffc8dd", "#ffafcc"],
 ];
 
-function GradientOption({
-  label,
-  colors,
-  onPress,
-  selected,
-}: {
-  label: string;
-  colors: GradientPair;
-  onPress: () => void;
-  selected?: boolean;
-}) {
-  const scale = useSharedValue(1);
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-
-  return (
-    <Animated.View style={[style, { flex: 1 }]}>
-      <Pressable
-        onPress={onPress}
-        onPressIn={() => { scale.value = withSpring(0.94, SPRING_BOUNCY); }}
-        onPressOut={() => { scale.value = withSpring(1, SPRING_BOUNCY); }}
-      >
-        <View style={{ position: "relative" }}>
-          <LinearGradient
-            colors={colors}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 0, y: 1 }}
-            style={{ borderRadius: 24, paddingVertical: 16, alignItems: "center" }}
-          >
-            <Text style={{ color: "#fff", fontWeight: "500", fontSize: 15 }}>{label}</Text>
-          </LinearGradient>
-          {selected && (
-            <View style={{
-              position: "absolute", top: -4, right: -4,
-              width: 20, height: 20, borderRadius: 10,
-              backgroundColor: "#fff",
-              alignItems: "center", justifyContent: "center",
-              boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.15)",
-            }}>
-              <Ionicons name="checkmark" size={14} color="#a2d2ff" />
-            </View>
-          )}
-        </View>
-      </Pressable>
-    </Animated.View>
-  );
-}
-
 interface Props {
   onClose: () => void;
 }
 
 export const SelectDaySheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
-    const flow = useSheetFlow();
+    const flow = useTaskCreationFlow();
     const tour = useGuidedTour();
     const isSelected = (day: string) => {
       if (!flow.editingExistingTaskId || !flow.selectedDay) return false;
@@ -90,18 +39,14 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
       }
       setShowCustomInput(false);
       setCustomValue("");
-      const dateStr = daySelectionToDate(day);
-      flow.setDay(dateStr);
-      flow.next();
+      flow.selectDay(day);
       if (tour?.isTourStep("pickDay")) tour.advance();
     };
 
     const handleCustomSubmit = () => {
       if (customValue.trim()) {
         setShowCustomInput(false);
-        const dateStr = daySelectionToDate(customValue.trim());
-        flow.setDay(dateStr);
-        flow.next();
+        flow.selectDay(customValue.trim());
         if (tour?.isTourStep("pickDay")) tour.advance();
         setCustomValue("");
       }

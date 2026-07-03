@@ -10,10 +10,10 @@ import { PreferencesSheet } from "../sheets/PreferencesSheet";
 import { TaskSummarySheet } from "../sheets/TaskSummarySheet";
 import { ProfileSheet } from "../sheets/ProfileSheet";
 import { InsightsSheet } from "../sheets/InsightsSheet";
-import { useHome } from "./HomeProvider";
+import { useSheetNav } from "./SheetNavProvider";
 
 export function SheetManager() {
-  const { onSheetClose, registerSheet } = useHome();
+  const { onSheetClose, registerSheet } = useSheetNav();
 
   const addSheetRef = useRef<BottomSheet>(null);
   const daySheetRef = useRef<BottomSheet>(null);

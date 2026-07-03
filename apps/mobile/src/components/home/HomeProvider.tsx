@@ -1,37 +1,18 @@
 // apps/mobile/src/components/home/HomeProvider.tsx
-import { createContext, useContext, useState, useCallback, useRef, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import type { Id } from "@adhd-planner/convex/convex/_generated/dataModel";
 import type { Task, UserProgress } from "@adhd-planner/types";
-import type {  Settings, SettingsEntry } from "../../hooks/useSettings";
 import { useTasks, useCreateTask, useCompleteTask, useDeleteTask, useUpdateTask } from "../../hooks/useTasks";
 import { useUserProgress } from "../../hooks/useUserProgress";
-import { useSettings } from "../../hooks/useSettings";
-import { AppState } from "react-native";
-import { syncWidgetData, readWidgetMoodUpdate, readWidgetTaskCompletions } from "../../lib/widgetSync";
+import { useWidgetSync } from "../../hooks/useWidgetSync";
 import { usePremium } from "../../hooks/usePremium";
-import type BottomSheet from "@gorhom/bottom-sheet";
-
- type ActiveSheet =
-  | "none"
-  | "addTask"
-  | "selectDay"
-  | "selectTime"
-  | "allTasks"
-  | "settings"
-  | "preferences"
-  | "taskSummary"
-  | "profile"
-  | "insights";
-
-type SheetEntry = { name: ActiveSheet; ref: React.RefObject<BottomSheet | null> };
 
 interface HomeContextValue {
   // Data
   tasks: Task[];
   progress: UserProgress;
-  settings: Settings;
   moodLevel: number;
   selectedTask: Task | null;
   toast: { points: number; visible: boolean };
@@ -45,15 +26,6 @@ interface HomeContextValue {
   createTask: (args: { title: string; dueDate: string; dueTime: string }) => Promise<void>;
   deleteTask: (id: string) => Promise<void>;
   updateTask: (args: { id: string; title: string; dueDate: string; dueTime: string }) => Promise<void>;
-  updateSetting: (...[key, value]: SettingsEntry) => Promise<void>;
-
-  adminAiEnabled: boolean;
-
-  // Sheet nav
-  openSheet: (sheet: ActiveSheet) => void;
-  closeSheet: () => void;
-  onSheetClose: () => void;
-  registerSheet: (entry: SheetEntry) => void;
 }
 
 const HomeContext = createContext<HomeContextValue | null>(null);
@@ -64,13 +36,17 @@ export function useHome() {
   return ctx;
 }
 
+/**
+ * Home data: tasks, progress, mood, selected task, points toast.
+ * Sheet navigation lives in SheetNavProvider; widget bridging in useWidgetSync.
+ */
 export function HomeProvider({ children }: { children: ReactNode }) {
   const [moodLevel, setMoodLevel] = useState(50);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [toast, setToast] = useState<{ points: number; visible: boolean }>({
     points: 0,
     visible: false,
-  }); 
+  });
 
   const tasks = useTasks();
   const createTaskMutation = useCreateTask();
@@ -78,91 +54,26 @@ export function HomeProvider({ children }: { children: ReactNode }) {
   const deleteTaskMutation = useDeleteTask();
   const updateTaskMutation = useUpdateTask();
   const { progress } = useUserProgress();
-  const { settings, updateSetting, adminAiEnabled } = useSettings();
   const streakData = useQuery(api.streaks.get);
   const { isPremium } = usePremium();
 
-  // Sync data to shared storage for home screen widgets (debounced to avoid
-  // flooding the main thread with rapid successive widget reloads)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const todayStr = new Date().toISOString().split("T")[0];
-      const todayTasks = tasks.filter((t) => t.dueDate === todayStr);
+  const completeFromWidget = useCallback(
+    (taskId: string) => {
+      completeTaskMutation({ id: taskId as Id<"tasks"> }).catch(() => {});
+    },
+    [completeTaskMutation]
+  );
 
-      syncWidgetData({
-        isPremium,
-        streak: streakData?.currentStreak ?? 0,
-        suggestedTask: selectedTask?.title ?? null,
-        level: progress.level,
-        points: progress.points,
-        pointsToNextLevel: progress.pointsToNextLevel,
-        moodLevel,
-        todayTaskCount: todayTasks.length,
-        todayCompletedCount: todayTasks.filter((t) => t.completed).length,
-        tasks: todayTasks.slice(0, 10).map((t) => ({
-          id: t._id,
-          title: t.title,
-          completed: t.completed,
-        })),
-      });
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [isPremium, progress, selectedTask, streakData, moodLevel, tasks]);
-
-  // Read pending widget updates on app resume
-  useEffect(() => {
-    const processWidgetUpdates = () => {
-      const pendingMood = readWidgetMoodUpdate();
-      if (pendingMood !== null) {
-        setMoodLevel(pendingMood);
-      }
-
-      const pendingCompletions = readWidgetTaskCompletions();
-      for (const taskId of pendingCompletions) {
-        completeTaskMutation({ id: taskId as Id<"tasks"> }).catch(() => {});
-      }
-    };
-
-    // Process on mount
-    processWidgetUpdates();
-
-    // Process on app resume
-    const subscription = AppState.addEventListener("change", (state) => {
-      if (state === "active") {
-        processWidgetUpdates();
-      }
-    });
-    return () => subscription.remove();
-  }, [completeTaskMutation]);
-
-  // Sheet registry — SheetManager registers its refs here
-  const sheetsRef = useRef<Map<ActiveSheet, React.RefObject<BottomSheet | null>>>(new Map());
-  const activeSheetRef = useRef<ActiveSheet | null>(null);
-
-  const registerSheet = useCallback((entry: SheetEntry) => {
-    sheetsRef.current.set(entry.name, entry.ref);
-  }, []);
-
-  const openSheet = useCallback((sheet: ActiveSheet) => {
-    activeSheetRef.current = sheet;
-    sheetsRef.current.forEach((ref, name) => {
-      if (name !== sheet) ref.current?.close();
-    });
-    sheetsRef.current.get(sheet)?.current?.expand();
-  }, []);
-
-  const closeSheet = useCallback(() => {
-    activeSheetRef.current = null;
-    sheetsRef.current.forEach((ref) => ref.current?.close());
-  }, []);
-
-  // Guarded version for onClose callbacks — won't close a newly-opened sheet
-  const onSheetClose = useCallback(() => {
-    if (activeSheetRef.current === null) {
-      closeSheet();
-    }
-  }, [closeSheet]);
+  useWidgetSync({
+    tasks,
+    progress,
+    selectedTask,
+    moodLevel,
+    streak: streakData?.currentStreak ?? 0,
+    isPremium,
+    onMoodUpdate: setMoodLevel,
+    onTaskCompleted: completeFromWidget,
+  });
 
   const showToast = useCallback((points: number) => {
     setToast({ points, visible: true });
@@ -201,32 +112,36 @@ export function HomeProvider({ children }: { children: ReactNode }) {
     [updateTaskMutation]
   );
 
-  return (
-    <HomeContext.Provider
-      value={{
-        tasks,
-        progress,
-        settings,
-        adminAiEnabled,
-        moodLevel,
-        selectedTask,
-        toast,
-        setMoodLevel,
-        setSelectedTask,
-        showToast,
-        hideToast,
-        completeTask,
-        createTask,
-        deleteTask,
-        updateTask,
-        updateSetting,
-        openSheet,
-        closeSheet,
-        onSheetClose,
-        registerSheet,
-      }}
-    >
-      {children}
-    </HomeContext.Provider>
+  const value = useMemo(
+    () => ({
+      tasks,
+      progress,
+      moodLevel,
+      selectedTask,
+      toast,
+      setMoodLevel,
+      setSelectedTask,
+      showToast,
+      hideToast,
+      completeTask,
+      createTask,
+      deleteTask,
+      updateTask,
+    }),
+    [
+      tasks,
+      progress,
+      moodLevel,
+      selectedTask,
+      toast,
+      showToast,
+      hideToast,
+      completeTask,
+      createTask,
+      deleteTask,
+      updateTask,
+    ]
   );
+
+  return <HomeContext.Provider value={value}>{children}</HomeContext.Provider>;
 }

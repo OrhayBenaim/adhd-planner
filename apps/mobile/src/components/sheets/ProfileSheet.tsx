@@ -7,12 +7,11 @@ import BottomSheet, {
   BottomSheetTextInput,
 } from "@gorhom/bottom-sheet";
 import { authClient } from "../../lib/authClient";
-import { useHome } from "../home/HomeProvider";
+import { useSheetNav } from "../home/SheetNavProvider";
 import { usePreferences, useUpdatePreferences } from "../../hooks/usePreferences";
 import { AnonymousProfile } from "./profile/AnonymousProfile";
 import { AuthenticatedProfile } from "./profile/AuthenticatedProfile";
-import { LinkAccountOptions } from "../auth/LinkAccountOptions";
-import { SignInOptions } from "../auth/SignInOptions";
+import { AuthOptions } from "../auth/AuthOptions";
 import { SignUpWithEmail } from "../auth/SignUpWithEmail";
 import { SignInWithEmail } from "../auth/SignInWithEmail";
 
@@ -58,7 +57,7 @@ interface Props {
 
 export const ProfileSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
-    const { closeSheet } = useHome();
+    const { closeSheet } = useSheetNav();
     const { data: session } = authClient.useSession();
     const preferences = usePreferences();
 
@@ -121,7 +120,8 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
       content = (
         <View className="px-6 pt-6">
           <SubViewHeader onBack={() => setSubView("main")} onClose={closeSheet} />
-          <LinkAccountOptions
+          <AuthOptions
+            mode="link"
             onSuccess={handleAuthSuccess}
             onEmailPress={() => setSubView("signUpEmail")}
           />
@@ -131,7 +131,8 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
       content = (
         <View className="px-6 pt-6">
           <SubViewHeader onBack={() => setSubView("main")} onClose={closeSheet} />
-          <SignInOptions
+          <AuthOptions
+            mode="signIn"
             onSuccess={handleAuthSuccess}
             onEmailPress={() => setSubView("signInEmail")}
           />
