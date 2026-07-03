@@ -10,7 +10,9 @@ describe("getMoodLabel", () => {
 });
 
 describe("getDifficultyLabel", () => {
-  it("returns Very Easy for 0", () => expect(getDifficultyLabel(0)).toBe("Very Easy"));
+  it("returns Scoring... for pending scores", () => expect(getDifficultyLabel(-1)).toBe("Scoring..."));
+  it("returns Not rated for unscored tasks", () => expect(getDifficultyLabel(0)).toBe("Not rated"));
+  it("returns Very Easy for low scores", () => expect(getDifficultyLabel(15)).toBe("Very Easy"));
   it("returns Medium for 60", () => expect(getDifficultyLabel(60)).toBe("Medium"));
   it("returns Very Hard for 100", () => expect(getDifficultyLabel(100)).toBe("Very Hard"));
 });
