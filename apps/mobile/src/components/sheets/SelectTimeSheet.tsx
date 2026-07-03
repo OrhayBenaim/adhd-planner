@@ -10,7 +10,7 @@ import { useSheetFlow } from "../home/SheetFlowProvider";
 import { timeSelectionToTime } from "../../lib/dateTimeConvert";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { TourTooltip } from "../tour/TourTooltip";
-import { TOUR_STEPS } from "../tour/constants";
+import { TOUR_STEPS, VISIBLE_TOUR_STEP_COUNT } from "../tour/constants";
 
 function GradientOption({ label, colors, onPress, selected }: { label: string; colors: [string, string]; onPress: () => void; selected?: boolean }) {
   const scale = useSharedValue(1);
@@ -140,6 +140,9 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
                 title={TOUR_STEPS[3].title}
                 description={TOUR_STEPS[3].description}
                 showMascot={false}
+                stepNumber={TOUR_STEPS[3].step}
+                totalSteps={VISIBLE_TOUR_STEP_COUNT}
+                arrow="up"
               />
             </View>
           )}
