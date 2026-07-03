@@ -3,7 +3,8 @@ import { View, Text, Switch } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
-import { useHome } from "../home/HomeProvider";
+import { useSheetNav } from "../home/SheetNavProvider";
+import { useSettings } from "../../hooks/useSettings";
 import { usePremium } from "../../hooks/usePremium";
 import { ProBadge } from "../ProBadge";
 import {
@@ -61,7 +62,8 @@ interface Props {
 
 export const SettingsSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
-    const { settings, updateSetting, adminAiEnabled, closeSheet } = useHome();
+    const { settings, updateSetting, adminAiEnabled } = useSettings();
+    const { closeSheet } = useSheetNav();
     const { isPremium, showPaywall } = usePremium();
     const voice = useVoiceLanguages();
 

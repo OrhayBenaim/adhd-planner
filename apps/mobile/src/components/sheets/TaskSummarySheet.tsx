@@ -1,4 +1,4 @@
-import { forwardRef, useCallback } from "react";
+import { forwardRef } from "react";
 import { View, Text, TextInput } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,7 +9,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { SPRING_BOUNCY } from "../../animations/springs";
-import { useSheetFlow, type PendingTask } from "../home/SheetFlowProvider";
+import { useTaskCreationFlow, type PendingTask } from "../home/TaskCreationFlowProvider";
 
 interface Props {
   onClose: () => void;
@@ -72,32 +72,11 @@ function TaskCard({
 
 export const TaskSummarySheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
-    const flow = useSheetFlow();
+    const flow = useTaskCreationFlow();
     const createScale = useSharedValue(1);
     const createStyle = useAnimatedStyle(() => ({
       transform: [{ scale: createScale.value }],
     }));
-
-    const updateTitle = useCallback(
-      (id: string, title: string) => {
-        flow.setPendingTasks(
-          flow.pendingTasks.map((t) => (t.id === id ? { ...t, title } : t))
-        );
-      },
-      [flow]
-    );
-
-    const removeTask = useCallback(
-      (id: string) => {
-        const updated = flow.pendingTasks.filter((t) => t.id !== id);
-        if (updated.length === 0) {
-          flow.reset();
-        } else {
-          flow.setPendingTasks(updated);
-        }
-      },
-      [flow]
-    );
 
     return (
       <BottomSheet
@@ -131,8 +110,8 @@ export const TaskSummarySheet = forwardRef<BottomSheet, Props>(
               <TaskCard
                 key={task.id}
                 task={task}
-                onTitleChange={(title) => updateTitle(task.id, title)}
-                onDelete={() => removeTask(task.id)}
+                onTitleChange={(title) => flow.updatePendingTitle(task.id, title)}
+                onDelete={() => flow.removePendingTask(task.id)}
                 onEditDate={() => flow.editDateTime(task.id, "dueDate")}
                 onEditTime={() => flow.editDateTime(task.id, "dueTime")}
               />
@@ -151,7 +130,7 @@ export const TaskSummarySheet = forwardRef<BottomSheet, Props>(
 
             <Animated.View style={[createStyle, { flex: 1 }]}>
               <Pressable
-                onPress={() => flow.next()}
+                onPress={() => flow.confirmSummary()}
                 onPressIn={() => {
                   createScale.value = withSpring(0.95, SPRING_BOUNCY);
                 }}

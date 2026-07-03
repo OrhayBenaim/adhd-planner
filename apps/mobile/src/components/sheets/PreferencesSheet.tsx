@@ -7,7 +7,7 @@ import { AppPressable } from "../AppPressable";
 import { SegmentedControl } from "../SegmentedControl";
 import { ChipGrid } from "../onboarding/ChipGrid";
 import { usePreferences, useUpdatePreferences } from "../../hooks/usePreferences";
-import { useHome } from "../home/HomeProvider";
+import { useSheetNav } from "../home/SheetNavProvider";
 import { PRODUCTIVE_TIMES, DIFFICULTIES, STRENGTHS } from "../../constants/onboarding";
 
 const SEGMENTS = [
@@ -42,7 +42,7 @@ interface Props {
 
 export const PreferencesSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
-    const { closeSheet } = useHome();
+    const { closeSheet } = useSheetNav();
     const preferences = usePreferences();
     const updatePreferences = useUpdatePreferences();
 

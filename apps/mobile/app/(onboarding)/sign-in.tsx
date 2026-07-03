@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,15 +6,12 @@ import {
   Platform,
   KeyboardAvoidingView,
   ScrollView,
-  Alert,
 } from "react-native";
-import * as Sentry from "@sentry/react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
-import { authClient } from "../../src/lib/authClient";
-import { getGoogleIdToken } from "../../src/lib/googleSignIn";
+import { useSocialAuth } from "../../src/hooks/useSocialAuth";
 import { SocialAuthButtons } from "../../src/components/auth/SocialAuthButtons";
 import { SignUpWithEmail } from "../../src/components/auth/SignUpWithEmail";
 import { SignInWithEmail } from "../../src/components/auth/SignInWithEmail";
@@ -26,7 +23,12 @@ export default function SignInStep() {
   const { state, submitOnboarding, saveOnboardingData, isSubmitting } =
     useOnboarding();
   const [subView, setSubView] = useState<SubView>("main");
-  const [socialBusy, setSocialBusy] = useState(false);
+
+  const { busy: socialBusy, signIn: handleSocialSignIn } = useSocialAuth({
+    errorTitle: "Sign-in failed",
+    onBeforeAuth: saveOnboardingData,
+    onSuccess: submitOnboarding,
+  });
 
   const busy = isSubmitting || socialBusy;
 
@@ -37,55 +39,6 @@ export default function SignInStep() {
   const handleSkip = async () => {
     await submitOnboarding();
   };
-
-  const handleSocialSignIn = useCallback(
-    async (provider: "google" | "apple") => {
-      setSocialBusy(true);
-      try {
-        await saveOnboardingData();
-        if (provider === "google") {
-          const idToken = await getGoogleIdToken();
-          if (!idToken) {
-            Alert.alert("Sign-in failed", "Could not get Google credentials. Please try again.");
-            return;
-          }
-          const { error } = await authClient.signIn.social({
-            provider: "google",
-            idToken: { token: idToken },
-            callbackURL: "/",
-          });
-          if (error) {
-            Sentry.captureMessage(
-              `Social sign-in failed: ${error.message ?? "unknown"}`,
-              "error",
-            );
-            Alert.alert("Sign-in failed", error.message ?? "An unknown error occurred.");
-            return;
-          }
-        } else {
-          const { error } = await authClient.signIn.social({
-            provider,
-            callbackURL: "/",
-          });
-          if (error) {
-            Sentry.captureMessage(
-              `Social sign-in failed: ${error.message ?? "unknown"}`,
-              "error",
-            );
-            Alert.alert("Sign-in failed", error.message ?? "An unknown error occurred.");
-            return;
-          }
-        }
-        await submitOnboarding();
-      } catch (e) {
-        Sentry.captureException(e);
-        Alert.alert("Sign-in failed", e instanceof Error ? e.message : "An unexpected error occurred.");
-      } finally {
-        setSocialBusy(false);
-      }
-    },
-    [saveOnboardingData, submitOnboarding],
-  );
 
   // Email form sub-views
   if (subView === "signUpEmail" || subView === "signInEmail") {

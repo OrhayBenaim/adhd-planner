@@ -3,7 +3,7 @@ import { View, Text, ScrollView } from "react-native";
 import { AppPressable as Pressable } from "../src/components/AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { LinkAccountOptions } from "../src/components/auth/LinkAccountOptions";
+import { AuthOptions } from "../src/components/auth/AuthOptions";
 import { SignUpWithEmail } from "../src/components/auth/SignUpWithEmail";
 import { SignInWithEmail } from "../src/components/auth/SignInWithEmail";
 
@@ -49,7 +49,8 @@ export default function SignInGateScreen() {
         {/* Auth forms */}
         <View className="px-2">
           {view === "options" && (
-            <LinkAccountOptions
+            <AuthOptions
+              mode="link"
               onSuccess={handleAuthSuccess}
               onEmailPress={() => setView("signUp")}
             />

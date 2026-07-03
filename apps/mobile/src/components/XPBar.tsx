@@ -10,7 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Text } from "react-native";
 import type { UserProgress } from "@adhd-planner/types";
 import { usePremium } from "../hooks/usePremium";
-import { useHome } from "./home/HomeProvider";
+import { useSheetNav } from "./home/SheetNavProvider";
 
 interface Props {
   progress: UserProgress;
@@ -18,7 +18,7 @@ interface Props {
 
 export function XPBar({ progress }: Props) {
   const { isPremium } = usePremium();
-  const { openSheet } = useHome();
+  const { openSheet } = useSheetNav();
   const percent = Math.min(progress.points / progress.pointsToNextLevel, 1);
 
   const barWidth = useDerivedValue(() =>

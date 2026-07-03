@@ -10,16 +10,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { SPRING_BOUNCY } from "../../animations/springs";
-import { useSheetFlow, type PendingTask } from "../home/SheetFlowProvider";
+import { useTaskCreationFlow } from "../home/TaskCreationFlowProvider";
 import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
-import { splitTranscription } from "../../lib/taskSplitter";
 import { posthog } from "../../lib/posthog";
 import { ScrollingWaveform } from "../ScrollingWaveform";
-
-let nextId = 0;
-function genId() {
-  return `pending-${++nextId}`;
-}
 
 type InputState = { text: string; mode: "text" | "recording" };
 type InputAction =
@@ -43,7 +37,7 @@ interface Props {
 
 export const AddTaskSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
-    const flow = useSheetFlow();
+    const flow = useTaskCreationFlow();
     const isEditing = !!flow.editingExistingTaskId;
     const [{ text, mode }, dispatch] = useReducer(inputReducer, { text: "", mode: "text" });
 
@@ -95,20 +89,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
     const handleTextConfirm = () => {
       if (!text.trim()) return;
       Keyboard.dismiss();
-
-      const splitTasks = splitTranscription(text);
-      if (splitTasks.length <= 1) {
-        flow.setTitle(splitTasks[0] || text.trim());
-      } else {
-        const pending: PendingTask[] = splitTasks.map((title) => ({
-          id: genId(),
-          title,
-          dueDate: "",
-          dueTime: "",
-        }));
-        flow.setPendingTasks(pending);
-      }
-      flow.next();
+      flow.submitInput(text);
       dispatch({ type: "setText", text: "" });
     };
 
@@ -116,21 +97,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
       stopRecording();
       const spoken = transcript.trim();
       if (!spoken) return;
-
-      const splitTasks = splitTranscription(spoken);
-
-      if (splitTasks.length <= 1) {
-        flow.setTitle(splitTasks[0] || spoken);
-      } else {
-        const pending: PendingTask[] = splitTasks.map((title) => ({
-          id: genId(),
-          title,
-          dueDate: "",
-          dueTime: "",
-        }));
-        flow.setPendingTasks(pending);
-      }
-      flow.next();
+      flow.submitInput(spoken);
       dispatch({ type: "setMode", mode: "text" });
     };
 

@@ -2,7 +2,8 @@
 import { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HomeProvider } from "./HomeProvider";
-import { SheetFlowProvider } from "./SheetFlowProvider";
+import { SheetNavProvider } from "./SheetNavProvider";
+import { TaskCreationFlowProvider } from "./TaskCreationFlowProvider";
 import { MainContent } from "./MainContent";
 import { SheetManager } from "./SheetManager";
 import { usePushToken } from "../../hooks/usePushToken";
@@ -19,14 +20,16 @@ export function HomeScreen() {
   }, []);
   return (
     <HomeProvider>
-      <SheetFlowProvider>
-        <GuidedTourProvider enabled={!hasCompletedTour}>
-          <SafeAreaView className="flex-1 bg-[#f5f7fa]">
-            <MainContent />
-            <SheetManager />
-          </SafeAreaView>
-        </GuidedTourProvider>
-      </SheetFlowProvider>
+      <SheetNavProvider>
+        <TaskCreationFlowProvider>
+          <GuidedTourProvider enabled={!hasCompletedTour}>
+            <SafeAreaView className="flex-1 bg-[#f5f7fa]">
+              <MainContent />
+              <SheetManager />
+            </SafeAreaView>
+          </GuidedTourProvider>
+        </TaskCreationFlowProvider>
+      </SheetNavProvider>
     </HomeProvider>
   );
 }

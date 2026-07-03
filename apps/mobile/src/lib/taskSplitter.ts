@@ -50,15 +50,16 @@ export function splitTranscription(text: string): string[] {
 function splitByNumbers(text: string): string[] {
   // Match patterns like "1. task" or "1) task" embedded in text
   const parts = text.split(/\d+[.)]\s*/);
-  return parts.map((p) => p.trim()).filter(Boolean);
+  return parts.flatMap((p) => (p.trim() ? [p.trim()] : []));
 }
 
 function splitByLines(text: string): string[] {
-  return text.split(/\n+/).map((p) => p.trim()).filter(Boolean);
+  return text.split(/\n+/).flatMap((p) => (p.trim() ? [p.trim()] : []));
 }
 
 function splitByConjunctions(text: string, config: LocaleSplitConfig): string[] {
-  const { conjunctions, commonVerbs } = config;
+  const { conjunctions } = config;
+  const commonVerbs = new Set(config.commonVerbs);
 
   // Sort conjunctions by length (longest first) to match "and also" before "and"
   const sorted = [...conjunctions].sort((a, b) => b.length - a.length);
@@ -78,7 +79,7 @@ function splitByConjunctions(text: string, config: LocaleSplitConfig): string[] 
         const after = part.slice(match.index + match[0].length).trim();
         const firstWord = after.split(/\s+/)[0]?.toLowerCase();
 
-        if (firstWord && commonVerbs.includes(firstWord)) {
+        if (firstWord && commonVerbs.has(firstWord)) {
           newParts.push(part.slice(lastIndex, match.index).trim());
           lastIndex = match.index + match[0].length;
           didSplit = true;

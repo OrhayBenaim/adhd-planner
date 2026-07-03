@@ -23,9 +23,11 @@ import { PointsToast } from "../PointsToast";
 import { StreakBadge } from "../StreakBadge";
 import { AiCeilingBanner } from "../AiCeilingBanner";
 import { useHome } from "./HomeProvider";
-import { useSheetFlow } from "./SheetFlowProvider";
+import { useSheetNav } from "./SheetNavProvider";
+import { useTaskCreationFlow } from "./TaskCreationFlowProvider";
 import { usePremium } from "../../hooks/usePremium";
 import { posthog } from "../../lib/posthog";
+import { getLocalToday, getLocalDateStringDaysAhead } from "../../lib/dateTimeConvert";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { TourIntroCard } from "../tour/TourIntroCard";
 import { TourOverlay } from "../tour/TourOverlay";
@@ -44,9 +46,9 @@ export function MainContent() {
     hideToast,
     completeTask,
     showToast,
-    openSheet,
   } = useHome();
-  const flow = useSheetFlow();
+  const { openSheet } = useSheetNav();
+  const flow = useTaskCreationFlow();
   const tour = useGuidedTour();
 
   // Tour target refs and layouts
@@ -147,12 +149,8 @@ export function MainContent() {
       return;
     }
 
-    const now = new Date();
-
-    const cutoff = new Date(now);
-    cutoff.setDate(cutoff.getDate() + aiPickDaysAhead);
-    const cutoffStr = cutoff.toISOString().slice(0, 10);
-    const todayStr = now.toISOString().slice(0, 10);
+    const todayStr = getLocalToday();
+    const cutoffStr = getLocalDateStringDaysAhead(aiPickDaysAhead);
 
     const eligible = tasks
       .filter(
@@ -335,7 +333,7 @@ export function MainContent() {
             <Pressable
               onPress={() => {
                 posthog.capture("guided_tour_step_viewed", { step: 1, stepName: "createTask" });
-                flow.start("addTask");
+                flow.start();
                 tour.advance();
               }}
             >
@@ -397,7 +395,7 @@ export function MainContent() {
       <BottomNav
         onListPress={() => openSheet("allTasks")}
         onPreferencesPress={() => openSheet("preferences")}
-        onAddPress={() => flow.start("addTask")}
+        onAddPress={() => flow.start()}
         onSettingsPress={() => openSheet("settings")}
         onProfilePress={() => openSheet("profile")}
       />
