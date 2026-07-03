@@ -124,12 +124,34 @@ export function useHomeTour() {
     [tour],
   );
 
+  const isCompleteTaskStep = tour?.isTourStep("completeTask") ?? false;
+
+  const handleTaskLater = useCallback(
+    (setSelectedTask: (task: Task | null) => void) => {
+      if (isCompleteTaskStep) return;
+      setSelectedTask(null);
+    },
+    [isCompleteTaskStep],
+  );
+
+  const ensureTourTaskSelected = useCallback(
+    (tasks: Task[], selectedTask: Task | null, setSelectedTask: (task: Task | null) => void) => {
+      if (!isCompleteTaskStep || selectedTask) return;
+      const firstTask = tasks.find((t) => !t.completed);
+      if (firstTask) setSelectedTask(firstTask);
+    },
+    [isCompleteTaskStep],
+  );
+
   return {
     refs,
     tourLayouts,
     tryHandleAIPick,
     notifyTaskCompleted,
     handleAddPress,
+    handleTaskLater,
+    ensureTourTaskSelected,
+    isCompleteTaskStep,
   };
 }
 

@@ -17,9 +17,10 @@ interface Props {
   task: Task | null;
   onComplete: (task: Task) => void;
   onLater: () => void;
+  hideLater?: boolean;
 }
 
-export function TaskCard({ task, onComplete, onLater }: Props) {
+export function TaskCard({ task, onComplete, onLater, hideLater }: Props) {
   const completeScale = useSharedValue(1);
   const laterScale = useSharedValue(1);
 
@@ -75,16 +76,18 @@ export function TaskCard({ task, onComplete, onLater }: Props) {
           </Pressable>
         </Animated.View>
 
-        <Animated.View style={laterBtnStyle}>
-          <Pressable
-            onPress={onLater}
-            onPressIn={() => { laterScale.value = withSpring(0.92, SPRING_BOUNCY); }}
-            onPressOut={() => { laterScale.value = withSpring(1, SPRING_BOUNCY); }}
-            className="bg-[#ffc8dd] rounded-3xl py-3 px-5 items-center"
-          >
-            <Text className="text-sm font-medium text-[#0a0a0a]">Later</Text>
-          </Pressable>
-        </Animated.View>
+        {!hideLater && (
+          <Animated.View style={laterBtnStyle}>
+            <Pressable
+              onPress={onLater}
+              onPressIn={() => { laterScale.value = withSpring(0.92, SPRING_BOUNCY); }}
+              onPressOut={() => { laterScale.value = withSpring(1, SPRING_BOUNCY); }}
+              className="bg-[#ffc8dd] rounded-3xl py-3 px-5 items-center"
+            >
+              <Text className="text-sm font-medium text-[#0a0a0a]">Later</Text>
+            </Pressable>
+          </Animated.View>
+        )}
       </View>
     </Animated.View>
   );
