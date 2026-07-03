@@ -1,0 +1,18 @@
+---
+description: Lullio mobile brand accent colors for UI elements
+globs: apps/mobile/**
+alwaysApply: false
+---
+
+# Brand Color Palette
+
+Always use these brand colors for UI elements (backgrounds, accents, chart bars, highlights). Do not introduce arbitrary colors — derive tints/shades from these.
+
+| Name | Hex | Usage |
+|------|-----|-------|
+| Pink Orchid | `#cdb4db` | Lavender-pink accent, card backgrounds, chart bars |
+| Pastel Petal | `#ffc8dd` | Blush accent, card backgrounds, chart bars |
+| Blush Pop | `#ffafcc` | Pink accent, card backgrounds, chart bars |
+| Icy Blue | `#bde0fe` | Blue accent, card backgrounds, chart bars |
+
+For lighter card backgrounds, use NativeWind opacity modifiers (e.g., `bg-[#bde0fe]/20`).

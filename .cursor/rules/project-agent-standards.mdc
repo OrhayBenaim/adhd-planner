@@ -1,0 +1,34 @@
+---
+description: Core agent workflow and coding standards for Lullio
+alwaysApply: true
+---
+
+# Worktrees
+
+Every plan uses a git worktree. **Never** use the `EnterWorktree` tool.
+
+```
+git worktree add .worktrees/<feature-name> -b <feature-name>
+```
+
+Edit files in that worktree. Clean up: `git worktree remove .worktrees/<feature-name>`
+
+# Before finishing
+
+- Run `npm run typecheck` after code changes
+- After mobile changes: `npx -y react-doctor@latest .` from `apps/mobile/` — fix all warnings except icon-related ones; refactor to `useReducer` if warned about too many state calls
+
+# Coding
+
+- TypeScript strict — avoid `any`
+- Follow existing patterns; shared types go in `packages/types/`
+- Mobile styling: NativeWind (Tailwind on RN components)
+- Dependencies in the specific app/package, not the root
+- Backend: validate before DB ops; throw `ConvexError` for client errors
+- Never edit `.env` files
+
+# Protected
+
+Do not modify: `*.proto`, `.env*`, `.claude/settings.json`
+
+Do not change `apps/mobile/package.json` → `"main": "expo-router/entry"`

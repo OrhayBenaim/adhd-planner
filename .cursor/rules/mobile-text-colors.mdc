@@ -1,0 +1,12 @@
+---
+description: Lullio mobile text colors for headings and muted copy
+globs: apps/mobile/**
+alwaysApply: false
+---
+
+# Text Colors
+
+| Name | Hex | Usage |
+|------|-----|-------|
+| Primary Text | `#0A0A0A` | Headings, values, bold text |
+| Sub Text | `#6A7282` | Labels, descriptions, muted text |
