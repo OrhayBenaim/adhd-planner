@@ -46,8 +46,16 @@ export function MainContent() {
   const { openSheet } = useSheetNav();
   const flow = useTaskCreationFlow();
   const homeTour = useHomeTour();
-  const { refs: tourRefs, tourLayouts, tryHandleAIPick, notifyTaskCompleted, handleAddPress } =
-    homeTour;
+  const {
+    refs: tourRefs,
+    tourLayouts,
+    tryHandleAIPick,
+    notifyTaskCompleted,
+    handleAddPress,
+    handleTaskLater,
+    ensureTourTaskSelected,
+    isCompleteTaskStep,
+  } = homeTour;
 
   const { isPremium, showPaywall } = usePremium();
   const streakData = useQuery(api.streaks.get);
@@ -151,6 +159,10 @@ export function MainContent() {
     },
     [notifyTaskCompleted, completeTask, setSelectedTask, showToast],
   );
+
+  useEffect(() => {
+    ensureTourTaskSelected(tasks, selectedTask, setSelectedTask);
+  }, [ensureTourTaskSelected, tasks, selectedTask, setSelectedTask]);
 
   const aiAnimStyle = useAnimatedStyle(() => ({
     transform: [{ scale: aiScale.value }, { rotate: `${aiRotate.value}rad` }],
@@ -265,7 +277,8 @@ export function MainContent() {
           <TaskCard
             task={selectedTask}
             onComplete={handleComplete}
-            onLater={() => setSelectedTask(null)}
+            onLater={() => handleTaskLater(setSelectedTask)}
+            hideLater={isCompleteTaskStep}
           />
         </View>
       </ScrollView>
