@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { authClient } from "../../lib/authClient";
@@ -36,9 +36,9 @@ export function GuidedTourProvider({ children, enabled }: Props) {
   const isAnonymous =
     (session?.user as { isAnonymous?: boolean | null } | undefined)?.isAnonymous ?? true;
 
-  useEffect(() => {
-    if (enabled) setEngaged(true);
-  }, [enabled]);
+  if (enabled && !engaged) {
+    setEngaged(true);
+  }
 
   const isActive = engaged && !dismissed;
   const currentStep = TOUR_STEPS[stepIndex];
