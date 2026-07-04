@@ -1,17 +1,28 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
-import { DAY_MS } from "./lib/constants";
 import { requireAuth, requirePremium } from "./lib/auth";
+import {
+  getTrendsSince,
+  getWeeklyBoundaries,
+} from "./lib/insightsWindows";
+
+const weeklyReportReturns = v.object({
+  tasksCompletedThisWeek: v.number(),
+  tasksCompletedLastWeek: v.number(),
+  mostProductiveDay: v.union(v.string(), v.null()),
+  avgDifficulty: v.number(),
+  currentStreak: v.number(),
+  longestStreak: v.number(),
+});
 
 export const getWeeklyReport = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { nowMs: v.number() },
+  returns: weeklyReportReturns,
+  handler: async (ctx, { nowMs }) => {
     const userId = await requireAuth(ctx);
-    await requirePremium(ctx, userId);
+    await requirePremium(ctx, userId, nowMs);
 
-    const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * DAY_MS);
-    const twoWeeksAgo = new Date(now.getTime() - 14 * DAY_MS);
+    const { weekAgoMs, twoWeeksAgoMs } = getWeeklyBoundaries(nowMs);
 
     // Only fetch completed tasks from last 2 weeks (not ALL tasks ever)
     const recentTasks = await ctx.db
@@ -20,16 +31,16 @@ export const getWeeklyReport = query({
       .filter((q) =>
         q.and(
           q.eq(q.field("completed"), true),
-          q.gte(q.field("_creationTime"), twoWeeksAgo.getTime()),
+          q.gte(q.field("_creationTime"), twoWeeksAgoMs),
         ),
       )
       .collect();
 
     const completedThisWeek = recentTasks.filter(
-      (t) => t._creationTime >= weekAgo.getTime(),
+      (t) => t._creationTime >= weekAgoMs,
     );
     const completedLastWeek = recentTasks.filter(
-      (t) => t._creationTime < weekAgo.getTime(),
+      (t) => t._creationTime < weekAgoMs,
     );
 
     // Most productive day
@@ -70,12 +81,13 @@ export const getWeeklyReport = query({
 });
 
 export const getCompletionTrends = query({
-  args: { days: v.optional(v.number()) },
-  handler: async (ctx, { days = 30 }) => {
+  args: { nowMs: v.number(), days: v.optional(v.number()) },
+  returns: v.record(v.string(), v.number()),
+  handler: async (ctx, { nowMs, days = 30 }) => {
     const userId = await requireAuth(ctx);
-    await requirePremium(ctx, userId);
+    await requirePremium(ctx, userId, nowMs);
 
-    const since = Date.now() - days * DAY_MS;
+    const since = getTrendsSince(nowMs, days);
 
     const tasks = await ctx.db
       .query("tasks")

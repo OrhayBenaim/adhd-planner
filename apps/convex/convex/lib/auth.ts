@@ -1,5 +1,6 @@
 import { QueryCtx, MutationCtx } from "../_generated/server";
 import { ConvexError } from "convex/values";
+import { isSubscriptionActive } from "./subscriptionStatus";
 
 /**
  * Require authenticated user identity. Throws ConvexError if unauthenticated.
@@ -19,14 +20,13 @@ export async function requireAuth(
 export async function checkPremium(
   ctx: QueryCtx | MutationCtx,
   userId: string,
+  nowMs: number = Date.now(),
 ): Promise<boolean> {
   const sub = await ctx.db
     .query("subscriptions")
-    .withIndex("by_user", (q: any) => q.eq("userId", userId))
+    .withIndex("by_user", (q) => q.eq("userId", userId))
     .first();
-  if (!sub?.isActive) return false;
-  if (sub.expiresAt && new Date(sub.expiresAt) <= new Date()) return false;
-  return true;
+  return isSubscriptionActive(sub, nowMs);
 }
 
 /**
@@ -35,9 +35,10 @@ export async function checkPremium(
 export async function requirePremium(
   ctx: QueryCtx | MutationCtx,
   userId: string,
+  nowMs: number = Date.now(),
 ): Promise<void> {
-  const isPremium = await checkPremium(ctx, userId);
-  if (!isPremium) {
+  const premium = await checkPremium(ctx, userId, nowMs);
+  if (!premium) {
     throw new ConvexError("Premium subscription required");
   }
 }

@@ -8,7 +8,7 @@ import {
 } from "react";
 import { Platform } from "react-native";
 import Purchases, { type CustomerInfo } from "react-native-purchases";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery, useConvexAuth } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
@@ -16,6 +16,7 @@ import { authClient } from "../lib/authClient";
 import { posthog } from "../lib/posthog";
 import { getDeviceId } from "../lib/deviceId";
 import { getSessionAnonymousState } from "../lib/sessionState";
+import { evaluateBackendPremium } from "../lib/subscriptionStatus";
 
 const ENTITLEMENT_ID = "Lullio Pro";
 
@@ -78,6 +79,7 @@ function premiumReducer(
 
 interface PremiumContextValue {
   isPremium: boolean;
+  isBackendPremium: boolean;
   isAnonymous: boolean;
   isLoading: boolean;
   expiresAt: string | null;
@@ -96,7 +98,7 @@ export function usePremium() {
 
 export function PremiumProvider({ children }: { children: ReactNode }) {
   const [
-    { isPremium, isLoading, expiresAt, willRenew, managementURL },
+    { isPremium: sdkPremium, isLoading, expiresAt, willRenew, managementURL },
     dispatch,
   ] = useReducer(premiumReducer, {
     isPremium: false,
@@ -108,7 +110,15 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
 
   const session = authClient.useSession();
   const isAnonymous = getSessionAnonymousState(session.data) ?? true;
+  const { isAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
   const registerDeviceIdMutation = useMutation(api.settings.registerDeviceId);
+  const backendSubscription = useQuery(
+    api.subscriptions.getStatus,
+    !isAnonymous && isAuthenticated && !isConvexAuthLoading ? {} : "skip",
+  );
+  const isBackendPremium = evaluateBackendPremium(backendSubscription);
+  const isPremium = sdkPremium || isBackendPremium;
+  const resolvedExpiresAt = expiresAt ?? backendSubscription?.expiresAt ?? null;
 
   const extractSubscriptionInfo = useCallback((info: CustomerInfo) => {
     const entitlement = info.entitlements.active[ENTITLEMENT_ID];
@@ -150,6 +160,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
         await Purchases.setDisplayName(user.name);
       }
 
+      await Purchases.invalidateCustomerInfoCache();
       const info = await Purchases.getCustomerInfo();
       dispatch({ type: "INIT_DONE", ...extractSubscriptionInfo(info) });
     }
@@ -171,7 +182,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "PREMIUM_CHANGED", ...subInfo });
 
       // Track new subscription purchase (free → premium transition)
-      if (subInfo.isPremium && !isPremium) {
+      if (subInfo.isPremium && !sdkPremium) {
         posthog.capture("subscription_purchased", {
           variant: String(posthog.getFeatureFlag("profile-upgrade-variant") ?? "unknown"),
         });
@@ -191,7 +202,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
         Purchases.removeCustomerInfoUpdateListener(listener);
       }
     };
-  }, [isAnonymous, session.data?.user?.id]);
+  }, [isAnonymous, session.data?.user?.id, sdkPremium, extractSubscriptionInfo]);
 
   const showPaywall = useCallback(
     (offering?: string) => {
@@ -229,9 +240,10 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     <PremiumContext
       value={{
         isPremium,
+        isBackendPremium,
         isAnonymous,
         isLoading,
-        expiresAt,
+        expiresAt: resolvedExpiresAt,
         willRenew,
         managementURL,
         showPaywall,

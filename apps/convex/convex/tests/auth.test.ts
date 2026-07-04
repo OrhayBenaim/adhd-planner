@@ -4,6 +4,8 @@ import schema from "../schema";
 
 const modules = import.meta.glob("../**/*.ts");
 
+const FIXED_NOW_MS = new Date("2025-06-01T12:00:00.000Z").getTime();
+
 describe("premium gated queries", () => {
   test("insights getWeeklyReport requires premium", async () => {
     const t = convexTest(schema, modules);
@@ -11,7 +13,7 @@ describe("premium gated queries", () => {
 
     const { api } = await import("../_generated/api");
     await expect(
-      asUser.query(api.insights.getWeeklyReport),
+      asUser.query(api.insights.getWeeklyReport, { nowMs: FIXED_NOW_MS }),
     ).rejects.toThrow(/[Pp]remium/);
   });
 
@@ -28,7 +30,9 @@ describe("premium gated queries", () => {
 
     const asUser = t.withIdentity({ name: "Pro", subject: "premium_user" });
     const { api } = await import("../_generated/api");
-    const result = await asUser.query(api.insights.getWeeklyReport);
+    const result = await asUser.query(api.insights.getWeeklyReport, {
+      nowMs: FIXED_NOW_MS,
+    });
     expect(result).toBeDefined();
   });
 });

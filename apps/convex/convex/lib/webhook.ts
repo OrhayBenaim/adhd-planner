@@ -35,6 +35,21 @@ export type ValidatedEvent =
   | { kind: "ignored" };
 
 /**
+ * RevenueCat dashboard/API promotional grants use NON_RENEWING_PURCHASE with
+ * store PROMOTIONAL or rc_promo_* product ids.
+ */
+export function isPromotionalGrant(e: Record<string, unknown>): boolean {
+  const store = e.store;
+  const periodType = e.period_type;
+  const productId = e.product_id;
+  return (
+    store === "PROMOTIONAL" ||
+    periodType === "PROMOTIONAL" ||
+    (typeof productId === "string" && productId.startsWith("rc_promo"))
+  );
+}
+
+/**
  * Validate and extract fields from a RevenueCat webhook body.
  * Returns null if the payload is malformed.
  */
@@ -51,10 +66,34 @@ export function validateWebhookPayload(body: unknown): ValidatedEvent | null {
   if (typeof eventType !== "string" || !eventType) return null;
   if (typeof appUserId !== "string" || !appUserId) return null;
 
-  // Credit purchase
+  // Dashboard/API promotional grants use NON_RENEWING_PURCHASE with store PROMOTIONAL.
   if (eventType === "NON_RENEWING_PURCHASE") {
     const productId = e.product_id;
     if (typeof productId !== "string" || !productId) return null;
+
+    if (isPromotionalGrant(e)) {
+      const rcId = e.id ?? e.transaction_id ?? appUserId;
+      if (typeof rcId !== "string") return null;
+
+      const periodType = e.period_type;
+      return {
+        kind: "subscription",
+        data: {
+          appUserId,
+          rcId,
+          eventType,
+          classification: "active",
+          expirationAtMs:
+            typeof e.expiration_at_ms === "number"
+              ? e.expiration_at_ms
+              : undefined,
+          productId,
+          periodType:
+            typeof periodType === "string" ? periodType : "PROMOTIONAL",
+        },
+      };
+    }
+
     return {
       kind: "credit",
       data: { appUserId, eventType, productId },

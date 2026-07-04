@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useMemo } from "react";
 import { View, Text } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
@@ -61,14 +61,15 @@ function MiniBarChart({ data }: { data: Record<string, number> }) {
 export const InsightsSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const { closeSheet } = useSheetNav();
-    const { isPremium } = usePremium();
+    const { isBackendPremium } = usePremium();
+    const nowMs = useMemo(() => Date.now(), []);
     const report = useQuery(
       api.insights.getWeeklyReport,
-      isPremium ? {} : "skip",
+      isBackendPremium ? { nowMs } : "skip",
     );
     const trends = useQuery(
       api.insights.getCompletionTrends,
-      isPremium ? { days: 7 } : "skip",
+      isBackendPremium ? { days: 7, nowMs } : "skip",
     );
 
     return (
