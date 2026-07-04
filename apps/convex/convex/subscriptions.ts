@@ -1,16 +1,44 @@
 import { v } from "convex/values";
-import { internalMutation, internalQuery } from "./_generated/server";
+import { internalMutation, internalQuery, query } from "./_generated/server";
+import { requireAuth } from "./lib/auth";
+import { isSubscriptionActive } from "./lib/subscriptionStatus";
 
-export const isPremium = internalQuery({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
+const subscriptionStatusValidator = v.union(
+  v.object({
+    isActive: v.boolean(),
+    expiresAt: v.union(v.string(), v.null()),
+  }),
+  v.null(),
+);
+
+export const getStatus = query({
+  args: {},
+  returns: subscriptionStatusValidator,
+  handler: async (ctx) => {
+    const userId = await requireAuth(ctx);
     const sub = await ctx.db
       .query("subscriptions")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
-    if (!sub?.isActive) return false;
-    if (sub.expiresAt && new Date(sub.expiresAt) <= new Date()) return false;
-    return true;
+
+    if (!sub) return null;
+
+    return {
+      isActive: sub.isActive,
+      expiresAt: sub.expiresAt ?? null,
+    };
+  },
+});
+
+export const isPremium = internalQuery({
+  args: { userId: v.string(), nowMs: v.optional(v.number()) },
+  returns: v.boolean(),
+  handler: async (ctx, { userId, nowMs = Date.now() }) => {
+    const sub = await ctx.db
+      .query("subscriptions")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    return isSubscriptionActive(sub, nowMs);
   },
 });
 

@@ -8,6 +8,7 @@ export const RC_ACTIVE_EVENTS = [
   "PRODUCT_CHANGE",
   "UNCANCELLATION",
   "SUBSCRIPTION_EXTENDED",
+  "TEMPORARY_ENTITLEMENT_GRANT",
 ] as const;
 
 /** RevenueCat event types that indicate an inactive subscription */

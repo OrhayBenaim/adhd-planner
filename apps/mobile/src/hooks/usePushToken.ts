@@ -2,13 +2,16 @@ import { useEffect } from "react";
 import { Platform } from "react-native";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
-import { useMutation } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 
 export function usePushToken() {
+  const { isAuthenticated, isLoading } = useConvexAuth();
   const registerToken = useMutation(api.pushTokens.register);
 
   useEffect(() => {
+    if (isLoading || !isAuthenticated) return;
+
     async function register() {
       const { status } = await Notifications.getPermissionsAsync();
       if (status !== "granted") return;
@@ -32,5 +35,5 @@ export function usePushToken() {
     register().catch((err) => {
       console.warn("[PushToken] Registration failed:", err);
     });
-  }, [registerToken]);
+  }, [isAuthenticated, isLoading, registerToken]);
 }
