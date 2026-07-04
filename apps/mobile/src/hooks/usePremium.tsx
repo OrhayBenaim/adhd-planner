@@ -17,6 +17,7 @@ import { posthog } from "../lib/posthog";
 import { getDeviceId } from "../lib/deviceId";
 import { getSessionAnonymousState } from "../lib/sessionState";
 import { evaluateBackendPremium } from "../lib/subscriptionStatus";
+import { usePreferences } from "./usePreferences";
 
 const ENTITLEMENT_ID = "Lullio Pro";
 
@@ -108,6 +109,8 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     managementURL: null,
   });
 
+  const preferences = usePreferences();
+
   const session = authClient.useSession();
   const isAnonymous = getSessionAnonymousState(session.data) ?? true;
   const { isAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
@@ -132,8 +135,9 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     async function init() {
-      // Don't initialize RevenueCat for anonymous users — they can't purchase
-      if (isAnonymous || !session.data?.user?.id) {
+      const userName = preferences?.name ?? session.data?.user?.name;
+
+      if (!userName || userName === "Anonymous" || !session.data?.user?.id) {
         dispatch({ type: "INIT_FAILED" });
         return;
       }
@@ -161,8 +165,8 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       if (user.email) {
         attributeSyncs.push(Purchases.setEmail(user.email));
       }
-      if (user.name) {
-        attributeSyncs.push(Purchases.setDisplayName(user.name));
+      if (userName) {
+        attributeSyncs.push(Purchases.setDisplayName(userName));
       }
       await Promise.all(attributeSyncs);
 
@@ -172,7 +176,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     }
 
     init().catch(() => dispatch({ type: "INIT_FAILED" }));
-  }, [session.data?.user?.id, isAnonymous]);
+  }, [session.data?.user?.id, isAnonymous, preferences]);
 
   // Register device ID with backend for cost ceiling enforcement
   useEffect(() => {
