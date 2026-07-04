@@ -153,12 +153,18 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       await Purchases.logIn(session.data.user.id);
 
       const user = session.data.user;
+      const attributeSyncs: Promise<void>[] = [
+        Purchases.setAttributes({
+          $posthogUserId: posthog.getDistinctId(),
+        }),
+      ];
       if (user.email) {
-        await Purchases.setEmail(user.email);
+        attributeSyncs.push(Purchases.setEmail(user.email));
       }
       if (user.name) {
-        await Purchases.setDisplayName(user.name);
+        attributeSyncs.push(Purchases.setDisplayName(user.name));
       }
+      await Promise.all(attributeSyncs);
 
       await Purchases.invalidateCustomerInfoCache();
       const info = await Purchases.getCustomerInfo();
@@ -184,7 +190,9 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       // Track new subscription purchase (free → premium transition)
       if (subInfo.isPremium && !sdkPremium) {
         posthog.capture("subscription_purchased", {
-          variant: String(posthog.getFeatureFlag("profile-upgrade-variant") ?? "unknown"),
+          variant: String(
+            posthog.getFeatureFlag("profile-upgrade-variant") ?? "unknown",
+          ),
         });
       }
     };
@@ -202,7 +210,12 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
         Purchases.removeCustomerInfoUpdateListener(listener);
       }
     };
-  }, [isAnonymous, session.data?.user?.id, sdkPremium, extractSubscriptionInfo]);
+  }, [
+    isAnonymous,
+    session.data?.user?.id,
+    sdkPremium,
+    extractSubscriptionInfo,
+  ]);
 
   const showPaywall = useCallback(
     (offering?: string) => {
