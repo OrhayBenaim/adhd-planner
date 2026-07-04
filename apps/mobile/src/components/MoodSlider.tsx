@@ -10,10 +10,15 @@ import { scheduleOnRN } from "react-native-worklets";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { LinearGradient } from "expo-linear-gradient";
 import { getMoodLabel } from "../lib/moodLabels";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const THUMB_SIZE = 28;
 const TRACK_HEIGHT = 12;
+
+function valueToThumbX(value: number, trackWidth: number): number {
+  const max = trackWidth - THUMB_SIZE;
+  return max > 0 ? (value / 100) * max : 0;
+}
 
 interface Props {
   value: number;
@@ -23,20 +28,31 @@ interface Props {
 export function MoodSlider({ value, onChange }: Props) {
   const label = getMoodLabel(value);
   const [trackWidth, setTrackWidth] = useState(1);
+  const isDraggingRef = useRef(false);
 
-  const thumbX = useSharedValue((value / 100) * (trackWidth - THUMB_SIZE));
+  const thumbX = useSharedValue(valueToThumbX(value, trackWidth));
 
   const notifyChange = (x: number) => {
     const pct = Math.min(Math.max(x / (trackWidth - THUMB_SIZE), 0), 1);
     onChange(Math.round(pct * 100));
   };
 
+  const setDragging = (dragging: boolean) => {
+    isDraggingRef.current = dragging;
+  };
+
   const pan = Gesture.Pan()
     .minDistance(0)
+    .onBegin(() => {
+      scheduleOnRN(setDragging, true);
+    })
     .onChange((e) => {
       const max = trackWidth - THUMB_SIZE;
       thumbX.value = clamp(thumbX.value + e.changeX, 0, max);
       scheduleOnRN(notifyChange, thumbX.value);
+    })
+    .onFinalize(() => {
+      scheduleOnRN(setDragging, false);
     });
 
   const tap = Gesture.Tap().onEnd((e) => {
@@ -50,10 +66,15 @@ export function MoodSlider({ value, onChange }: Props) {
     transform: [{ translateX: thumbX.value }],
   }));
 
+  useEffect(() => {
+    if (isDraggingRef.current) return;
+    thumbX.value = valueToThumbX(value, trackWidth);
+  }, [value, trackWidth, thumbX]);
+
   const handleLayout = (e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width;
     setTrackWidth(w);
-    thumbX.value = (value / 100) * (w - THUMB_SIZE);
+    thumbX.value = valueToThumbX(value, w);
   };
 
   return (
