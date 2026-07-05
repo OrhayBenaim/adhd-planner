@@ -1,4 +1,4 @@
-import { forwardRef, useState } from "react";
+import { forwardRef, useState, useMemo, useEffect } from "react";
 import { View, Text, Keyboard } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,6 +25,17 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
     const [customValue, setCustomValue] = useState("");
     const [showCustomInput, setShowCustomInput] = useState(false);
 
+    const snapPoints = useMemo(
+      () => [showCustomInput ? "50%" : "28%"],
+      [showCustomInput],
+    );
+
+    useEffect(() => {
+      if (showCustomInput) {
+        (ref as React.RefObject<BottomSheet | null>)?.current?.snapToIndex(0);
+      }
+    }, [showCustomInput, ref]);
+
     const handleSelect = (time: string) => {
       if (time === "custom") {
         setShowCustomInput(true);
@@ -49,12 +60,12 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
       <BottomSheet
         ref={ref}
         index={-1}
-        snapPoints={["28%", "40%"]}
+        snapPoints={snapPoints}
         enablePanDownToClose={!tour?.isTourStep("pickTime")}
         onClose={onClose}
-        keyboardBehavior="extend"
+        keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
-        android_keyboardInputMode="adjustResize"
+        android_keyboardInputMode="adjustPan"
         backgroundStyle={{ borderTopLeftRadius: 48, borderTopRightRadius: 48 }}
         handleIndicatorStyle={{ display: "none" }}
       >
@@ -86,6 +97,7 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
                   onChangeText={setCustomValue}
                   returnKeyType="done"
                   onSubmitEditing={handleCustomSubmit}
+                  autoFocus
                 />
                 <Pressable
                   onPress={handleCustomSubmit}
