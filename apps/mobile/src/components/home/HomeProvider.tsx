@@ -4,7 +4,8 @@ import { useQuery } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import type { Id } from "@adhd-planner/convex/convex/_generated/dataModel";
 import type { Task, UserProgress } from "@adhd-planner/types";
-import { useTasks, useCreateTask, useCompleteTask, useDeleteTask, useUpdateTask } from "../../hooks/useTasks";
+import { useCreateTask, useCompleteTask, useDeleteTask, useUpdateTask } from "../../hooks/useTasks";
+import { usePersistedSelectedTask } from "../../hooks/usePersistedSelectedTask";
 import { useUserProgress } from "../../hooks/useUserProgress";
 import { useWidgetSync } from "../../hooks/useWidgetSync";
 import { usePremium } from "../../hooks/usePremium";
@@ -42,13 +43,14 @@ export function useHome() {
  */
 export function HomeProvider({ children }: { children: ReactNode }) {
   const [moodLevel, setMoodLevel] = useState(50);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [toast, setToast] = useState<{ points: number; visible: boolean }>({
     points: 0,
     visible: false,
   });
 
-  const tasks = useTasks();
+  const tasksData = useQuery(api.tasks.list);
+  const tasks = useMemo(() => tasksData ?? [], [tasksData]);
+  const [selectedTask, setSelectedTask] = usePersistedSelectedTask(tasksData);
   const createTaskMutation = useCreateTask();
   const completeTaskMutation = useCompleteTask();
   const deleteTaskMutation = useDeleteTask();
@@ -134,6 +136,7 @@ export function HomeProvider({ children }: { children: ReactNode }) {
       moodLevel,
       selectedTask,
       toast,
+      setSelectedTask,
       showToast,
       hideToast,
       completeTask,

@@ -38,6 +38,7 @@ import type * as settings from "../settings.js";
 import type * as streaks from "../streaks.js";
 import type * as subscriptions from "../subscriptions.js";
 import type * as tasks from "../tasks.js";
+import type * as userSessionState from "../userSessionState.js";
 
 import type {
   ApiFromModules,
@@ -76,6 +77,7 @@ declare const fullApi: ApiFromModules<{
   streaks: typeof streaks;
   subscriptions: typeof subscriptions;
   tasks: typeof tasks;
+  userSessionState: typeof userSessionState;
 }>;
 
 /**

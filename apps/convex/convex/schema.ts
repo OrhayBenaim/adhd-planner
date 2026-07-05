@@ -118,4 +118,10 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_date", ["userId", "date"]),
+
+  userSessionState: defineTable({
+    userId: v.string(),
+    selectedTaskId: v.optional(v.id("tasks")),
+    updatedAt: v.number(),
+  }).index("by_user", ["userId"]),
 });

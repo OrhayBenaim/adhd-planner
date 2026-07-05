@@ -11,6 +11,7 @@ import {
 } from "./lib/validation";
 import { normalizedLevenshtein } from "./lib/levenshtein";
 import { requireAuth } from "./lib/auth";
+import { clearSelectedTaskIfMatches } from "./userSessionState";
 
 const RESCORE_THRESHOLD = 0.3;
 
@@ -84,6 +85,8 @@ export const completeTask = mutation({
 
     await ctx.db.patch(id, { completed: true });
 
+    await clearSelectedTaskIfMatches(ctx, userId, id);
+
     // Award points — atomic with task completion
     const existing = await ctx.db
       .query("userProgress")
@@ -133,6 +136,7 @@ export const remove = mutation({
     const userId = await requireAuth(ctx);
     const task = await ctx.db.get(id);
     if (!task || task.userId !== userId) throw new ConvexError("Not found");
+    await clearSelectedTaskIfMatches(ctx, userId, id);
     await ctx.db.delete(id);
   },
 });
