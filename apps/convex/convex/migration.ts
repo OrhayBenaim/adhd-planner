@@ -2,6 +2,8 @@ import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { deleteAllUserData } from "./lib/deleteUserData";
+import { upsertSelectedTaskId } from "./userSessionState";
+import type { Id } from "./_generated/dataModel";
 
 export const migrateUserData = internalMutation({
   args: {
@@ -24,6 +26,10 @@ export const migrateUserData = internalMutation({
       .first();
     const oldProgress = await ctx.db
       .query("userProgress")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .first();
+    const oldSessionState = await ctx.db
+      .query("userSessionState")
       .withIndex("by_user", (q) => q.eq("userId", oldUserId))
       .first();
 
@@ -84,9 +90,18 @@ export const migrateUserData = internalMutation({
     }
 
     // Migrate tasks — copy to new user, keep old copies for stale JWT
+    const taskIdMap = new Map<Id<"tasks">, Id<"tasks">>();
     for (const task of oldTasks) {
       const { _id, _creationTime, userId: _oldUid, ...taskData } = task;
-      await ctx.db.insert("tasks", { ...taskData, userId: newUserId });
+      const newTaskId = await ctx.db.insert("tasks", { ...taskData, userId: newUserId });
+      taskIdMap.set(_id, newTaskId);
+    }
+
+    if (oldSessionState?.selectedTaskId) {
+      const remapped = taskIdMap.get(oldSessionState.selectedTaskId);
+      if (remapped) {
+        await upsertSelectedTaskId(ctx, newUserId, remapped);
+      }
     }
 
     // Migrate userSettings

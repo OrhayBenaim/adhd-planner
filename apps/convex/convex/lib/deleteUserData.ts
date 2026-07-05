@@ -5,6 +5,7 @@ const SINGLE_TABLES = [
   "userSettings",
   "userProgress",
   "userPreferences",
+  "userSessionState",
   "userCosts",
   "subscriptions",
   "aiCredits",
