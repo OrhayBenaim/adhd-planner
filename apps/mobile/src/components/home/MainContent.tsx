@@ -139,12 +139,19 @@ export function MainContent() {
       return;
     }
 
-    const best = eligible.reduce((prev, curr) =>
-      Math.abs(curr.difficulty - moodLevel) <
-      Math.abs(prev.difficulty - moodLevel)
-        ? curr
-        : prev,
-    );
+    const best = eligible.find((t) => t.difficulty <= moodLevel);
+    if (!best) {
+      setNoTasksMsg(`No tasks match your energy right now`);
+      noTasksTranslateY.value = 0;
+      noTasksOpacity.value = withSequence(
+        withTiming(1, { duration: 200 }),
+        withTiming(1, { duration: 2000 }),
+        withTiming(0, { duration: 300 }),
+      );
+      noTasksTranslateY.value = withTiming(-30, { duration: 2500 });
+      return;
+    }
+
     setTimeout(() => setSelectedTask(best), 500);
   }, [tryHandleAIPick, tasks, moodLevel, setSelectedTask, aiRotate, aiScale, aiPickDaysAhead, noTasksOpacity, noTasksTranslateY]);
 
