@@ -17,12 +17,12 @@ import { Mascot } from "../mascot/Mascot";
 import { authClient } from "../../lib/authClient";
 import { getGoogleIdToken } from "../../lib/googleSignIn";
 import { SocialAuthButtons } from "../auth/SocialAuthButtons";
-import { SignUpWithEmail } from "../auth/SignUpWithEmail";
-import { SignInWithEmail } from "../auth/SignInWithEmail";
+import { SignUpWithUsername } from "../auth/SignUpWithUsername";
+import { SignInWithUsername } from "../auth/SignInWithUsername";
 import { usePreferences } from "../../hooks/usePreferences";
 import { posthog } from "../../lib/posthog";
 
-type SubView = "main" | "options" | "signUpEmail" | "signInEmail";
+type SubView = "main" | "options" | "signUpUsername" | "signInUsername";
 
 interface Props {
   /** Called when the user links an account or chooses to do it later. */
@@ -153,7 +153,7 @@ export function SaveProgressOverlay({ onDone }: Props) {
                   </Text>
                   <SocialAuthButtons
                     onSocial={handleSocialSignIn}
-                    onEmail={() => setSubView("signUpEmail")}
+                    onUsername={() => setSubView("signUpUsername")}
                     busy={socialBusy}
                     labelPrefix="Continue with"
                   />
@@ -168,12 +168,12 @@ export function SaveProgressOverlay({ onDone }: Props) {
                 </>
               )}
 
-              {subView === "signUpEmail" && (
+              {subView === "signUpUsername" && (
                 <>
-                  <SignUpWithEmail
+                  <SignUpWithUsername
                     onSuccess={handleLinked}
                     name={preferences?.name?.trim() || ""}
-                    onSwitchToSignIn={() => setSubView("signInEmail")}
+                    onSwitchToSignIn={() => setSubView("signInUsername")}
                     title="Create your account"
                     subtitle="Your data will be preserved"
                   />
@@ -188,11 +188,11 @@ export function SaveProgressOverlay({ onDone }: Props) {
                 </>
               )}
 
-              {subView === "signInEmail" && (
+              {subView === "signInUsername" && (
                 <>
-                  <SignInWithEmail
+                  <SignInWithUsername
                     onSuccess={handleLinked}
-                    onSwitchToSignUp={() => setSubView("signUpEmail")}
+                    onSwitchToSignUp={() => setSubView("signUpUsername")}
                     title="Welcome back"
                     subtitle="Sign in to your account"
                   />

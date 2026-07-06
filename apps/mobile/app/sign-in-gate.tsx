@@ -4,8 +4,8 @@ import { AppPressable as Pressable } from "../src/components/AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { AuthOptions } from "../src/components/auth/AuthOptions";
-import { SignUpWithEmail } from "../src/components/auth/SignUpWithEmail";
-import { SignInWithEmail } from "../src/components/auth/SignInWithEmail";
+import { SignUpWithUsername } from "../src/components/auth/SignUpWithUsername";
+import { SignInWithUsername } from "../src/components/auth/SignInWithUsername";
 import type { AuthOptionsMode } from "../src/components/auth/AuthOptions";
 
 type GateView = "options" | "signUp" | "signIn";
@@ -73,11 +73,11 @@ export default function SignInGateScreen() {
             <AuthOptions
               mode={authMode}
               onSuccess={handleAuthSuccess}
-              onEmailPress={() => setView(authMode === "signIn" ? "signIn" : "signUp")}
+              onUsernamePress={() => setView(authMode === "signIn" ? "signIn" : "signUp")}
             />
           )}
           {view === "signUp" && (
-            <SignUpWithEmail
+            <SignUpWithUsername
               onSuccess={handleAuthSuccess}
               title="Create your account"
               subtitle="Sign up to unlock Pro features"
@@ -85,7 +85,7 @@ export default function SignInGateScreen() {
             />
           )}
           {view === "signIn" && (
-            <SignInWithEmail
+            <SignInWithUsername
               onSuccess={handleAuthSuccess}
               title="Welcome back"
               subtitle="Sign in to your existing account"
@@ -94,7 +94,7 @@ export default function SignInGateScreen() {
           )}
         </View>
 
-        {/* Back to options link when in email view */}
+        {/* Back to options link when in username view */}
         {view !== "options" && (
           <View className="items-center mt-6">
             <Pressable onPress={() => setView("options")}>

@@ -12,12 +12,15 @@ import { authClient } from "../../../lib/authClient";
 import { posthog } from "../../../lib/posthog";
 import { usePremium } from "../../../hooks/usePremium";
 import { clearHadLinkedAccountMarker } from "../../../lib/sessionState";
+import { isInternalAuthEmail } from "../../../lib/authUsername";
 import { UpgradeFeatureCard } from "./UpgradeFeatureCard";
 import { UpgradeLockedTeasers } from "./UpgradeLockedTeasers";
 
 interface SessionUser {
   name?: string | null;
   email?: string | null;
+  username?: string | null;
+  displayUsername?: string | null;
   image?: string | null;
 }
 
@@ -61,9 +64,19 @@ export function AuthenticatedProfile({
     const userEmail = session?.user?.email ?? "";
     if (image.includes("googleusercontent")) return "Google";
     if (userEmail.includes("privaterelay.appleid.com")) return "Apple";
+    if (session?.user?.username || isInternalAuthEmail(userEmail)) return "Username";
     if (userEmail) return "Email";
     return null;
   };
+
+  const accountSubtitle = (() => {
+    const user = session?.user;
+    if (!user) return null;
+    const handle = user.displayUsername ?? user.username;
+    if (handle) return `@${handle}`;
+    if (user.email && !isInternalAuthEmail(user.email)) return user.email;
+    return null;
+  })();
 
   const handleSignOut = useCallback(async () => {
     setBusy(true);
@@ -175,9 +188,9 @@ export function AuthenticatedProfile({
             borderBottomColor: "#e5e7eb",
           }}
         />
-        {session?.user?.email && (
+        {accountSubtitle && (
           <Text className="text-sm text-[#6a7282] mt-1">
-            {session.user.email}
+            {accountSubtitle}
           </Text>
         )}
         {provider && (

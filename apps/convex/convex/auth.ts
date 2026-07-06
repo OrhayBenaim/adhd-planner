@@ -3,7 +3,7 @@ import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { betterAuth } from "better-auth/minimal";
 import { expo } from "@better-auth/expo";
-import { anonymous } from "better-auth/plugins";
+import { anonymous, username } from "better-auth/plugins";
 import { components, internal } from "./_generated/api";
 import { sentryCaptureEvent } from "./lib/sentry";
 import type { DataModel } from "./_generated/dataModel";
@@ -61,6 +61,14 @@ export const createAuth = (ctx: GenericCtx<DataModel>) => {
               jwks: `${process.env.CONVEX_SITE_URL!}/api/auth/convex/jwks`,
             },
           ],
+        },
+      }),
+      username({
+        minUsernameLength: 3,
+        maxUsernameLength: 30,
+        usernameValidator: (value) => {
+          const reserved = new Set(["admin", "support", "lullio", "help"]);
+          return !reserved.has(value.toLowerCase());
         },
       }),
       anonymous({

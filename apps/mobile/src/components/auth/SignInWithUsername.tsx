@@ -3,71 +3,59 @@ import { View, Text, type TextInputProps } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import * as Sentry from "@sentry/react-native";
 import { authClient } from "../../lib/authClient";
-import { EmailForm } from "./EmailForm";
+import { validateUsername } from "../../lib/authUsername";
+import { UsernameForm } from "./UsernameForm";
 import type { ComponentType } from "react";
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_PASSWORD_LENGTH = 8;
-
-interface SignUpWithEmailProps {
+interface SignInWithUsernameProps {
   onSuccess: () => void;
   onBeforeAuth?: () => Promise<void>;
-  name?: string;
-  onSwitchToSignIn?: () => void;
+  onSwitchToSignUp?: () => void;
   InputComponent?: ComponentType<TextInputProps>;
   title?: string;
   subtitle?: string;
 }
 
-export function SignUpWithEmail({
+export function SignInWithUsername({
   onSuccess,
   onBeforeAuth,
-  name,
-  onSwitchToSignIn,
+  onSwitchToSignUp,
   InputComponent,
-  title = "Create your account",
-  subtitle = "Your data will be preserved",
-}: SignUpWithEmailProps) {
-  const [email, setEmail] = useState("");
+  title = "Sign in",
+  subtitle = "Sign in to your existing account",
+}: SignInWithUsernameProps) {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = useCallback(async () => {
     setError(null);
-    const trimmedEmail = email.trim();
+    const trimmedUsername = username.trim();
 
-    if (!trimmedEmail || !password) {
-      setError("Please enter your email and password.");
+    const usernameError = validateUsername(trimmedUsername);
+    if (usernameError) {
+      setError(usernameError);
       return;
     }
-    if (!EMAIL_REGEX.test(trimmedEmail)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+    if (!password) {
+      setError("Please enter your password.");
       return;
     }
 
     setBusy(true);
     try {
       await onBeforeAuth?.();
-      const { error: authError } = await authClient.signUp.email({
-        email: trimmedEmail,
+      const { error: authError } = await authClient.signIn.username({
+        username: trimmedUsername,
         password,
-        name: name || trimmedEmail.split("@")[0],
       });
       if (authError) {
         Sentry.captureMessage(
-          `Sign-up failed: ${authError.message ?? "unknown"}`,
+          `Username sign-in failed: ${authError.message ?? "unknown"}`,
           "error",
         );
-        const userMessage =
-          authError.code === "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL"
-            ? "An account with this email already exists. Try signing in instead."
-            : "Sign-up failed. Please try again.";
-        setError(userMessage);
+        setError("Sign-in failed. Please check your credentials and try again.");
         return;
       }
       setPassword("");
@@ -78,7 +66,7 @@ export function SignUpWithEmail({
     } finally {
       setBusy(false);
     }
-  }, [email, password, name, onBeforeAuth, onSuccess]);
+  }, [username, password, onBeforeAuth, onSuccess]);
 
   return (
     <View>
@@ -88,22 +76,22 @@ export function SignUpWithEmail({
       <Text className="text-sm text-[#6a7282] mb-6">
         {subtitle}
       </Text>
-      <EmailForm
-        email={email}
-        onEmailChange={setEmail}
+      <UsernameForm
+        username={username}
+        onUsernameChange={setUsername}
         password={password}
         onPasswordChange={setPassword}
         onSubmit={handleSubmit}
-        submitLabel="Sign Up"
+        submitLabel="Sign In"
         busy={busy}
         error={error}
         InputComponent={InputComponent}
       />
-      {onSwitchToSignIn && (
+      {onSwitchToSignUp && (
         <View className="items-center mt-4">
-          <Pressable onPress={onSwitchToSignIn}>
+          <Pressable onPress={onSwitchToSignUp}>
             <Text className="text-sm font-medium text-[#a2d2ff]">
-              Already have an account? Sign in
+              Don't have an account? Sign up
             </Text>
           </Pressable>
         </View>
