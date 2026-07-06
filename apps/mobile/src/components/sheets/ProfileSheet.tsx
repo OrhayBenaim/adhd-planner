@@ -12,16 +12,16 @@ import { usePreferences, useUpdatePreferences } from "../../hooks/usePreferences
 import { AnonymousProfile } from "./profile/AnonymousProfile";
 import { AuthenticatedProfile } from "./profile/AuthenticatedProfile";
 import { AuthOptions } from "../auth/AuthOptions";
-import { SignUpWithEmail } from "../auth/SignUpWithEmail";
-import { SignInWithEmail } from "../auth/SignInWithEmail";
+import { SignUpWithUsername } from "../auth/SignUpWithUsername";
+import { SignInWithUsername } from "../auth/SignInWithUsername";
 import { getSessionAnonymousState } from "../../lib/sessionState";
 
 type SubView =
   | "main"
   | "linkOptions"
   | "signInOptions"
-  | "signUpEmail"
-  | "signInEmail";
+  | "signUpUsername"
+  | "signInUsername";
 
 function SubViewHeader({ onBack, onClose }: { onBack: () => void; onClose: () => void }) {
   return (
@@ -102,11 +102,11 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
           <Text className="text-sm text-[#6a7282]">Loading profile...</Text>
         </View>
       );
-    } else if (subView === "signUpEmail" && isAnonymous) {
+    } else if (subView === "signUpUsername" && isAnonymous) {
       content = (
         <View className="px-6 pt-6">
           <SubViewHeader onBack={() => setSubView("linkOptions")} onClose={closeSheet} />
-          <SignUpWithEmail
+          <SignUpWithUsername
             onSuccess={handleAuthSuccess}
             name={userName}
             onSwitchToSignIn={() => setSubView("signInOptions")}
@@ -114,11 +114,11 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
           />
         </View>
       );
-    } else if (subView === "signInEmail" && isAnonymous) {
+    } else if (subView === "signInUsername" && isAnonymous) {
       content = (
         <View className="px-6 pt-6">
           <SubViewHeader onBack={() => setSubView("signInOptions")} onClose={closeSheet} />
-          <SignInWithEmail
+          <SignInWithUsername
             onSuccess={handleAuthSuccess}
             InputComponent={BottomSheetTextInput as any}
           />
@@ -131,7 +131,7 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
           <AuthOptions
             mode="link"
             onSuccess={handleAuthSuccess}
-            onEmailPress={() => setSubView("signUpEmail")}
+            onUsernamePress={() => setSubView("signUpUsername")}
           />
         </View>
       );
@@ -142,7 +142,7 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
           <AuthOptions
             mode="signIn"
             onSuccess={handleAuthSuccess}
-            onEmailPress={() => setSubView("signInEmail")}
+            onUsernamePress={() => setSubView("signInUsername")}
           />
         </View>
       );

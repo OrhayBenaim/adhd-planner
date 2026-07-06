@@ -21,14 +21,14 @@ interface AuthOptionsProps {
   mode: AuthOptionsMode;
   onSuccess: () => void;
   onBeforeAuth?: () => Promise<void>;
-  onEmailPress: () => void;
+  onUsernamePress: () => void;
 }
 
 /**
- * Social + email auth entry point, parameterized by mode
+ * Social + username auth entry point, parameterized by mode
  * (linking an anonymous account vs signing in to an existing one).
  */
-export function AuthOptions({ mode, onSuccess, onBeforeAuth, onEmailPress }: AuthOptionsProps) {
+export function AuthOptions({ mode, onSuccess, onBeforeAuth, onUsernamePress }: AuthOptionsProps) {
   const copy = COPY[mode];
   const { busy, signIn } = useSocialAuth({
     errorTitle: copy.errorTitle,
@@ -40,7 +40,7 @@ export function AuthOptions({ mode, onSuccess, onBeforeAuth, onEmailPress }: Aut
     <View>
       <Text className="text-xl font-semibold text-[#1e2939] mb-2">{copy.title}</Text>
       <Text className="text-sm text-[#6a7282] mb-6">{copy.subtitle}</Text>
-      <SocialAuthButtons onSocial={signIn} onEmail={onEmailPress} busy={busy} />
+      <SocialAuthButtons onSocial={signIn} onUsername={onUsernamePress} busy={busy} />
     </View>
   );
 }

@@ -3,9 +3,9 @@ import { AppPressable as Pressable } from "../AppPressable";
 import { LinearGradient } from "expo-linear-gradient";
 import type { ComponentType } from "react";
 
-interface EmailFormProps {
-  email: string;
-  onEmailChange: (text: string) => void;
+interface UsernameFormProps {
+  username: string;
+  onUsernameChange: (text: string) => void;
   password: string;
   onPasswordChange: (text: string) => void;
   onSubmit: () => void;
@@ -15,9 +15,9 @@ interface EmailFormProps {
   InputComponent?: ComponentType<TextInputProps>;
 }
 
-export function EmailForm({
-  email,
-  onEmailChange,
+export function UsernameForm({
+  username,
+  onUsernameChange,
   password,
   onPasswordChange,
   onSubmit,
@@ -25,18 +25,17 @@ export function EmailForm({
   busy,
   error,
   InputComponent = TextInput,
-}: EmailFormProps) {
+}: UsernameFormProps) {
   const Input = InputComponent;
   return (
     <View>
       <View style={{ gap: 12 }}>
         <Input
-          value={email}
-          onChangeText={onEmailChange}
-          placeholder="Email"
+          value={username}
+          onChangeText={onUsernameChange}
+          placeholder="Username"
           placeholderTextColor="#99a1af"
           className="border border-[#e5e7eb] rounded-3xl px-5 py-4 text-base text-[#1e2939]"
-          keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
         />

@@ -6,6 +6,8 @@ export interface AuthSessionUser {
   id?: string | null;
   name?: string | null;
   email?: string | null;
+  username?: string | null;
+  displayUsername?: string | null;
   image?: string | null;
   isAnonymous?: boolean | null;
 }

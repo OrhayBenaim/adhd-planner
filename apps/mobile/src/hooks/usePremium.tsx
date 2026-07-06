@@ -16,6 +16,7 @@ import { authClient } from "../lib/authClient";
 import { posthog } from "../lib/posthog";
 import { getDeviceId } from "../lib/deviceId";
 import { getSessionAnonymousState } from "../lib/sessionState";
+import { isInternalAuthEmail } from "../lib/authUsername";
 import { evaluateBackendPremium } from "../lib/subscriptionStatus";
 import { usePreferences } from "./usePreferences";
 
@@ -162,7 +163,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
           $posthogUserId: posthog.getDistinctId(),
         }),
       ];
-      if (user.email) {
+      if (user.email && !isInternalAuthEmail(user.email)) {
         attributeSyncs.push(Purchases.setEmail(user.email));
       }
       if (userName) {

@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 
 interface SocialAuthButtonsProps {
   onSocial: (provider: "google" | "apple") => void;
-  onEmail: () => void;
+  onUsername: () => void;
   busy: boolean;
   labelPrefix?: string;
   showShadow?: boolean;
@@ -12,7 +12,7 @@ interface SocialAuthButtonsProps {
 
 export function SocialAuthButtons({
   onSocial,
-  onEmail,
+  onUsername,
   busy,
   labelPrefix = "Continue with",
   showShadow = false,
@@ -68,7 +68,7 @@ export function SocialAuthButtons({
         </Pressable>
       )}
       <Pressable
-        onPress={onEmail}
+        onPress={onUsername}
         disabled={busy}
         className="flex-row items-center bg-white"
         style={{
@@ -82,9 +82,9 @@ export function SocialAuthButtons({
           ...shadowStyle,
         }}
       >
-        <Ionicons name="mail-outline" size={24} color="#6a7282" />
+        <Ionicons name="person-outline" size={24} color="#6a7282" />
         <Text className="text-base font-medium text-[#364153]">
-          {`${labelPrefix} Email`}
+          {`${labelPrefix} Username`}
         </Text>
       </Pressable>
     </View>

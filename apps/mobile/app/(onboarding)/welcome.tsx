@@ -7,10 +7,10 @@ import { MascotHeader } from "../../src/components/onboarding/MascotHeader";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { useNeedsOnboarding } from "../../src/hooks/usePreferences";
 import { AuthOptions } from "../../src/components/auth/AuthOptions";
-import { SignInWithEmail } from "../../src/components/auth/SignInWithEmail";
+import { SignInWithUsername } from "../../src/components/auth/SignInWithUsername";
 import { posthog } from "../../src/lib/posthog";
 
-type SubView = "welcome" | "signIn" | "signInEmail";
+type SubView = "welcome" | "signIn" | "signInUsername";
 
 export default function WelcomeStep() {
   const { state, updateField } = useOnboarding();
@@ -31,7 +31,7 @@ export default function WelcomeStep() {
     // Navigation handled by needsOnboarding effect once Convex syncs
   }, []);
 
-  if (subView === "signInEmail") {
+  if (subView === "signInUsername") {
     return (
       <OnboardingLayout step={1} showFooter={false}>
         <KeyboardAvoidingView
@@ -43,7 +43,7 @@ export default function WelcomeStep() {
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
           >
-            <SignInWithEmail
+            <SignInWithUsername
               onSuccess={handleSignInSuccess}
               title="Welcome back"
               subtitle="Sign in to your account"
@@ -70,7 +70,7 @@ export default function WelcomeStep() {
           <AuthOptions
             mode="signIn"
             onSuccess={handleSignInSuccess}
-            onEmailPress={() => setSubView("signInEmail")}
+            onUsernamePress={() => setSubView("signInUsername")}
           />
         </View>
         <View className="items-center pb-6">
