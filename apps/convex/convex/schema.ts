@@ -10,6 +10,8 @@ export default defineSchema({
     completed: v.boolean(),
     dueDate: v.string(),
     dueTime: v.string(),
+    sourceType: v.optional(v.literal("survey")),
+    sourceId: v.optional(v.string()),
   })
     .index("by_user", ["userId"])
     .index("by_user_completed", ["userId", "completed"]),
@@ -124,4 +126,46 @@ export default defineSchema({
     selectedTaskId: v.optional(v.id("tasks")),
     updatedAt: v.number(),
   }).index("by_user", ["userId"]),
+
+  surveyCampaigns: defineTable({
+    posthogSurveyId: v.string(),
+    title: v.string(),
+    description: v.string(),
+    rewardType: v.union(
+      v.literal("points"),
+      v.literal("pro_days"),
+      v.literal("ai_credits"),
+    ),
+    rewardAmount: v.number(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("active"),
+      v.literal("closed"),
+    ),
+    pushTitle: v.optional(v.string()),
+    pushBody: v.optional(v.string()),
+    activatedAt: v.optional(v.number()),
+  })
+    .index("by_posthog_survey", ["posthogSurveyId"])
+    .index("by_status", ["status"]),
+
+  surveyCompletions: defineTable({
+    userId: v.string(),
+    campaignId: v.id("surveyCampaigns"),
+    completedAt: v.number(),
+    rewardType: v.union(
+      v.literal("points"),
+      v.literal("pro_days"),
+      v.literal("ai_credits"),
+    ),
+    rewardAmount: v.number(),
+    rewardStatus: v.union(
+      v.literal("granted"),
+      v.literal("pending_rc"),
+      v.literal("failed"),
+    ),
+    posthogSubmissionId: v.optional(v.string()),
+  })
+    .index("by_user_campaign", ["userId", "campaignId"])
+    .index("by_user", ["userId"]),
 });

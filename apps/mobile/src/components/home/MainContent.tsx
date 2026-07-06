@@ -14,6 +14,8 @@ import { Ionicons } from "@expo/vector-icons";
 
 import { useQuery } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
+import type { Id } from "@adhd-planner/convex/convex/_generated/dataModel";
+import type { Task } from "@adhd-planner/types";
 
 import { XPBar } from "../XPBar";
 import { MoodSlider } from "../MoodSlider";
@@ -22,10 +24,13 @@ import { BottomNav } from "../BottomNav";
 import { PointsToast } from "../PointsToast";
 import { StreakBadge } from "../StreakBadge";
 import { AiCeilingBanner } from "../AiCeilingBanner";
+import { SurveyInviteOverlay } from "../surveys/SurveyInviteOverlay";
 import { useHome } from "./HomeProvider";
 import { useSheetNav } from "./SheetNavProvider";
 import { useTaskCreationFlow } from "./TaskCreationFlowProvider";
 import { usePremium } from "../../hooks/usePremium";
+import { useSurveyCampaign } from "../../hooks/useSurveyCampaign";
+import { useNotificationRouting } from "../../hooks/useNotificationRouting";
 import { posthog } from "../../lib/posthog";
 import { getLocalToday, getLocalDateStringDaysAhead } from "../../lib/dateTimeConvert";
 import { useHomeTour, HomeTourIntro, HomeTourOverlays } from "./HomeTour";
@@ -62,6 +67,25 @@ export function MainContent() {
   const ceilingStatus = useQuery(api.ai.getCeilingStatus);
   const creditBalance = useQuery(api.credits.getMyBalance);
   const aiPickDaysAhead = useQuery(api.appConfig.getPublic, { key: "aiPickDaysAhead" }) ?? 7;
+  const [forcedSurveyCampaignId, setForcedSurveyCampaignId] =
+    useState<Id<"surveyCampaigns"> | null>(null);
+  const [surveyRewardToast, setSurveyRewardToast] = useState<string | null>(null);
+
+  const survey = useSurveyCampaign({
+    forcedCampaignId: forcedSurveyCampaignId,
+    onRewardGranted: (message) => setSurveyRewardToast(message),
+  });
+
+  useNotificationRouting(useCallback((campaignId) => {
+    setForcedSurveyCampaignId(campaignId);
+  }, []));
+
+  const selectedSurveyCampaign = useQuery(
+    api.surveys.getCampaign,
+    selectedTask?.sourceType === "survey" && selectedTask.sourceId
+      ? { campaignId: selectedTask.sourceId as Id<"surveyCampaigns"> }
+      : "skip",
+  );
 
   // Debounce: only show banner if tasks have had difficulty === -1 for >5 minutes
   const hasUnscoredTasks = useMemo(
@@ -85,6 +109,12 @@ export function MainContent() {
       if (unscoredTimerRef.current) clearTimeout(unscoredTimerRef.current);
     };
   }, [hasUnscoredTasks]);
+
+  useEffect(() => {
+    if (!surveyRewardToast) return;
+    const timer = setTimeout(() => setSurveyRewardToast(null), 3500);
+    return () => clearTimeout(timer);
+  }, [surveyRewardToast]);
 
   const showCeilingBanner = ceilingStatus?.atCeiling === true || showUnscoredBanner;
 
@@ -165,6 +195,17 @@ export function MainContent() {
       notifyTaskCompleted();
     },
     [notifyTaskCompleted, completeTask, setSelectedTask, showToast],
+  );
+
+  const handleSurveyTaskPress = useCallback(
+    (task: Task) => {
+      const posthogSurveyId =
+        selectedSurveyCampaign?.posthogSurveyId ??
+        survey.campaign?.posthogSurveyId;
+      if (!task.sourceId || !posthogSurveyId) return;
+      survey.handleSurveyTaskPress(task.sourceId, posthogSurveyId);
+    },
+    [selectedSurveyCampaign, survey],
   );
 
   useEffect(() => {
@@ -284,6 +325,7 @@ export function MainContent() {
           <TaskCard
             task={selectedTask}
             onComplete={handleComplete}
+            onSurveyPress={handleSurveyTaskPress}
             onLater={() => handleTaskLater(setSelectedTask)}
             hideLater={isCompleteTaskStep}
           />
@@ -291,6 +333,25 @@ export function MainContent() {
       </ScrollView>
 
       <HomeTourOverlays tourLayouts={tourLayouts} />
+
+      {survey.overlayVisible && survey.campaign && (
+        <SurveyInviteOverlay
+          campaign={survey.campaign}
+          onStart={survey.handleStart}
+          onDefer={survey.handleDefer}
+          onDismiss={survey.handleDismissOverlay}
+        />
+      )}
+
+      {surveyRewardToast ? (
+        <View className="absolute top-24 left-0 right-0 items-center z-[950] px-6">
+          <View className="bg-white rounded-full px-5 py-3 shadow-sm border border-[#f3f4f6]">
+            <Text className="text-sm font-medium text-[#0A0A0A]">
+              {surveyRewardToast}
+            </Text>
+          </View>
+        </View>
+      ) : null}
 
       {/* Bottom nav */}
       <BottomNav

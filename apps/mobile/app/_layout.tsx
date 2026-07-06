@@ -8,7 +8,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ConvexReactClient } from "convex/react";
 import { authClient } from "../src/lib/authClient";
 import * as Sentry from "@sentry/react-native";
-import { PostHogProvider } from "posthog-react-native";
+import { PostHogProvider, PostHogSurveyProvider } from "posthog-react-native";
 import { posthog } from "../src/lib/posthog";
 import { PremiumProvider } from "../src/hooks/usePremium";
 import { LoadingScreen } from "../src/components/LoadingScreen";
@@ -39,22 +39,24 @@ function RootLayout() {
       <ConvexBetterAuthProvider  client={convex} authClient={authClient} >
         <PremiumProvider>
           <PostHogProvider client={posthog}>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen
-                name="paywall"
-                options={{
-                  presentation: "fullScreenModal",
-                  gestureEnabled: false,
-                }}
-              />
-              <Stack.Screen
-                name="sign-in-gate"
-                options={{
-                  presentation: "fullScreenModal",
-                  gestureEnabled: false,
-                }}
-              />
-            </Stack>
+            <PostHogSurveyProvider client={posthog}>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen
+                  name="paywall"
+                  options={{
+                    presentation: "fullScreenModal",
+                    gestureEnabled: false,
+                  }}
+                />
+                <Stack.Screen
+                  name="sign-in-gate"
+                  options={{
+                    presentation: "fullScreenModal",
+                    gestureEnabled: false,
+                  }}
+                />
+              </Stack>
+            </PostHogSurveyProvider>
           </PostHogProvider>
         </PremiumProvider>
       </ConvexBetterAuthProvider >

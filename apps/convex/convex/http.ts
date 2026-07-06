@@ -3,6 +3,7 @@ import { httpAction } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { authComponent, createAuth } from "./auth";
 import { validateWebhookPayload } from "./lib/webhook";
+import { parseSurveyWebhookPayload } from "./lib/posthogWebhook";
 import { CREDIT_MULTIPLIERS } from "./lib/constants";
 import { sentryCaptureEvent } from "./lib/sentry";
 
@@ -65,6 +66,16 @@ http.route({
         productId: d.productId,
         periodType: d.periodType,
       });
+
+      if (
+        d.classification === "active" &&
+        (d.periodType === "PROMOTIONAL" ||
+          d.productId?.startsWith("rc_promo"))
+      ) {
+        await ctx.runMutation(internal.surveys.markProRewardGranted, {
+          userId: d.appUserId,
+        });
+      }
     }
 
     if (validated.kind === "credit") {
@@ -84,6 +95,52 @@ http.route({
         });
       }
     }
+
+    return new Response("OK", { status: 200 });
+  }),
+});
+
+http.route({
+  path: "/webhooks/posthog/survey",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const expectedToken = process.env.POSTHOG_WEBHOOK_SECRET;
+    if (!expectedToken) {
+      await sentryCaptureEvent(
+        "error",
+        "[Webhook] POSTHOG_WEBHOOK_SECRET is not configured",
+        {},
+      );
+      return new Response("Server misconfigured", { status: 500 });
+    }
+
+    const authHeader = request.headers.get("Authorization");
+    if (authHeader !== `Bearer ${expectedToken}`) {
+      await sentryCaptureEvent(
+        "warning",
+        "[Webhook] PostHog unauthorized request",
+        { ip: request.headers.get("x-forwarded-for") },
+      );
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response("Invalid JSON", { status: 400 });
+    }
+
+    const parsed = parseSurveyWebhookPayload(body);
+    if (!parsed) {
+      return new Response("Ignored", { status: 200 });
+    }
+
+    await ctx.runMutation(internal.surveys.processSurveyWebhook, {
+      userId: parsed.userId,
+      surveyId: parsed.surveyId,
+      submissionId: parsed.submissionId,
+    });
 
     return new Response("OK", { status: 200 });
   }),

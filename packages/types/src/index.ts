@@ -1,4 +1,6 @@
 // Domain types shared between apps
+export type SurveyRewardType = "points" | "pro_days" | "ai_credits";
+
 export interface Task {
   _id: string;
   userId: string;
@@ -8,7 +10,18 @@ export interface Task {
   completed: boolean;
   dueDate: string;
   dueTime: string;
+  sourceType?: "survey";
+  sourceId?: string;
   _creationTime: number;
+}
+
+export interface SurveyCampaign {
+  _id: string;
+  posthogSurveyId: string;
+  title: string;
+  description: string;
+  rewardType: SurveyRewardType;
+  rewardAmount: number;
 }
 
 export interface UserProgress {
@@ -26,6 +39,7 @@ export interface UserPreferences {
   strengths: string[];
   notificationsEnabled?: boolean;
   onboardingCompleted: boolean;
+  hasCompletedTour?: boolean;
   _creationTime: number;
 }
 
