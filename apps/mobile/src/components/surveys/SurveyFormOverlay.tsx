@@ -16,7 +16,10 @@ import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { useMutation } from "convex/react";
 import type { Survey } from "@posthog/core";
+import { api } from "@adhd-planner/convex/convex/_generated/api";
+import type { Id } from "@adhd-planner/convex/convex/_generated/dataModel";
 import type { SurveyCampaign } from "@adhd-planner/types";
 import { Mascot } from "../mascot/Mascot";
 import {
@@ -24,6 +27,7 @@ import {
   formatSurveyRewardCelebration,
 } from "../../lib/surveyRewards";
 import {
+  captureSurveyShown,
   loadSurveyDefinition,
   submitSurveyResponses,
   type SurveyResponseValue,
@@ -39,6 +43,7 @@ interface Props {
 
 export function SurveyFormOverlay({ campaign, onClose, onSubmitted }: Props) {
   const insets = useSafeAreaInsets();
+  const completeSurvey = useMutation(api.surveys.completeSurvey);
   const [survey, setSurvey] = useState<Survey | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -58,6 +63,7 @@ export function SurveyFormOverlay({ campaign, onClose, onSubmitted }: Props) {
           setLoadError("Survey is not available right now.");
           return;
         }
+        captureSurveyShown(definition);
         setSurvey(definition);
       })
       .catch(() => {
@@ -86,6 +92,13 @@ export function SurveyFormOverlay({ campaign, onClose, onSubmitted }: Props) {
       submittingRef.current = true;
       try {
         submitSurveyResponses(survey, finalResponses);
+        try {
+          await completeSurvey({
+            campaignId: campaign._id as Id<"surveyCampaigns">,
+          });
+        } catch {
+          // webhook backstop may still grant reward
+        }
         setThankYou(true);
         onSubmitted();
         setTimeout(onClose, 2200);
@@ -93,7 +106,7 @@ export function SurveyFormOverlay({ campaign, onClose, onSubmitted }: Props) {
         submittingRef.current = false;
       }
     },
-    [survey, onSubmitted, onClose],
+    [survey, campaign._id, completeSurvey, onSubmitted, onClose],
   );
 
   const handleRatingSelect = useCallback(

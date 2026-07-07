@@ -5,7 +5,9 @@ import {
   internalQuery,
   mutation,
   query,
+  type MutationCtx,
 } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
 import { grantCredits, grantPoints } from "./lib/rewards";
@@ -195,6 +197,83 @@ export const dismissDeferredTask = mutation({
   },
 });
 
+async function recordSurveyCompletion(
+  ctx: MutationCtx,
+  userId: string,
+  campaign: Doc<"surveyCampaigns">,
+  submissionId?: string,
+): Promise<void> {
+  const existing = await ctx.db
+    .query("surveyCompletions")
+    .withIndex("by_user_campaign", (q) =>
+      q.eq("userId", userId).eq("campaignId", campaign._id),
+    )
+    .first();
+
+  if (existing) return;
+
+  const completedAt = Date.now();
+
+  if (campaign.rewardType === "points") {
+    await grantPoints(ctx, userId, campaign.rewardAmount);
+  } else if (campaign.rewardType === "ai_credits") {
+    await grantCredits(ctx, userId, campaign.rewardAmount);
+  }
+
+  const rewardStatus =
+    campaign.rewardType === "pro_days" ? "pending_rc" : "granted";
+
+  await ctx.db.insert("surveyCompletions", {
+    userId,
+    campaignId: campaign._id,
+    completedAt,
+    rewardType: campaign.rewardType,
+    rewardAmount: campaign.rewardAmount,
+    rewardStatus,
+    posthogSubmissionId: submissionId,
+  });
+
+  if (campaign.rewardType === "pro_days") {
+    await ctx.scheduler.runAfter(0, internal.lib.revenueCat.grantPromotionalPro, {
+      userId,
+      days: campaign.rewardAmount,
+      campaignId: campaign._id,
+    });
+  }
+
+  const tasks = await ctx.db
+    .query("tasks")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .collect();
+
+  for (const task of tasks) {
+    if (
+      task.sourceType === "survey" &&
+      task.sourceId === campaign._id &&
+      !task.completed
+    ) {
+      await ctx.db.delete(task._id);
+    }
+  }
+}
+
+export const completeSurvey = mutation({
+  args: { campaignId: v.id("surveyCampaigns") },
+  returns: v.null(),
+  handler: async (ctx, { campaignId }) => {
+    const userId = await requireAuth(ctx);
+
+    const campaign = await ctx.db.get(campaignId);
+    if (!campaign || campaign.status !== "active") {
+      throw new ConvexError("Survey not available");
+    }
+
+    // ponytail: client asserts completion — same trust as PostHog capture; dedupe prevents double grants
+    await recordSurveyCompletion(ctx, userId, campaign);
+    return null;
+  },
+});
+
 export const processSurveyWebhook = internalMutation({
   args: {
     userId: v.string(),
@@ -212,73 +291,7 @@ export const processSurveyWebhook = internalMutation({
       return null;
     }
 
-    const existing = await ctx.db
-      .query("surveyCompletions")
-      .withIndex("by_user_campaign", (q) =>
-        q.eq("userId", userId).eq("campaignId", campaign._id),
-      )
-      .first();
-
-    if (existing) return null;
-
-    const completedAt = Date.now();
-
-    if (campaign.rewardType === "points") {
-      await grantPoints(ctx, userId, campaign.rewardAmount);
-      await ctx.db.insert("surveyCompletions", {
-        userId,
-        campaignId: campaign._id,
-        completedAt,
-        rewardType: campaign.rewardType,
-        rewardAmount: campaign.rewardAmount,
-        rewardStatus: "granted",
-        posthogSubmissionId: submissionId,
-      });
-    } else if (campaign.rewardType === "ai_credits") {
-      await grantCredits(ctx, userId, campaign.rewardAmount);
-      await ctx.db.insert("surveyCompletions", {
-        userId,
-        campaignId: campaign._id,
-        completedAt,
-        rewardType: campaign.rewardType,
-        rewardAmount: campaign.rewardAmount,
-        rewardStatus: "granted",
-        posthogSubmissionId: submissionId,
-      });
-    } else if (campaign.rewardType === "pro_days") {
-      await ctx.db.insert("surveyCompletions", {
-        userId,
-        campaignId: campaign._id,
-        completedAt,
-        rewardType: campaign.rewardType,
-        rewardAmount: campaign.rewardAmount,
-        rewardStatus: "pending_rc",
-        posthogSubmissionId: submissionId,
-      });
-
-      await ctx.scheduler.runAfter(0, internal.lib.revenueCat.grantPromotionalPro, {
-        userId,
-        days: campaign.rewardAmount,
-        campaignId: campaign._id,
-      });
-    }
-
-    // Remove deferred survey task if present
-    const tasks = await ctx.db
-      .query("tasks")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .collect();
-
-    for (const task of tasks) {
-      if (
-        task.sourceType === "survey" &&
-        task.sourceId === campaign._id &&
-        !task.completed
-      ) {
-        await ctx.db.delete(task._id);
-      }
-    }
-
+    await recordSurveyCompletion(ctx, userId, campaign, submissionId);
     return null;
   },
 });
