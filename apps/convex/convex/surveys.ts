@@ -476,3 +476,15 @@ export const seedTestCampaign = internalMutation({
     return campaignId;
   },
 });
+
+/** ponytail: admin helper — close a stale campaign row by id */
+export const closeCampaign = internalMutation({
+  args: { campaignId: v.id("surveyCampaigns") },
+  returns: v.null(),
+  handler: async (ctx, { campaignId }) => {
+    const campaign = await ctx.db.get(campaignId);
+    if (!campaign || campaign.status === "closed") return null;
+    await ctx.db.patch(campaignId, { status: "closed" });
+    return null;
+  },
+});

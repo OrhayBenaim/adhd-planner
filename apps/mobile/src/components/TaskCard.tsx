@@ -17,7 +17,6 @@ interface Props {
   task: Task | null;
   onComplete: (task: Task) => void;
   onLater: () => void;
-  onSurveyPress?: (task: Task) => void;
   hideLater?: boolean;
 }
 
@@ -25,12 +24,10 @@ export function TaskCard({
   task,
   onComplete,
   onLater,
-  onSurveyPress,
   hideLater,
 }: Props) {
   const completeScale = useSharedValue(1);
   const laterScale = useSharedValue(1);
-  const isSurveyTask = task?.sourceType === "survey";
 
   const handlePrimaryPress = () => {
     completeScale.value = withSequence(
@@ -39,11 +36,7 @@ export function TaskCard({
     );
     setTimeout(() => {
       if (!task) return;
-      if (isSurveyTask) {
-        onSurveyPress?.(task);
-      } else {
-        onComplete(task);
-      }
+      onComplete(task);
     }, 200);
   };
 
@@ -75,25 +68,14 @@ export function TaskCard({
       className="bg-white border border-[#f3f4f6] rounded-3xl p-6"
       style={{ boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)" }}
     >
-      {isSurveyTask ? (
-        <View className="flex-row items-center gap-2 mb-2">
-          <Ionicons name="clipboard-outline" size={16} color="#6a7282" />
-          <Text className="text-xs font-medium text-[#6a7282] uppercase tracking-wide">
-            Survey
-          </Text>
-        </View>
-      ) : null}
-
       <Text className="text-lg font-medium text-[#1e2939] mb-1">{task.title}</Text>
       {task.description ? (
         <Text className="text-sm text-[#4a5565] mb-3">{task.description}</Text>
       ) : null}
 
-      {!isSurveyTask ? (
-        <Text className="text-xs text-[#6a7282] mb-4">
-          {getDifficultyLabel(task.difficulty)}
-        </Text>
-      ) : null}
+      <Text className="text-xs text-[#6a7282] mb-4">
+        {getDifficultyLabel(task.difficulty)}
+      </Text>
 
       <View className="flex-row gap-3">
         <Animated.View style={[completeBtnStyle, { flex: 1 }]}>
@@ -101,18 +83,12 @@ export function TaskCard({
             onPress={handlePrimaryPress}
             className="bg-[#a2d2ff] rounded-3xl py-3 items-center flex-row justify-center gap-2"
           >
-            <Ionicons
-              name={isSurveyTask ? "create-outline" : "checkmark"}
-              size={18}
-              color="#0a0a0a"
-            />
-            <Text className="text-base font-medium text-[#0a0a0a]">
-              {isSurveyTask ? "Take survey" : " Complete"}
-            </Text>
+            <Ionicons name="checkmark" size={18} color="#0a0a0a" />
+            <Text className="text-base font-medium text-[#0a0a0a]"> Complete</Text>
           </Pressable>
         </Animated.View>
 
-        {!hideLater && !isSurveyTask && (
+        {!hideLater && (
           <Animated.View style={laterBtnStyle}>
             <Pressable
               onPress={onLater}
