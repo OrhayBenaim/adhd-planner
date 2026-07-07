@@ -3,78 +3,109 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import type { Id } from "@adhd-planner/convex/convex/_generated/dataModel";
 import type { SurveyCampaign } from "@adhd-planner/types";
-import { posthog } from "../lib/posthog";
 import { formatSurveyRewardCelebration } from "../lib/surveyRewards";
+import { posthog } from "../lib/posthog";
 
 interface UseSurveyCampaignOptions {
   onRewardGranted?: (message: string) => void;
   forcedCampaignId?: Id<"surveyCampaigns"> | null;
+  /** Clears push-notification force flag when invite is dismissed or deferred */
+  onInviteHandled?: () => void;
 }
 
 export function useSurveyCampaign({
   onRewardGranted,
   forcedCampaignId = null,
+  onInviteHandled,
 }: UseSurveyCampaignOptions = {}) {
   const pendingCampaign = useQuery(api.surveys.getPendingCampaign);
-  const deferAsTask = useMutation(api.surveys.deferAsTask);
   const dismissDeferredTask = useMutation(api.surveys.dismissDeferredTask);
 
   const [dismissedCampaignId, setDismissedCampaignId] =
     useState<Id<"surveyCampaigns"> | null>(null);
+  const [remindLaterCampaignId, setRemindLaterCampaignId] =
+    useState<Id<"surveyCampaigns"> | null>(null);
+  const [formCampaign, setFormCampaign] = useState<SurveyCampaign | null>(null);
   const [activeCampaignId, setActiveCampaignId] =
     useState<Id<"surveyCampaigns"> | null>(null);
   const celebratedRef = useRef<string | null>(null);
 
   const campaign: SurveyCampaign | null | undefined = pendingCampaign;
 
-  const overlayVisible =
-    !!campaign &&
-    !activeCampaignId &&
-    (forcedCampaignId
-      ? campaign._id === forcedCampaignId
-      : dismissedCampaignId !== campaign._id);
-
   const rewardStatus = useQuery(
     api.surveys.getRewardStatus,
     activeCampaignId ? { campaignId: activeCampaignId } : "skip",
   );
 
-  const openSurvey = useCallback((c: SurveyCampaign) => {
-    setActiveCampaignId(c._id as Id<"surveyCampaigns">);
-    posthog.capture("survey_campaign_opened", {
-      campaign_id: c._id,
-      survey_id: c.posthogSurveyId,
-    });
-    posthog.capture("survey_invite_started", { campaign_id: c._id });
+  const grantedCampaignId =
+    rewardStatus?.rewardStatus === "granted" ? rewardStatus.campaignId : null;
+
+  const overlayVisible =
+    !!campaign &&
+    !formCampaign &&
+    dismissedCampaignId !== campaign._id &&
+    remindLaterCampaignId !== campaign._id &&
+    grantedCampaignId !== campaign._id &&
+    (!forcedCampaignId || forcedCampaignId === campaign._id);
+
+  const reminderVisible =
+    !!campaign &&
+    !formCampaign &&
+    remindLaterCampaignId === campaign._id &&
+    dismissedCampaignId !== campaign._id &&
+    grantedCampaignId !== campaign._id;
+
+  const formVisible = formCampaign !== null;
+
+  const dismissInvite = useCallback(
+    (campaignId: Id<"surveyCampaigns">) => {
+      setDismissedCampaignId(campaignId);
+      onInviteHandled?.();
+    },
+    [onInviteHandled],
+  );
+
+  const openSurveyForm = useCallback(
+    (c: SurveyCampaign) => {
+      dismissInvite(c._id as Id<"surveyCampaigns">);
+      setRemindLaterCampaignId(null);
+      setActiveCampaignId(c._id as Id<"surveyCampaigns">);
+      setFormCampaign(c);
+      posthog.capture("survey_invite_started", { campaign_id: c._id });
+    },
+    [dismissInvite],
+  );
+
+  const closeSurveyForm = useCallback(() => {
+    setFormCampaign(null);
   }, []);
 
   const handleStart = useCallback(() => {
     if (!campaign) return;
-    openSurvey(campaign);
-  }, [campaign, openSurvey]);
+    openSurveyForm(campaign);
+  }, [campaign, openSurveyForm]);
 
-  const handleDefer = useCallback(async () => {
+  const handleDefer = useCallback(() => {
     if (!campaign) return;
     posthog.capture("survey_invite_deferred", { campaign_id: campaign._id });
-    await deferAsTask({ campaignId: campaign._id as Id<"surveyCampaigns"> });
-    setDismissedCampaignId(campaign._id as Id<"surveyCampaigns">);
-  }, [campaign, deferAsTask]);
+    setRemindLaterCampaignId(campaign._id as Id<"surveyCampaigns">);
+    dismissInvite(campaign._id as Id<"surveyCampaigns">);
+  }, [campaign, dismissInvite]);
 
   const handleDismissOverlay = useCallback(() => {
     if (!campaign) return;
-    setDismissedCampaignId(campaign._id as Id<"surveyCampaigns">);
-  }, [campaign]);
+    dismissInvite(campaign._id as Id<"surveyCampaigns">);
+  }, [campaign, dismissInvite]);
 
-  const handleSurveyTaskPress = useCallback(
-    (taskCampaignId: string, posthogSurveyId: string) => {
-      setActiveCampaignId(taskCampaignId as Id<"surveyCampaigns">);
-      posthog.capture("survey_campaign_opened", {
-        campaign_id: taskCampaignId,
-        survey_id: posthogSurveyId,
-      });
-    },
-    [],
-  );
+  const handleDismissReminder = useCallback(() => {
+    if (!campaign) return;
+    dismissInvite(campaign._id as Id<"surveyCampaigns">);
+    setRemindLaterCampaignId(null);
+  }, [campaign, dismissInvite]);
+
+  const handleFormSubmitted = useCallback(() => {
+    // activeCampaignId already set when form opened — reward query stays subscribed
+  }, []);
 
   useEffect(() => {
     if (!rewardStatus || rewardStatus.rewardStatus !== "granted") return;
@@ -82,11 +113,12 @@ export function useSurveyCampaign({
     if (celebratedRef.current === key) return;
     celebratedRef.current = key;
 
-    const message = formatSurveyRewardCelebration(
-      rewardStatus.rewardType,
-      rewardStatus.rewardAmount,
+    onRewardGranted?.(
+      formatSurveyRewardCelebration(
+        rewardStatus.rewardType,
+        rewardStatus.rewardAmount,
+      ),
     );
-    onRewardGranted?.(message);
 
     void dismissDeferredTask({ campaignId: rewardStatus.campaignId }).catch(
       () => undefined,
@@ -96,10 +128,15 @@ export function useSurveyCampaign({
   return {
     campaign,
     overlayVisible,
+    reminderVisible,
+    formVisible,
+    formCampaign,
     handleStart,
     handleDefer,
     handleDismissOverlay,
-    handleSurveyTaskPress,
-    openSurvey,
+    handleDismissReminder,
+    openSurveyForm,
+    closeSurveyForm,
+    handleFormSubmitted,
   };
 }

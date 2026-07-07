@@ -15,7 +15,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import type { Id } from "@adhd-planner/convex/convex/_generated/dataModel";
-import type { Task } from "@adhd-planner/types";
 
 import { XPBar } from "../XPBar";
 import { MoodSlider } from "../MoodSlider";
@@ -25,6 +24,8 @@ import { PointsToast } from "../PointsToast";
 import { StreakBadge } from "../StreakBadge";
 import { AiCeilingBanner } from "../AiCeilingBanner";
 import { SurveyInviteOverlay } from "../surveys/SurveyInviteOverlay";
+import { SurveyFormOverlay } from "../surveys/SurveyFormOverlay";
+import { SurveyReminderBanner } from "../surveys/SurveyReminderBanner";
 import { useHome } from "./HomeProvider";
 import { useSheetNav } from "./SheetNavProvider";
 import { useTaskCreationFlow } from "./TaskCreationFlowProvider";
@@ -74,18 +75,12 @@ export function MainContent() {
   const survey = useSurveyCampaign({
     forcedCampaignId: forcedSurveyCampaignId,
     onRewardGranted: (message) => setSurveyRewardToast(message),
+    onInviteHandled: () => setForcedSurveyCampaignId(null),
   });
 
   useNotificationRouting(useCallback((campaignId) => {
     setForcedSurveyCampaignId(campaignId);
   }, []));
-
-  const selectedSurveyCampaign = useQuery(
-    api.surveys.getCampaign,
-    selectedTask?.sourceType === "survey" && selectedTask.sourceId
-      ? { campaignId: selectedTask.sourceId as Id<"surveyCampaigns"> }
-      : "skip",
-  );
 
   // Debounce: only show banner if tasks have had difficulty === -1 for >5 minutes
   const hasUnscoredTasks = useMemo(
@@ -195,17 +190,6 @@ export function MainContent() {
       notifyTaskCompleted();
     },
     [notifyTaskCompleted, completeTask, setSelectedTask, showToast],
-  );
-
-  const handleSurveyTaskPress = useCallback(
-    (task: Task) => {
-      const posthogSurveyId =
-        selectedSurveyCampaign?.posthogSurveyId ??
-        survey.campaign?.posthogSurveyId;
-      if (!task.sourceId || !posthogSurveyId) return;
-      survey.handleSurveyTaskPress(task.sourceId, posthogSurveyId);
-    },
-    [selectedSurveyCampaign, survey],
   );
 
   useEffect(() => {
@@ -320,12 +304,21 @@ export function MainContent() {
 
         <HomeTourIntro />
 
+        {survey.reminderVisible && survey.campaign && (
+          <View className="px-6">
+            <SurveyReminderBanner
+              campaign={survey.campaign}
+              onTakeSurvey={survey.handleStart}
+              onDismiss={survey.handleDismissReminder}
+            />
+          </View>
+        )}
+
         {/* Task card */}
         <View ref={tourRefs.taskCardRef} className="px-6">
           <TaskCard
             task={selectedTask}
             onComplete={handleComplete}
-            onSurveyPress={handleSurveyTaskPress}
             onLater={() => handleTaskLater(setSelectedTask)}
             hideLater={isCompleteTaskStep}
           />
@@ -340,6 +333,14 @@ export function MainContent() {
           onStart={survey.handleStart}
           onDefer={survey.handleDefer}
           onDismiss={survey.handleDismissOverlay}
+        />
+      )}
+
+      {survey.formVisible && survey.formCampaign && (
+        <SurveyFormOverlay
+          campaign={survey.formCampaign}
+          onClose={survey.closeSurveyForm}
+          onSubmitted={survey.handleFormSubmitted}
         />
       )}
 
