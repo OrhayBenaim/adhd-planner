@@ -11,12 +11,14 @@ export async function loadSurveyDefinition(
   return surveys.find((s) => s.id === posthogSurveyId) ?? null;
 }
 
+export function captureSurveyShown(survey: Survey): void {
+  posthog.capture("survey shown", { $survey_id: survey.id });
+}
+
 export function submitSurveyResponses(
   survey: Survey,
   responses: Record<string, SurveyResponseValue>,
 ): void {
-  posthog.capture("survey shown", { $survey_id: survey.id });
-
   const responseProps = Object.fromEntries(
     Object.entries(responses).map(([questionId, value]) => [
       `$survey_response_${questionId}`,
@@ -33,4 +35,6 @@ export function submitSurveyResponses(
     })),
     ...responseProps,
   });
+
+  void posthog.flush().catch(() => undefined);
 }
