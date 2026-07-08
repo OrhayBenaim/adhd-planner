@@ -13,6 +13,7 @@ const POSES = {
   wave: require("../../../assets/mascot/dog-wave.png"),
   running: require("../../../assets/mascot/dog-running.png"),
   celebrate: require("../../../assets/mascot/dog-celebrate.png"),
+  star: require("../../../assets/mascot/dog-star.png"),
 } as const;
 
 export type MascotPose = keyof typeof POSES;

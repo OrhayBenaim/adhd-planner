@@ -26,11 +26,14 @@ import { AiCeilingBanner } from "../AiCeilingBanner";
 import { SurveyInviteOverlay } from "../surveys/SurveyInviteOverlay";
 import { SurveyFormOverlay } from "../surveys/SurveyFormOverlay";
 import { SurveyReminderBanner } from "../surveys/SurveyReminderBanner";
+import { RatingPromptBanner } from "../RatingPromptBanner";
 import { useHome } from "./HomeProvider";
 import { useSheetNav } from "./SheetNavProvider";
 import { useTaskCreationFlow } from "./TaskCreationFlowProvider";
 import { usePremium } from "../../hooks/usePremium";
 import { useSurveyCampaign } from "../../hooks/useSurveyCampaign";
+import { useRatingPrompt } from "../../hooks/useRatingPrompt";
+import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { useNotificationRouting } from "../../hooks/useNotificationRouting";
 import { posthog } from "../../lib/posthog";
 import { getLocalToday, getLocalDateStringDaysAhead } from "../../lib/dateTimeConvert";
@@ -52,6 +55,8 @@ export function MainContent() {
   const { openSheet } = useSheetNav();
   const flow = useTaskCreationFlow();
   const homeTour = useHomeTour();
+  const guidedTour = useGuidedTour();
+  const ratingPrompt = useRatingPrompt();
   const {
     refs: tourRefs,
     tourLayouts,
@@ -313,6 +318,17 @@ export function MainContent() {
             />
           </View>
         )}
+
+        {ratingPrompt.visible &&
+          !survey.reminderVisible &&
+          !guidedTour?.isActive && (
+            <View className="px-6">
+              <RatingPromptBanner
+                onRate={ratingPrompt.handleRate}
+                onDismiss={ratingPrompt.handleDismiss}
+              />
+            </View>
+          )}
 
         {/* Task card */}
         <View ref={tourRefs.taskCardRef} className="px-6">
