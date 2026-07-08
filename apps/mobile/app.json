@@ -3,7 +3,7 @@
     "name": "Lullio",
     "slug": "lullio",
     "scheme": "lullio",
-    "version": "1.0.0",
+    "version": "1.0.5",
     "orientation": "portrait",
     "icon": "./assets/ios-light.png",
     "userInterfaceStyle": "automatic",
