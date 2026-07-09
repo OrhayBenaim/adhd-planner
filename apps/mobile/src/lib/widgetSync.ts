@@ -1,30 +1,18 @@
-const WIDGET_KEY = "@widget_data";
-const PENDING_MOOD_KEY = "@pending_mood";
-const PENDING_TASK_COMPLETIONS_KEY = "@pending_task_completions";
+import {
+  formatWidgetData,
+  WIDGET_STORAGE_KEYS,
+  type WidgetData,
+} from "@adhd-planner/types";
 
-export interface WidgetData {
-  isPremium: boolean;
-  streak: number;
-  suggestedTask: string | null;
-  level: number;
-  points: number;
-  pointsToNextLevel: number;
-  moodLevel: number;
-  todayTaskCount: number;
-  todayCompletedCount: number;
-  tasks?: Array<{ id: string; title: string; completed: boolean }>;
-}
-
-export function formatWidgetData(data: WidgetData): string {
-  return JSON.stringify(data);
-}
+export type { WidgetData } from "@adhd-planner/types";
+export { formatWidgetData };
 
 export async function syncWidgetData(data: WidgetData) {
   const json = formatWidgetData(data);
 
   try {
     const { setWidgetData, reloadWidgets } = require("../../modules/widget-bridge");
-    setWidgetData(WIDGET_KEY, json);
+    setWidgetData(WIDGET_STORAGE_KEYS.widgetData, json);
     await reloadWidgets();
   } catch {
     // WidgetBridge not available (e.g. Expo Go) — no-op
@@ -39,9 +27,9 @@ export async function syncWidgetData(data: WidgetData) {
 export function readWidgetMoodUpdate(): number | null {
   try {
     const { getWidgetData, clearWidgetData } = require("../../modules/widget-bridge");
-    const value = getWidgetData(PENDING_MOOD_KEY);
+    const value = getWidgetData(WIDGET_STORAGE_KEYS.pendingMood);
     if (value == null) return null;
-    clearWidgetData(PENDING_MOOD_KEY);
+    clearWidgetData(WIDGET_STORAGE_KEYS.pendingMood);
     const level = parseInt(value, 10);
     return isNaN(level) ? null : level;
   } catch {
@@ -57,9 +45,9 @@ export function readWidgetMoodUpdate(): number | null {
 export function readWidgetTaskCompletions(): string[] {
   try {
     const { getWidgetData, clearWidgetData } = require("../../modules/widget-bridge");
-    const value = getWidgetData(PENDING_TASK_COMPLETIONS_KEY);
+    const value = getWidgetData(WIDGET_STORAGE_KEYS.pendingTaskCompletions);
     if (value == null) return [];
-    clearWidgetData(PENDING_TASK_COMPLETIONS_KEY);
+    clearWidgetData(WIDGET_STORAGE_KEYS.pendingTaskCompletions);
     const ids = JSON.parse(value);
     return Array.isArray(ids) ? ids : [];
   } catch {

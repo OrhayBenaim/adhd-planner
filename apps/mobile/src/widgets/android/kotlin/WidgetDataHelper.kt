@@ -22,39 +22,45 @@ data class WidgetData(
     val tasks: List<TaskItem>
 ) {
     companion object {
-        private const val PREFS_NAME = "widget_data"
-        private const val KEY = "@widget_data"
+        const val PREFS_NAME = "widget_data"
+        const val STORAGE_KEY = "@widget_data"
+        const val PENDING_MOOD_KEY = "@pending_mood"
+        const val PENDING_TASK_COMPLETIONS_KEY = "@pending_task_completions"
+
+        fun fromJson(json: String): WidgetData {
+            val obj = JSONObject(json)
+            val tasksArray = obj.optJSONArray("tasks")
+            val taskList = mutableListOf<TaskItem>()
+            if (tasksArray != null) {
+                for (i in 0 until tasksArray.length()) {
+                    val t = tasksArray.getJSONObject(i)
+                    taskList.add(TaskItem(
+                        id = t.getString("id"),
+                        title = t.getString("title"),
+                        completed = t.optBoolean("completed", false)
+                    ))
+                }
+            }
+            return WidgetData(
+                isPremium = obj.optBoolean("isPremium", false),
+                streak = obj.optInt("streak", 0),
+                suggestedTask = if (obj.isNull("suggestedTask")) null else obj.optString("suggestedTask"),
+                level = obj.optInt("level", 1),
+                points = obj.optInt("points", 0),
+                pointsToNextLevel = obj.optInt("pointsToNextLevel", 100),
+                moodLevel = obj.optInt("moodLevel", 50),
+                todayTaskCount = obj.optInt("todayTaskCount", 0),
+                todayCompletedCount = obj.optInt("todayCompletedCount", 0),
+                tasks = taskList
+            )
+        }
 
         fun load(context: Context): WidgetData {
             val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val json = prefs.getString(KEY, null) ?: return default()
+            val json = prefs.getString(STORAGE_KEY, null) ?: return default()
             return try {
-                val obj = JSONObject(json)
-                val tasksArray = obj.optJSONArray("tasks")
-                val taskList = mutableListOf<TaskItem>()
-                if (tasksArray != null) {
-                    for (i in 0 until tasksArray.length()) {
-                        val t = tasksArray.getJSONObject(i)
-                        taskList.add(TaskItem(
-                            id = t.getString("id"),
-                            title = t.getString("title"),
-                            completed = t.optBoolean("completed", false)
-                        ))
-                    }
-                }
-                WidgetData(
-                    isPremium = obj.optBoolean("isPremium", false),
-                    streak = obj.optInt("streak", 0),
-                    suggestedTask = if (obj.isNull("suggestedTask")) null else obj.optString("suggestedTask"),
-                    level = obj.optInt("level", 1),
-                    points = obj.optInt("points", 0),
-                    pointsToNextLevel = obj.optInt("pointsToNextLevel", 100),
-                    moodLevel = obj.optInt("moodLevel", 50),
-                    todayTaskCount = obj.optInt("todayTaskCount", 0),
-                    todayCompletedCount = obj.optInt("todayCompletedCount", 0),
-                    tasks = taskList
-                )
-            } catch (e: Exception) {
+                fromJson(json)
+            } catch (_: Exception) {
                 default()
             }
         }
