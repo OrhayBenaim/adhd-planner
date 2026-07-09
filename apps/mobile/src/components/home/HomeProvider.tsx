@@ -72,7 +72,7 @@ export function HomeProvider({ children }: { children: ReactNode }) {
     () => progressData ?? DEFAULT_PROGRESS,
     [progressData],
   );
-  const streak = useQuery(api.streaks.get);
+  const streak = useQuery(api.streaks.get, { nowMs: Date.now() });
   const { isPremium } = usePremium();
 
   const completeFromWidget = useCallback(

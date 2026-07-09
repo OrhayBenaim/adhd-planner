@@ -8,16 +8,19 @@ import {
   getTimeOfDayLabel,
   isWorkTime,
 } from "./lib/coachPrompt";
+import { callOpenRouterChat, tryParseJson } from "./lib/openRouter";
+import { today } from "./lib/calendar";
 
 const MAX_NOTIFICATIONS_PER_DAY = 3;
 
 export const countTodayNotifications = internalQuery({
   args: { userId: v.string(), today: v.string() },
-  handler: async (ctx, { userId, today }) => {
+  returns: v.number(),
+  handler: async (ctx, { userId, today: todayStr }) => {
     const logs = await ctx.db
       .query("coachNotificationLog")
       .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter((q) => q.eq(q.field("date"), today))
+      .filter((q) => q.eq(q.field("date"), todayStr))
       .collect();
     return logs.length;
   },
@@ -30,28 +33,16 @@ export const logNotification = internalMutation({
     type: v.string(),
     message: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.insert("coachNotificationLog", args);
-  },
-});
-
-export const getActiveSubscribers = internalQuery({
-  args: {},
-  handler: async (ctx) => {
-    const subs = await ctx.db
-      .query("subscriptions")
-      .filter((q) => q.eq(q.field("isActive"), true))
-      .collect();
-    return subs
-      .filter((s) => !s.expiresAt || new Date(s.expiresAt) > new Date())
-      .map((s) => s.userId);
+    return null;
   },
 });
 
 export const getUserCoachContext = internalQuery({
   args: { userId: v.string(), today: v.string() },
-  handler: async (ctx, { userId, today }) => {
-    // Settings — check notifications enabled
+  handler: async (ctx, { userId, today: todayStr }) => {
     const settings = await ctx.db
       .query("userSettings")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -61,25 +52,22 @@ export const getUserCoachContext = internalQuery({
       return null;
     }
 
-    // Preferences
     const prefs = await ctx.db
       .query("userPreferences")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
-    // Today's uncompleted tasks
     const tasks = await ctx.db
       .query("tasks")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .filter((q) =>
         q.and(
-          q.eq(q.field("dueDate"), today),
+          q.eq(q.field("dueDate"), todayStr),
           q.eq(q.field("completed"), false),
         ),
       )
       .collect();
 
-    // Streak
     const streak = await ctx.db
       .query("streaks")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -97,42 +85,36 @@ export const getUserCoachContext = internalQuery({
 });
 
 export const processAllUsers = internalAction({
+  args: {},
+  returns: v.null(),
   handler: async (ctx) => {
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) return;
-
-    const now = new Date();
-    const currentHour = now.getUTCHours();
-    const today = now.toISOString().slice(0, 10);
+    const nowMs = Date.now();
+    const currentHour = new Date(nowMs).getUTCHours();
+    const todayStr = today(nowMs);
 
     const userIds = await ctx.runQuery(
-      internal.coachNotifications.getActiveSubscribers,
-      {},
+      internal.subscriptions.listActiveSubscriberIds,
+      { nowMs },
     );
 
     for (const userId of userIds) {
       try {
-        // Get user context
         const userCtx = await ctx.runQuery(
           internal.coachNotifications.getUserCoachContext,
-          { userId, today },
+          { userId, today: todayStr },
         );
-        if (!userCtx) continue; // notifications disabled
+        if (!userCtx) continue;
 
-        // Check if current hour matches their preferred work times
         if (!isWorkTime(userCtx.bestWorkTimes, currentHour)) continue;
 
-        // Check daily notification limit
         const todayCount = await ctx.runQuery(
           internal.coachNotifications.countTodayNotifications,
-          { userId, today },
+          { userId, today: todayStr },
         );
         if (todayCount >= MAX_NOTIFICATIONS_PER_DAY) continue;
 
-        // Skip if no tasks to work on
         if (userCtx.uncompletedTaskCount === 0) continue;
 
-        // Generate message via LLM
         const timeOfDay = getTimeOfDayLabel(currentHour);
         const systemPrompt = buildCoachSystemPrompt();
         const userPrompt = buildCoachUserPrompt({
@@ -144,42 +126,24 @@ export const processAllUsers = internalAction({
           timeOfDay,
         });
 
-        const response = await fetch(
-          "https://openrouter.ai/api/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              messages: [
-                { role: "system", content: systemPrompt },
-                { role: "user", content: userPrompt },
-              ],
-            }),
-          },
-        );
-
-        if (!response.ok) continue;
-
-        const data = await response.json();
-        let raw = data.choices?.[0]?.message?.content?.trim() ?? "";
-        raw = raw
-          .replace(/^```(?:json)?\s*/i, "")
-          .replace(/\s*```$/, "")
-          .trim();
+        const llm = await callOpenRouterChat({ systemPrompt, userPrompt });
+        if (!llm.ok) continue;
 
         let message: string;
-        try {
-          message = JSON.parse(raw).message;
-        } catch {
-          message = raw.slice(0, 120);
+        const parsed = tryParseJson(llm.rawText);
+        if (
+          parsed &&
+          typeof parsed === "object" &&
+          "message" in parsed &&
+          typeof (parsed as { message: unknown }).message === "string"
+        ) {
+          message = (parsed as { message: string }).message;
+        } else {
+          message = llm.rawText.slice(0, 120);
         }
 
         if (!message) continue;
 
-        // Send push notification
         await ctx.runAction(internal.pushNotifications.send, {
           userId,
           title: "Lullio Coach",
@@ -187,10 +151,9 @@ export const processAllUsers = internalAction({
           data: { type: "coach" },
         });
 
-        // Log notification
         await ctx.runMutation(internal.coachNotifications.logNotification, {
           userId,
-          date: today,
+          date: todayStr,
           type: "coach",
           message,
         });
@@ -202,5 +165,7 @@ export const processAllUsers = internalAction({
         );
       }
     }
+
+    return null;
   },
 });

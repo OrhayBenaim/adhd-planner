@@ -70,7 +70,7 @@ export function MainContent() {
   } = homeTour;
 
   const { isPremium, showPaywall } = usePremium();
-  const ceilingStatus = useQuery(api.ai.getCeilingStatus);
+  const ceilingStatus = useQuery(api.ai.getCeilingStatus, { nowMs: Date.now() });
   const creditBalance = useQuery(api.credits.getMyBalance);
   const aiPickDaysAhead = useQuery(api.appConfig.getPublic, { key: "aiPickDaysAhead" }) ?? 7;
   const [forcedSurveyCampaignId, setForcedSurveyCampaignId] =

@@ -3,89 +3,58 @@ import { internalAction, internalMutation, internalQuery, query } from "./_gener
 import { internal } from "./_generated/api";
 import { sanitizeForPrompt, MAX_TITLE } from "./lib/validation";
 import { sentryCaptureEvent } from "./lib/sentry";
-import {
-  AI_RATE_LIMIT_WINDOW_MS,
-  AI_MAX_SCORES_PER_WINDOW,
-} from "./lib/constants";
 import { requireAuth } from "./lib/auth";
-
-const CEILING_DEFAULTS: Record<string, number> = {
-  freeTierCostCeiling: 1.0,
-  premiumTierCostCeiling: 10.0,
-};
+import { evaluateBudget } from "./lib/aiBudget";
+import { callOpenRouterChat, tryParseJson } from "./lib/openRouter";
 
 const TASK_SCORING_MODEL = "@preset/task-scoring";
 
+const ceilingStatusReturns = v.union(
+  v.object({ atCeiling: v.literal(false) }),
+  v.object({
+    atCeiling: v.literal(true),
+    reason: v.string(),
+  }),
+);
+
+const budgetReturns = v.object({
+  aiEnabled: v.boolean(),
+  rateLimited: v.boolean(),
+  allowed: v.boolean(),
+  atCeiling: v.boolean(),
+  creditsWillBeUsed: v.boolean(),
+  deviceId: v.union(v.string(), v.null()),
+  monthKey: v.string(),
+  monthlyCost: v.number(),
+  ceiling: v.number(),
+  creditBalance: v.number(),
+});
+
+export const checkBudget = internalQuery({
+  args: { userId: v.string(), nowMs: v.number() },
+  returns: budgetReturns,
+  handler: async (ctx, { userId, nowMs }) => {
+    return await evaluateBudget(ctx, { userId, nowMs });
+  },
+});
+
 export const getCeilingStatus = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { nowMs: v.number() },
+  returns: ceilingStatusReturns,
+  handler: async (ctx, { nowMs }) => {
     const userId = await requireAuth(ctx);
+    const budget = await evaluateBudget(ctx, { userId, nowMs });
 
-    // Check user AI settings
-    const settings = await ctx.db
-      .query("userSettings")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-    const adminEnabled = settings?.aiEnabled ?? true;
-    const userEnabled = settings?.userAiEnabled ?? true;
-    if (!adminEnabled || !userEnabled) {
-      return { atCeiling: false };
+    if (!budget.aiEnabled) {
+      return { atCeiling: false as const };
     }
 
-    // Check premium status
-    const sub = await ctx.db
-      .query("subscriptions")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-    const premium =
-      sub?.isActive === true &&
-      (!sub.expiresAt || new Date(sub.expiresAt) > new Date());
-
-    // Get ceiling
-    const ceilingKey = premium ? "premiumTierCostCeiling" : "freeTierCostCeiling";
-    const ceilingRow = await ctx.db
-      .query("appConfig")
-      .withIndex("by_key", (q) => q.eq("key", ceilingKey))
-      .first();
-    const ceiling = (ceilingRow?.value as number) ?? CEILING_DEFAULTS[ceilingKey] ?? 0;
-
-    // Get monthly cost (user + device)
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    const userCostRow = await ctx.db
-      .query("monthlyAiCosts")
-      .withIndex("by_user_month", (q) =>
-        q.eq("userId", userId).eq("month", currentMonth),
-      )
-      .first();
-    let monthlyCost = userCostRow?.totalCost ?? 0;
-
-    const deviceId = settings?.deviceId;
-    if (deviceId) {
-      const deviceRows = await ctx.db
-        .query("monthlyAiCosts")
-        .withIndex("by_device_month", (q) =>
-          q.eq("deviceId", deviceId as string).eq("month", currentMonth),
-        )
-        .collect();
-      const deviceCost = deviceRows.reduce((sum, r) => sum + r.totalCost, 0);
-      monthlyCost = Math.max(monthlyCost, deviceCost);
-    }
-
-    if (monthlyCost < ceiling) {
-      return { atCeiling: false };
-    }
-
-    // At ceiling — check credits
-    const creditRow = await ctx.db
-      .query("aiCredits")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-    if ((creditRow?.balance ?? 0) > 0) {
-      return { atCeiling: false };
+    if (!budget.atCeiling || budget.creditBalance > 0) {
+      return { atCeiling: false as const };
     }
 
     return {
-      atCeiling: true,
+      atCeiling: true as const,
       reason: "Monthly AI scoring limit reached",
     };
   },
@@ -96,8 +65,10 @@ export const updateTaskDifficulty = internalMutation({
     taskId: v.id("tasks"),
     difficulty: v.number(),
   },
+  returns: v.null(),
   handler: async (ctx, { taskId, difficulty }) => {
     await ctx.db.patch(taskId, { difficulty });
+    return null;
   },
 });
 
@@ -111,24 +82,28 @@ export const logScoringAudit = internalMutation({
     model: v.optional(v.string()),
     cost: v.optional(v.number()),
   },
+  returns: v.null(),
   handler: async (ctx, args) => {
     await ctx.db.insert("aiScoringAudit", args);
+    return null;
   },
 });
 
 export const getUserModelOverride = internalQuery({
   args: { userId: v.string() },
+  returns: v.union(v.string(), v.null()),
   handler: async (ctx, { userId }) => {
     const settings = await ctx.db
       .query("userSettings")
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
-    return settings?.modelOverride ?? undefined;
+    return settings?.modelOverride ?? null;
   },
 });
 
 export const getLifetimeCost = internalQuery({
   args: { userId: v.string() },
+  returns: v.number(),
   handler: async (ctx, { userId }) => {
     const rows = await ctx.db
       .query("monthlyAiCosts")
@@ -141,6 +116,7 @@ export const getLifetimeCost = internalQuery({
 /** @deprecated Use getLifetimeCost instead. Kept for backward compat until userCosts table cleanup. */
 export const accumulateUserCost = internalMutation({
   args: { userId: v.string(), cost: v.number() },
+  returns: v.number(),
   handler: async (ctx, { userId, cost }) => {
     const existing = await ctx.db
       .query("userCosts")
@@ -152,36 +128,10 @@ export const accumulateUserCost = internalMutation({
         totalCost: existing.totalCost + cost,
       });
       return existing.totalCost + cost;
-    } else {
-      await ctx.db.insert("userCosts", { userId, totalCost: cost });
-      return cost;
     }
-  },
-});
 
-export const getMonthlyAiCost = internalQuery({
-  args: { userId: v.string(), month: v.string() },
-  handler: async (ctx, { userId, month }) => {
-    const row = await ctx.db
-      .query("monthlyAiCosts")
-      .withIndex("by_user_month", (q) =>
-        q.eq("userId", userId).eq("month", month),
-      )
-      .first();
-    return row?.totalCost ?? 0;
-  },
-});
-
-export const getMonthlyAiCostByDevice = internalQuery({
-  args: { deviceId: v.string(), month: v.string() },
-  handler: async (ctx, { deviceId, month }) => {
-    const rows = await ctx.db
-      .query("monthlyAiCosts")
-      .withIndex("by_device_month", (q) =>
-        q.eq("deviceId", deviceId).eq("month", month),
-      )
-      .collect();
-    return rows.reduce((sum, r) => sum + r.totalCost, 0);
+    await ctx.db.insert("userCosts", { userId, totalCost: cost });
+    return cost;
   },
 });
 
@@ -192,6 +142,7 @@ export const accumulateMonthlyAiCost = internalMutation({
     cost: v.number(),
     deviceId: v.optional(v.string()),
   },
+  returns: v.number(),
   handler: async (ctx, { userId, month, cost, deviceId }) => {
     const existing = await ctx.db
       .query("monthlyAiCosts")
@@ -209,45 +160,15 @@ export const accumulateMonthlyAiCost = internalMutation({
       }
       await ctx.db.patch(existing._id, patch);
       return existing.totalCost + cost;
-    } else {
-      await ctx.db.insert("monthlyAiCosts", {
-        userId,
-        month,
-        totalCost: cost,
-        ...(deviceId ? { deviceId } : {}),
-      });
-      return cost;
     }
-  },
-});
 
-export const getUserAiEnabled = internalQuery({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
-    const settings = await ctx.db
-      .query("userSettings")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-    // Admin override takes priority, then user preference
-    const adminEnabled = settings?.aiEnabled ?? true;
-    const userEnabled = settings?.userAiEnabled ?? true;
-    return adminEnabled && userEnabled;
-  },
-});
-
-export const countRecentScores = internalQuery({
-  args: { userId: v.string(), since: v.number() },
-  handler: async (ctx, { userId, since }) => {
-    const recent = await ctx.db
-      .query("aiScoringAudit")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("userId"), userId),
-          q.gte(q.field("_creationTime"), since),
-        ),
-      )
-      .collect();
-    return recent.length;
+    await ctx.db.insert("monthlyAiCosts", {
+      userId,
+      month,
+      totalCost: cost,
+      ...(deviceId ? { deviceId } : {}),
+    });
+    return cost;
   },
 });
 
@@ -257,72 +178,21 @@ export const scoreTaskDifficulty = internalAction({
     userId: v.string(),
     title: v.string(),
   },
+  returns: v.null(),
   handler: async (ctx, { taskId, userId, title }) => {
-    // Check kill switch
-    const settings = await ctx.runQuery(internal.ai.getUserAiEnabled, { userId });
-    if (!settings) {
+    const nowMs = Date.now();
+    const budget = await ctx.runQuery(internal.ai.checkBudget, { userId, nowMs });
+
+    if (!budget.allowed) {
       await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
-      return;
-    }
-
-    // Per-user rate limit
-    const windowStart = Date.now() - AI_RATE_LIMIT_WINDOW_MS;
-    const recentCount = await ctx.runQuery(internal.ai.countRecentScores, {
-      userId,
-      since: windowStart,
-    });
-    if (recentCount >= AI_MAX_SCORES_PER_WINDOW) {
-      await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
-      await sentryCaptureEvent("warning", `[AI] rate limit exceeded for user ${userId}, task ${taskId} set to 0`, { userId, taskId });
-      return;
-    }
-
-    // Cost ceiling check — also check by deviceId to prevent anonymous bypass
-    const currentMonth = new Date().toISOString().slice(0, 7);
-    let monthlyCost = await ctx.runQuery(internal.ai.getMonthlyAiCost, {
-      userId,
-      month: currentMonth,
-    });
-
-    const deviceId = await ctx.runQuery(internal.settings.getDeviceId, {
-      userId,
-    });
-    if (deviceId) {
-      const deviceCost = await ctx.runQuery(
-        internal.ai.getMonthlyAiCostByDevice,
-        { deviceId, month: currentMonth },
-      );
-      monthlyCost = Math.max(monthlyCost, deviceCost);
-    }
-
-    const premium = await ctx.runQuery(internal.subscriptions.isPremium, {
-      userId,
-    });
-    const ceilingKey = premium
-      ? "premiumTierCostCeiling"
-      : "freeTierCostCeiling";
-    const ceiling = await ctx.runQuery(internal.appConfig.get, {
-      key: ceilingKey,
-    });
-
-    let usingCredits = false;
-    if (monthlyCost >= ceiling) {
-      const creditBalance = await ctx.runQuery(internal.credits.getBalance, {
-        userId,
-      });
-      if (creditBalance <= 0) {
-        // No credits, don't score — set difficulty to 0 (unscored)
-        await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
-        return;
+      if (budget.rateLimited) {
+        await sentryCaptureEvent(
+          "warning",
+          `[AI] rate limit exceeded for user ${userId}, task ${taskId} set to 0`,
+          { userId, taskId },
+        );
       }
-      usingCredits = true;
-    }
-
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) {
-      await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: 0 });
-      await sentryCaptureEvent("error", `[AI] OPENROUTER_API_KEY not set, task ${taskId} set to 0`, { taskId });
-      return;
+      return null;
     }
 
     const sanitizedTitle = sanitizeForPrompt(title).slice(0, MAX_TITLE);
@@ -350,54 +220,37 @@ export const scoreTaskDifficulty = internalAction({
         "Tasks aligned with their strengths should score lower.";
     }
 
-    const requestBody: Record<string, unknown> = {
-      model: TASK_SCORING_MODEL,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: sanitizedTitle },
-      ],
-    };
-
     try {
-      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
+      const llm = await callOpenRouterChat({
+        model: TASK_SCORING_MODEL,
+        systemPrompt,
+        userPrompt: sanitizedTitle,
       });
 
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          throw new Error(`OpenRouter HTTP ${response.status}: [response redacted]`);
-        }
-        throw new Error(`OpenRouter HTTP ${response.status}: ${(await response.text()).slice(0, 200)}`);
+      if (!llm.ok) {
+        throw new Error(llm.message);
       }
-
-      const data = await response.json();
-      let raw = data.choices?.[0]?.message?.content?.trim() ?? "";
-      const model = data.model ?? undefined;
-      const costFromResponse = data.usage?.total_cost ?? data.usage?.cost ?? 0;
-
-      // Strip markdown code blocks if present
-      raw = raw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
 
       let score: number;
       let reason: string;
 
-      try {
-        const parsed = JSON.parse(raw);
-        score = parsed.score;
-        reason = parsed.reason ?? "";
-      } catch {
-        // Fallback: try parsing as plain number
-        score = parseInt(raw, 10);
+      const parsed = tryParseJson(llm.rawText);
+      if (
+        parsed &&
+        typeof parsed === "object" &&
+        "score" in parsed &&
+        typeof (parsed as { score: unknown }).score === "number"
+      ) {
+        const obj = parsed as { score: number; reason?: string };
+        score = obj.score;
+        reason = obj.reason ?? "";
+      } else {
+        score = parseInt(llm.rawText, 10);
         reason = "";
       }
 
       if (isNaN(score) || score < 0 || score > 100) {
-        throw new Error(`Invalid score from AI: "${raw}"`);
+        throw new Error(`Invalid score from AI: "${llm.rawText}"`);
       }
 
       await ctx.runMutation(internal.ai.updateTaskDifficulty, { taskId, difficulty: score });
@@ -407,23 +260,23 @@ export const scoreTaskDifficulty = internalAction({
         taskTitle: title,
         score,
         reason: reason.slice(0, 1000),
-        model,
-        cost: costFromResponse,
+        model: llm.model,
+        cost: llm.cost,
       });
 
-      if (costFromResponse > 0) {
-        if (usingCredits) {
+      if (llm.cost > 0) {
+        if (budget.creditsWillBeUsed) {
           await ctx.runMutation(internal.credits.deductCredits, {
             userId,
-            amount: costFromResponse,
+            amount: llm.cost,
           });
         }
 
         await ctx.runMutation(internal.ai.accumulateMonthlyAiCost, {
           userId,
-          month: currentMonth,
-          cost: costFromResponse,
-          ...(deviceId ? { deviceId } : {}),
+          month: budget.monthKey,
+          cost: llm.cost,
+          ...(budget.deviceId ? { deviceId: budget.deviceId } : {}),
         });
 
         const newTotal = await ctx.runQuery(internal.ai.getLifetimeCost, {
@@ -448,8 +301,13 @@ export const scoreTaskDifficulty = internalAction({
         score: 0,
         reason: `Error: ${(error instanceof Error ? error.message : String(error)).slice(0, 1000)}`,
       });
-      await sentryCaptureEvent("error", `[AI] scoring failed for task ${taskId}: ${error instanceof Error ? error.message : String(error)}`, { taskId, userId });
+      await sentryCaptureEvent(
+        "error",
+        `[AI] scoring failed for task ${taskId}: ${error instanceof Error ? error.message : String(error)}`,
+        { taskId, userId },
+      );
     }
+
+    return null;
   },
 });
-

@@ -1,5 +1,6 @@
 import { v, ConvexError } from "convex/values";
 import { query, internalMutation } from "./_generated/server";
+import { weekStart } from "./lib/calendar";
 
 interface AchievementDef {
   id: string;
@@ -113,12 +114,7 @@ export const checkOnTaskComplete = internalMutation({
     }
 
     // Weekly warrior — count completions this week
-    const now = new Date();
-    const dayOfWeek = now.getUTCDay();
-    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-    const monday = new Date(now);
-    monday.setUTCDate(now.getUTCDate() + mondayOffset);
-    monday.setUTCHours(0, 0, 0, 0);
+    const mondayMs = new Date(weekStart(Date.now()) + "T00:00:00Z").getTime();
 
     const weekTasks = await ctx.db
       .query("tasks")
@@ -126,7 +122,7 @@ export const checkOnTaskComplete = internalMutation({
       .filter((q: any) =>
         q.and(
           q.eq(q.field("completed"), true),
-          q.gte(q.field("_creationTime"), monday.getTime()),
+          q.gte(q.field("_creationTime"), mondayMs),
         ),
       )
       .collect();
