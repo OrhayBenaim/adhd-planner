@@ -1,19 +1,23 @@
 import { v } from "convex/values";
 import { query, internalMutation } from "./_generated/server";
-import { DAY_MS } from "./lib/constants";
-import { requireAuth, checkPremium } from "./lib/auth";
+import { today, yesterday, weekStart, daysBetween } from "./lib/calendar";
+import { requireAuth } from "./lib/auth";
+import { checkPremium } from "./subscriptions";
 
-function getMonday(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00Z");
-  const day = d.getUTCDay();
-  const diff = d.getUTCDate() - day + (day === 0 ? -6 : 1);
-  d.setUTCDate(diff);
-  return d.toISOString().slice(0, 10);
-}
+const streakReadReturns = v.object({
+  currentStreak: v.number(),
+  longestStreak: v.number(),
+  lastCompletionDate: v.union(v.string(), v.null()),
+});
+
+const streakUpdateReturns = v.object({
+  currentStreak: v.number(),
+});
 
 export const get = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { nowMs: v.number() },
+  returns: streakReadReturns,
+  handler: async (ctx, { nowMs }) => {
     const userId = await requireAuth(ctx);
 
     const streak = await ctx.db
@@ -25,14 +29,12 @@ export const get = query({
       return { currentStreak: 0, longestStreak: 0, lastCompletionDate: null };
     }
 
-    const today = new Date().toISOString().slice(0, 10);
-    const yesterday = new Date(Date.now() - DAY_MS)
-      .toISOString()
-      .slice(0, 10);
+    const todayStr = today(nowMs);
+    const yesterdayStr = yesterday(nowMs);
 
     if (
-      streak.lastCompletionDate !== today &&
-      streak.lastCompletionDate !== yesterday
+      streak.lastCompletionDate !== todayStr &&
+      streak.lastCompletionDate !== yesterdayStr
     ) {
       return {
         currentStreak: 0,
@@ -50,15 +52,17 @@ export const get = query({
 });
 
 export const updateOnCompletion = internalMutation({
-  args: { userId: v.string() },
-  handler: async (ctx, { userId }) => {
-    const isPremium = await checkPremium(ctx, userId);
+  args: {
+    userId: v.string(),
+    nowMs: v.optional(v.number()),
+  },
+  returns: streakUpdateReturns,
+  handler: async (ctx, { userId, nowMs = Date.now() }) => {
+    const isPremium = await checkPremium(ctx, userId, nowMs);
 
-    const today = new Date().toISOString().slice(0, 10);
-    const yesterday = new Date(Date.now() - DAY_MS)
-      .toISOString()
-      .slice(0, 10);
-    const mondayOfThisWeek = getMonday(today);
+    const todayStr = today(nowMs);
+    const yesterdayStr = yesterday(nowMs);
+    const mondayOfThisWeek = weekStart(nowMs);
 
     const existing = await ctx.db
       .query("streaks")
@@ -70,43 +74,33 @@ export const updateOnCompletion = internalMutation({
         userId,
         currentStreak: 1,
         longestStreak: 1,
-        lastCompletionDate: today,
+        lastCompletionDate: todayStr,
         freezesUsedThisWeek: 0,
         weekStart: mondayOfThisWeek,
       });
       return { currentStreak: 1 };
     }
 
-    // Already completed today
-    if (existing.lastCompletionDate === today) {
+    if (existing.lastCompletionDate === todayStr) {
       return { currentStreak: existing.currentStreak };
     }
 
     let newStreak = existing.currentStreak;
     let freezesUsed = existing.freezesUsedThisWeek;
-    let weekStart = existing.weekStart;
+    let weekStartDate = existing.weekStart;
 
-    // Reset weekly freeze counter if new week
-    if (mondayOfThisWeek !== weekStart) {
+    if (mondayOfThisWeek !== weekStartDate) {
       freezesUsed = 0;
-      weekStart = mondayOfThisWeek;
+      weekStartDate = mondayOfThisWeek;
     }
 
-    if (existing.lastCompletionDate === yesterday) {
+    if (existing.lastCompletionDate === yesterdayStr) {
       newStreak += 1;
     } else {
-      // Missed at least one day
-      const missedDate = new Date(
-        existing.lastCompletionDate + "T00:00:00Z",
-      );
-      const todayDate = new Date(today + "T00:00:00Z");
       const daysMissed =
-        Math.floor(
-          (todayDate.getTime() - missedDate.getTime()) / DAY_MS,
-        ) - 1;
+        daysBetween(existing.lastCompletionDate, todayStr) - 1;
 
       if (isPremium && daysMissed === 1 && freezesUsed < 1) {
-        // Premium streak freeze — forgive one missed day per week
         newStreak += 1;
         freezesUsed += 1;
       } else {
@@ -119,9 +113,9 @@ export const updateOnCompletion = internalMutation({
     await ctx.db.patch(existing._id, {
       currentStreak: newStreak,
       longestStreak,
-      lastCompletionDate: today,
+      lastCompletionDate: todayStr,
       freezesUsedThisWeek: freezesUsed,
-      weekStart,
+      weekStart: weekStartDate,
     });
 
     return { currentStreak: newStreak };
