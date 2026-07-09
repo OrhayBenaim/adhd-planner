@@ -20,6 +20,8 @@ struct WidgetData: Codable {
 
     static let appGroup = "group.com.ottersprod.lullio.widgets"
     static let storageKey = "@widget_data"
+    static let pendingMoodKey = "@pending_mood"
+    static let pendingTaskCompletionsKey = "@pending_task_completions"
 
     static func load() -> WidgetData? {
         guard let defaults = UserDefaults(suiteName: appGroup),

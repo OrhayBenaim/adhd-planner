@@ -11,8 +11,6 @@ class TaskWidgetReceiver : BroadcastReceiver() {
     companion object {
         const val ACTION_COMPLETE_TASK = "com.ottersprod.lullio.COMPLETE_TASK"
         const val EXTRA_TASK_ID = "task_id"
-        private const val PREFS_NAME = "widget_data"
-        private const val PENDING_KEY = "@pending_task_completions"
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -20,9 +18,8 @@ class TaskWidgetReceiver : BroadcastReceiver() {
 
         val taskId = intent.getStringExtra(EXTRA_TASK_ID) ?: return
 
-        // Append to pending completions list
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val existing = prefs.getString(PENDING_KEY, null)
+        val prefs = context.getSharedPreferences(WidgetData.PREFS_NAME, Context.MODE_PRIVATE)
+        val existing = prefs.getString(WidgetData.PENDING_TASK_COMPLETIONS_KEY, null)
         val ids = try {
             if (existing != null) {
                 val arr = JSONArray(existing)
@@ -41,10 +38,9 @@ class TaskWidgetReceiver : BroadcastReceiver() {
         if (!ids.contains(taskId)) {
             ids.add(taskId)
         }
-        prefs.edit().putString(PENDING_KEY, JSONArray(ids).toString()).apply()
+        prefs.edit().putString(WidgetData.PENDING_TASK_COMPLETIONS_KEY, JSONArray(ids).toString()).apply()
 
-        // Mark task as completed in widget data
-        val json = prefs.getString("@widget_data", null)
+        val json = prefs.getString(WidgetData.STORAGE_KEY, null)
         if (json != null) {
             try {
                 val obj = org.json.JSONObject(json)
@@ -60,12 +56,11 @@ class TaskWidgetReceiver : BroadcastReceiver() {
                     obj.put("tasks", tasks)
                     val completedCount = obj.optInt("todayCompletedCount", 0)
                     obj.put("todayCompletedCount", completedCount + 1)
-                    prefs.edit().putString("@widget_data", obj.toString()).apply()
+                    prefs.edit().putString(WidgetData.STORAGE_KEY, obj.toString()).apply()
                 }
             } catch (_: Exception) {}
         }
 
-        // Refresh task widgets
         val appWidgetManager = AppWidgetManager.getInstance(context)
         val provider = ComponentName(context, TodayTaskWidgetProvider::class.java)
         val widgetIds = appWidgetManager.getAppWidgetIds(provider)
