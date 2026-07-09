@@ -19,6 +19,7 @@ const MULTI_TABLES = [
   "pushTokens",
   "achievements",
   "coachNotificationLog",
+  "surveyCompletions",
 ] as const;
 
 /**

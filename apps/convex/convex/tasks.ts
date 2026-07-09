@@ -12,6 +12,7 @@ import {
 import { normalizedLevenshtein } from "./lib/levenshtein";
 import { requireAuth } from "./lib/auth";
 import { clearSelectedTaskIfMatches } from "./userSessionState";
+import { awardPoints } from "./progress";
 
 const RESCORE_THRESHOLD = 0.3;
 
@@ -19,13 +20,15 @@ function calcPointsEarned(difficulty: number): number {
   return Math.round(difficulty / 10) + 1;
 }
 
-function nextLevelThreshold(level: number): number {
-  let threshold = 50;
-  for (let i = 1; i < level; i++) {
-    threshold = Math.round(threshold * 1.5);
-  }
-  return threshold;
-}
+const completeTaskReturns = v.object({
+  earned: v.number(),
+  leveledUp: v.boolean(),
+  progress: v.object({
+    level: v.number(),
+    points: v.number(),
+    pointsToNextLevel: v.number(),
+  }),
+});
 
 export const list = query({
   args: {},
@@ -64,7 +67,6 @@ export const create = mutation({
       completed: false,
     });
 
-    // Schedule AI difficulty scoring in the background
     await ctx.scheduler.runAfter(0, internal.ai.scoreTaskDifficulty, {
       taskId,
       userId,
@@ -77,6 +79,7 @@ export const create = mutation({
 
 export const completeTask = mutation({
   args: { id: v.id("tasks") },
+  returns: completeTaskReturns,
   handler: async (ctx, { id }) => {
     const userId = await requireAuth(ctx);
 
@@ -87,34 +90,9 @@ export const completeTask = mutation({
 
     await clearSelectedTaskIfMatches(ctx, userId, id);
 
-    // Award points — atomic with task completion
-    const existing = await ctx.db
-      .query("userProgress")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-
-    const current = existing ?? { level: 1, points: 0, pointsToNextLevel: 50 };
     const earned = calcPointsEarned(task.difficulty);
-    let { level, points, pointsToNextLevel } = current;
-    points += earned;
-    let leveledUp = false;
+    const { progress, leveledUp } = await awardPoints(ctx, userId, earned);
 
-    if (points >= pointsToNextLevel) {
-      level += 1;
-      points -= pointsToNextLevel;
-      pointsToNextLevel = nextLevelThreshold(level);
-      leveledUp = true;
-    }
-
-    const next = { level, points, pointsToNextLevel };
-
-    if (existing) {
-      await ctx.db.patch(existing._id, next);
-    } else {
-      await ctx.db.insert("userProgress", { userId, ...next });
-    }
-
-    // Update streak and check achievements in background
     await ctx.scheduler.runAfter(
       0,
       internal.streaks.updateOnCompletion,
@@ -123,10 +101,10 @@ export const completeTask = mutation({
     await ctx.scheduler.runAfter(
       0,
       internal.achievementDefs.checkOnTaskComplete,
-      { userId, taskDifficulty: task.difficulty, newLevel: next.level },
+      { userId, taskDifficulty: task.difficulty, newLevel: progress.level },
     );
 
-    return { earned, leveledUp, progress: next };
+    return { earned, leveledUp, progress };
   },
 });
 
@@ -165,7 +143,6 @@ export const update = mutation({
       dueTime: args.dueTime,
     });
 
-    // Re-score difficulty if title changed significantly
     const diff = normalizedLevenshtein(oldTitle, args.title);
     if (diff >= RESCORE_THRESHOLD) {
       await ctx.scheduler.runAfter(0, internal.ai.scoreTaskDifficulty, {
