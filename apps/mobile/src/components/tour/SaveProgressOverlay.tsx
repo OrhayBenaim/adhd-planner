@@ -5,24 +5,18 @@ import {
   Platform,
   KeyboardAvoidingView,
   ScrollView,
-  Alert,
 } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
-import * as Sentry from "@sentry/react-native";
 import { BlurView } from "expo-blur";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { Mascot } from "../mascot/Mascot";
-import { authClient } from "../../lib/authClient";
-import { getGoogleIdToken } from "../../lib/googleSignIn";
-import { SocialAuthButtons } from "../auth/SocialAuthButtons";
-import { SignUpWithUsername } from "../auth/SignUpWithUsername";
-import { SignInWithUsername } from "../auth/SignInWithUsername";
+import { AuthFlow } from "../auth/AuthFlow";
 import { usePreferences } from "../../hooks/usePreferences";
 import { posthog } from "../../lib/posthog";
 
-type SubView = "main" | "options" | "signUpUsername" | "signInUsername";
+type SubView = "main" | "options";
 
 interface Props {
   /** Called when the user links an account or chooses to do it later. */
@@ -32,7 +26,6 @@ interface Props {
 /** End-of-onboarding prompt to link the anonymous account. */
 export function SaveProgressOverlay({ onDone }: Props) {
   const [subView, setSubView] = useState<SubView>("main");
-  const [socialBusy, setSocialBusy] = useState(false);
   const preferences = usePreferences();
 
   const handleLinked = useCallback(() => {
@@ -44,54 +37,6 @@ export function SaveProgressOverlay({ onDone }: Props) {
     posthog.capture("onboarding_save_progress_skipped");
     onDone();
   }, [onDone]);
-
-  const handleSocialSignIn = useCallback(
-    async (provider: "google" | "apple") => {
-      setSocialBusy(true);
-      try {
-        if (provider === "google") {
-          const idToken = await getGoogleIdToken();
-          if (!idToken) {
-            Alert.alert("Sign-in failed", "Could not get Google credentials. Please try again.");
-            return;
-          }
-          const { error } = await authClient.signIn.social({
-            provider: "google",
-            idToken: { token: idToken },
-            callbackURL: "/",
-          });
-          if (error) {
-            Sentry.captureMessage(
-              `Social sign-in failed: ${error.message ?? "unknown"}`,
-              "error"
-            );
-            Alert.alert("Sign-in failed", error.message ?? "An unknown error occurred.");
-            return;
-          }
-        } else {
-          const { error } = await authClient.signIn.social({
-            provider,
-            callbackURL: "/",
-          });
-          if (error) {
-            Sentry.captureMessage(
-              `Social sign-in failed: ${error.message ?? "unknown"}`,
-              "error"
-            );
-            Alert.alert("Sign-in failed", error.message ?? "An unknown error occurred.");
-            return;
-          }
-        }
-        handleLinked();
-      } catch (e) {
-        Sentry.captureException(e);
-        Alert.alert("Sign-in failed", e instanceof Error ? e.message : "An unexpected error occurred.");
-      } finally {
-        setSocialBusy(false);
-      }
-    },
-    [handleLinked]
-  );
 
   return (
     <Animated.View
@@ -114,16 +59,15 @@ export function SaveProgressOverlay({ onDone }: Props) {
           contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
         >
           <Animated.View entering={FadeInDown.duration(400).delay(100)} className="mx-6">
-        
             <View
               className="bg-white rounded-3xl px-6 py-6"
               style={{ boxShadow: "0px 4px 20px rgba(0, 0, 0, 0.12)" }}
             >
               {subView === "main" && (
                 <>
-                 <View className="items-center z-10">
-                <Mascot pose="wave" size={130} />
-              </View>
+                  <View className="items-center z-10">
+                    <Mascot pose="wave" size={130} />
+                  </View>
                   <Text className="text-xl font-semibold text-[#0A0A0A] text-center mb-2 mt-2">
                     One more thing — save your progress
                   </Text>
@@ -151,59 +95,32 @@ export function SaveProgressOverlay({ onDone }: Props) {
                   <Text className="text-xl font-semibold text-[#0A0A0A] text-center mb-5">
                     How would you like to sign up?
                   </Text>
-                  <SocialAuthButtons
-                    onSocial={handleSocialSignIn}
-                    onUsername={() => setSubView("signUpUsername")}
-                    busy={socialBusy}
-                    labelPrefix="Continue with"
-                  />
-                  <Pressable
-                    onPress={() => setSubView("main")}
-                    className="mt-4 flex-row items-center justify-center py-2"
-                    style={{ gap: 6 }}
-                  >
-                    <Ionicons name="arrow-back" size={18} color="#6a7282" />
-                    <Text className="text-base font-medium text-[#6a7282]">Back</Text>
-                  </Pressable>
-                </>
-              )}
-
-              {subView === "signUpUsername" && (
-                <>
-                  <SignUpWithUsername
+                  <AuthFlow
+                    mode="link"
                     onSuccess={handleLinked}
-                    name={preferences?.name?.trim() || ""}
-                    onSwitchToSignIn={() => setSubView("signInUsername")}
-                    title="Create your account"
-                    subtitle="Your data will be preserved"
+                    presentation={{
+                      hideOptionsHeader: true,
+                      socialLabelPrefix: "Continue with",
+                      signUpName: preferences?.name?.trim() || "",
+                      usernameBack: "arrow",
+                      usernameSignUpTitle: "Create your account",
+                      usernameSignUpSubtitle: "Your data will be preserved",
+                      usernameSignInTitle: "Welcome back",
+                      usernameSignInSubtitle: "Sign in to your account",
+                    }}
+                    renderFooter={({ view }) =>
+                      view === "options" ? (
+                        <Pressable
+                          onPress={() => setSubView("main")}
+                          className="mt-4 flex-row items-center justify-center py-2"
+                          style={{ gap: 6 }}
+                        >
+                          <Ionicons name="arrow-back" size={18} color="#6a7282" />
+                          <Text className="text-base font-medium text-[#6a7282]">Back</Text>
+                        </Pressable>
+                      ) : null
+                    }
                   />
-                  <Pressable
-                    onPress={() => setSubView("options")}
-                    className="mt-4 flex-row items-center justify-center py-2"
-                    style={{ gap: 6 }}
-                  >
-                    <Ionicons name="arrow-back" size={18} color="#6a7282" />
-                    <Text className="text-base font-medium text-[#6a7282]">Back</Text>
-                  </Pressable>
-                </>
-              )}
-
-              {subView === "signInUsername" && (
-                <>
-                  <SignInWithUsername
-                    onSuccess={handleLinked}
-                    onSwitchToSignUp={() => setSubView("signUpUsername")}
-                    title="Welcome back"
-                    subtitle="Sign in to your account"
-                  />
-                  <Pressable
-                    onPress={() => setSubView("options")}
-                    className="mt-4 flex-row items-center justify-center py-2"
-                    style={{ gap: 6 }}
-                  >
-                    <Ionicons name="arrow-back" size={18} color="#6a7282" />
-                    <Text className="text-base font-medium text-[#6a7282]">Back</Text>
-                  </Pressable>
                 </>
               )}
             </View>
