@@ -1,5 +1,12 @@
+import { ConvexError } from "convex/values";
 import { v } from "convex/values";
-import { internalMutation, internalQuery, query } from "./_generated/server";
+import {
+  internalMutation,
+  internalQuery,
+  query,
+  type MutationCtx,
+  type QueryCtx,
+} from "./_generated/server";
 import { requireAuth } from "./lib/auth";
 import { isSubscriptionActive } from "./lib/subscriptionStatus";
 
@@ -12,9 +19,9 @@ const subscriptionStatusValidator = v.union(
 );
 
 export const getStatus = query({
-  args: {},
+  args: { nowMs: v.number() },
   returns: subscriptionStatusValidator,
-  handler: async (ctx) => {
+  handler: async (ctx, { nowMs }) => {
     const userId = await requireAuth(ctx);
     const sub = await ctx.db
       .query("subscriptions")
@@ -24,21 +31,54 @@ export const getStatus = query({
     if (!sub) return null;
 
     return {
-      isActive: sub.isActive,
+      isActive: isSubscriptionActive(sub, nowMs),
       expiresAt: sub.expiresAt ?? null,
     };
   },
 });
 
 export const isPremium = internalQuery({
-  args: { userId: v.string(), nowMs: v.optional(v.number()) },
+  args: { userId: v.string(), nowMs: v.number() },
   returns: v.boolean(),
-  handler: async (ctx, { userId, nowMs = Date.now() }) => {
-    const sub = await ctx.db
+  handler: async (ctx, { userId, nowMs }) => {
+    return await checkPremium(ctx, userId, nowMs);
+  },
+});
+
+export async function checkPremium(
+  ctx: QueryCtx | MutationCtx,
+  userId: string,
+  nowMs: number,
+): Promise<boolean> {
+  const sub = await ctx.db
+    .query("subscriptions")
+    .withIndex("by_user", (q) => q.eq("userId", userId))
+    .first();
+  return isSubscriptionActive(sub, nowMs);
+}
+
+export async function requirePremium(
+  ctx: QueryCtx | MutationCtx,
+  userId: string,
+  nowMs: number,
+): Promise<void> {
+  const premium = await checkPremium(ctx, userId, nowMs);
+  if (!premium) {
+    throw new ConvexError("Premium subscription required");
+  }
+}
+
+export const listActiveSubscriberIds = internalQuery({
+  args: { nowMs: v.number() },
+  returns: v.array(v.string()),
+  handler: async (ctx, { nowMs }) => {
+    const subs = await ctx.db
       .query("subscriptions")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .first();
-    return isSubscriptionActive(sub, nowMs);
+      .filter((q) => q.eq(q.field("isActive"), true))
+      .collect();
+    return subs
+      .filter((sub) => isSubscriptionActive(sub, nowMs))
+      .map((sub) => sub.userId);
   },
 });
 

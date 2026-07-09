@@ -118,7 +118,9 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   const registerDeviceIdMutation = useMutation(api.settings.registerDeviceId);
   const backendSubscription = useQuery(
     api.subscriptions.getStatus,
-    !isAnonymous && isAuthenticated && !isConvexAuthLoading ? {} : "skip",
+    !isAnonymous && isAuthenticated && !isConvexAuthLoading
+      ? { nowMs: Date.now() }
+      : "skip",
   );
   const isBackendPremium = evaluateBackendPremium(backendSubscription);
   const isPremium = sdkPremium || isBackendPremium;
