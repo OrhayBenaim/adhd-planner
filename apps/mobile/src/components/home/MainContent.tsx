@@ -43,6 +43,7 @@ export function MainContent() {
   const {
     tasks,
     progress,
+    streak,
     moodLevel,
     setMoodLevel,
     selectedTask,
@@ -69,7 +70,6 @@ export function MainContent() {
   } = homeTour;
 
   const { isPremium, showPaywall } = usePremium();
-  const streakData = useQuery(api.streaks.get);
   const ceilingStatus = useQuery(api.ai.getCeilingStatus);
   const creditBalance = useQuery(api.credits.getMyBalance);
   const aiPickDaysAhead = useQuery(api.appConfig.getPublic, { key: "aiPickDaysAhead" }) ?? 7;
@@ -223,9 +223,9 @@ export function MainContent() {
         </View>
 
         {/* Streak badge (premium) */}
-        {isPremium && streakData && (
+        {isPremium && streak && (
           <StreakBadge
-            streak={streakData.currentStreak}
+            streak={streak.currentStreak}
           />
         )}
 

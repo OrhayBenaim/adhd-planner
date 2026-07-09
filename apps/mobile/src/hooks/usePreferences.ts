@@ -20,7 +20,6 @@ export function usePreferences() {
 }
 
 export function useHasCompletedTour() {
-  const { isAuthenticated } = useConvexAuth();
-  const prefs = useQuery(api.preferences.get, isAuthenticated ? {} : "skip");
+  const prefs = usePreferences();
   return prefs?.hasCompletedTour ?? false;
 }
