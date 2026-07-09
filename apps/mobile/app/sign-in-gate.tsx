@@ -1,25 +1,20 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { View, Text, ScrollView } from "react-native";
 import { AppPressable as Pressable } from "../src/components/AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
-import { AuthOptions } from "../src/components/auth/AuthOptions";
-import { SignUpWithUsername } from "../src/components/auth/SignUpWithUsername";
-import { SignInWithUsername } from "../src/components/auth/SignInWithUsername";
-import type { AuthOptionsMode } from "../src/components/auth/AuthOptions";
+import { AuthFlow, type AuthFlowMode } from "../src/components/auth/AuthFlow";
 
-type GateView = "options" | "signUp" | "signIn";
 type ReturnTo = "home" | "paywall";
 
 export default function SignInGateScreen() {
   const { offering, mode, reason, returnTo } = useLocalSearchParams<{
     offering?: string;
-    mode?: AuthOptionsMode;
+    mode?: AuthFlowMode;
     reason?: "session";
     returnTo?: ReturnTo;
   }>();
-  const authMode: AuthOptionsMode = mode === "signIn" ? "signIn" : "link";
-  const [view, setView] = useState<GateView>("options");
+  const authMode: AuthFlowMode = mode === "signIn" ? "signIn" : "link";
 
   const handleAuthSuccess = useCallback(() => {
     // Delay navigation to let auth state re-renders settle before replacing the screen.
@@ -67,43 +62,20 @@ export default function SignInGateScreen() {
           </Text>
         </View>
 
-        {/* Auth forms */}
+        {/* Auth flow */}
         <View className="px-2">
-          {view === "options" && (
-            <AuthOptions
-              mode={authMode}
-              onSuccess={handleAuthSuccess}
-              onUsernamePress={() => setView(authMode === "signIn" ? "signIn" : "signUp")}
-            />
-          )}
-          {view === "signUp" && (
-            <SignUpWithUsername
-              onSuccess={handleAuthSuccess}
-              title="Create your account"
-              subtitle="Sign up to unlock Pro features"
-              onSwitchToSignIn={() => setView("signIn")}
-            />
-          )}
-          {view === "signIn" && (
-            <SignInWithUsername
-              onSuccess={handleAuthSuccess}
-              title="Welcome back"
-              subtitle="Sign in to your existing account"
-              onSwitchToSignUp={() => setView("signUp")}
-            />
-          )}
+          <AuthFlow
+            mode={authMode}
+            onSuccess={handleAuthSuccess}
+            presentation={{
+              usernameBack: "gate-link",
+              usernameSignUpTitle: "Create your account",
+              usernameSignUpSubtitle: "Sign up to unlock Pro features",
+              usernameSignInTitle: "Welcome back",
+              usernameSignInSubtitle: "Sign in to your existing account",
+            }}
+          />
         </View>
-
-        {/* Back to options link when in username view */}
-        {view !== "options" && (
-          <View className="items-center mt-6">
-            <Pressable onPress={() => setView("options")}>
-              <Text className="text-sm text-[#6a7282]">
-                Back to sign-in options
-              </Text>
-            </Pressable>
-          </View>
-        )}
       </ScrollView>
     </View>
   );

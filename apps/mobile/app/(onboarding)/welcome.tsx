@@ -6,11 +6,10 @@ import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayo
 import { MascotHeader } from "../../src/components/onboarding/MascotHeader";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { useNeedsOnboarding } from "../../src/hooks/usePreferences";
-import { AuthOptions } from "../../src/components/auth/AuthOptions";
-import { SignInWithUsername } from "../../src/components/auth/SignInWithUsername";
+import { AuthFlow } from "../../src/components/auth/AuthFlow";
 import { posthog } from "../../src/lib/posthog";
 
-type SubView = "welcome" | "signIn" | "signInUsername";
+type SubView = "welcome" | "signIn";
 
 export default function WelcomeStep() {
   const { state, updateField } = useOnboarding();
@@ -31,7 +30,7 @@ export default function WelcomeStep() {
     // Navigation handled by needsOnboarding effect once Convex syncs
   }, []);
 
-  if (subView === "signInUsername") {
+  if (subView === "signIn") {
     return (
       <OnboardingLayout step={1} showFooter={false}>
         <KeyboardAvoidingView
@@ -43,45 +42,30 @@ export default function WelcomeStep() {
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
           >
-            <SignInWithUsername
+            <AuthFlow
+              mode="signIn"
               onSuccess={handleSignInSuccess}
-              title="Welcome back"
-              subtitle="Sign in to your account"
+              presentation={{
+                usernameSignInTitle: "Welcome back",
+                usernameSignInSubtitle: "Sign in to your account",
+                usernameBack: "text",
+              }}
+              renderFooter={({ view }) =>
+                view === "options" ? (
+                  <View className="items-center pb-6">
+                    <Pressable
+                      onPress={() => setSubView("welcome")}
+                      className="flex-row items-center justify-center h-14"
+                      style={{ gap: 6 }}
+                    >
+                      <Text className="text-lg font-medium text-[#6a7282]">Back</Text>
+                    </Pressable>
+                  </View>
+                ) : null
+              }
             />
           </ScrollView>
-          <View className="items-center pb-6" style={{ paddingTop: 16 }}>
-            <Pressable
-              onPress={() => setSubView("signIn")}
-              className="flex-row items-center justify-center h-14"
-              style={{ gap: 6 }}
-            >
-              <Text className="text-lg font-medium text-[#6a7282]">Back</Text>
-            </Pressable>
-          </View>
         </KeyboardAvoidingView>
-      </OnboardingLayout>
-    );
-  }
-
-  if (subView === "signIn") {
-    return (
-      <OnboardingLayout step={1} showFooter={false}>
-        <View className="flex-1 justify-center">
-          <AuthOptions
-            mode="signIn"
-            onSuccess={handleSignInSuccess}
-            onUsernamePress={() => setSubView("signInUsername")}
-          />
-        </View>
-        <View className="items-center pb-6">
-          <Pressable
-            onPress={() => setSubView("welcome")}
-            className="flex-row items-center justify-center h-14"
-            style={{ gap: 6 }}
-          >
-            <Text className="text-lg font-medium text-[#6a7282]">Back</Text>
-          </Pressable>
-        </View>
       </OnboardingLayout>
     );
   }
