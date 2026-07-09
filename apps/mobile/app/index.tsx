@@ -6,7 +6,7 @@ import { authClient } from "../src/lib/authClient";
 import { useNeedsOnboarding, usePreferences } from "../src/hooks/usePreferences";
 import { HomeScreen } from "../src/components/home/HomeScreen";
 import { LoadingScreen } from "../src/components/LoadingScreen";
-import { posthog } from "../src/lib/posthog";
+import { identify } from "../src/lib/analytics";
 import {
   hasLinkedAccountSession,
   markHadLinkedAccount,
@@ -82,7 +82,7 @@ export default function IndexPage() {
   // Identify user in PostHog when session is available
   useEffect(() => {
     if (session?.user?.id) {
-      posthog.identify(session.user.id);
+      identify(session.user.id);
     }
   }, [session?.user?.id]);
 

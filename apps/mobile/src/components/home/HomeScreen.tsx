@@ -7,7 +7,7 @@ import { TaskCreationFlowProvider } from "./TaskCreationFlowProvider";
 import { MainContent } from "./MainContent";
 import { SheetManager } from "./SheetManager";
 import { usePushToken } from "../../hooks/usePushToken";
-import { posthog } from "../../lib/posthog";
+import { track } from "../../lib/analytics";
 import { GuidedTourProvider } from "../tour/GuidedTourProvider";
 import { useHasCompletedTour } from "../../hooks/usePreferences";
 
@@ -16,7 +16,7 @@ export function HomeScreen() {
   const hasCompletedTour = useHasCompletedTour();
 
   useEffect(() => {
-    posthog.capture("Home page loaded");
+    track("Home page loaded");
   }, []);
   return (
     <HomeProvider>

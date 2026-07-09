@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, useCallback, useMemo, useRef, type ReactNode } from "react";
 import { useHome } from "./HomeProvider";
 import { useSheetNav } from "./SheetNavProvider";
-import { posthog } from "../../lib/posthog";
+import { track } from "../../lib/analytics";
 import {
   initialFlowState,
   type FlowState,
@@ -83,7 +83,7 @@ export function TaskCreationFlowProvider({ children }: { children: ReactNode }) 
             openSheet(effect.sheet);
             break;
           case "createTask":
-            posthog.capture("Created item", { source: effect.source });
+            track("Created item", { source: effect.source });
             mutations.push(createTask(effect.task));
             break;
           case "updateTask":

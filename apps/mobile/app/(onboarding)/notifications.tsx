@@ -6,14 +6,14 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
 import { MascotHeader } from "../../src/components/onboarding/MascotHeader";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
-import { posthog } from "../../src/lib/posthog";
+import { track } from "../../src/lib/analytics";
 
 export default function NotificationsStep() {
   const { updateField, submitOnboarding, isSubmitting } = useOnboarding();
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    posthog.capture("onboarding_step_viewed", { step: "notifications", step_number: 5 });
+    track("onboarding_step_viewed", { step: "notifications", step_number: 5 });
   }, []);
 
   const handleEnable = async () => {

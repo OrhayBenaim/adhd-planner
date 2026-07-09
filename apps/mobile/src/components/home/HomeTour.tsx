@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useReducer, useRef, type RefObject } from "react";
 import { View, type LayoutRectangle } from "react-native";
 
-import { posthog } from "../../lib/posthog";
+import { track } from "../../lib/analytics";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { TourIntroCard } from "../tour/TourIntroCard";
 import { TourSpotlight } from "../tour/TourSpotlight";
@@ -88,7 +88,7 @@ export function useHomeTour() {
 
   useEffect(() => {
     if (tour?.isTourStep("moodMeter")) {
-      posthog.capture("guided_tour_task_created");
+      track("guided_tour_task_created");
     }
   }, [tour?.currentStepIndex]);
 
@@ -107,14 +107,14 @@ export function useHomeTour() {
 
   const notifyTaskCompleted = useCallback(() => {
     if (!tour?.isTourStep("completeTask")) return;
-    posthog.capture("guided_tour_task_completed");
+    track("guided_tour_task_completed");
     tour.advance();
   }, [tour]);
 
   const handleAddPress = useCallback(
     (startAddTask: () => void) => {
       if (tour?.isTourStep("createTask")) {
-        posthog.capture("guided_tour_step_viewed", { step: 1, stepName: "createTask" });
+        track("guided_tour_step_viewed", { step: 1, stepName: "createTask" });
         startAddTask();
         tour.advance();
         return;
@@ -163,7 +163,7 @@ export function HomeTourIntro() {
     <View className="px-0 py-4">
       <TourIntroCard
         onStart={() => {
-          posthog.capture("guided_tour_started");
+          track("guided_tour_started");
           tour.advance();
         }}
         onSkip={tour.skip}

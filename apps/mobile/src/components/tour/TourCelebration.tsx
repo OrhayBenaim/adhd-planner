@@ -7,7 +7,7 @@ import LottieView from "lottie-react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { Mascot } from "../mascot/Mascot";
 import { usePreferences } from "../../hooks/usePreferences";
-import { posthog } from "../../lib/posthog";
+import { track } from "../../lib/analytics";
 
 interface Props {
   onFinish: () => void;
@@ -18,7 +18,7 @@ export function TourCelebration({ onFinish }: Props) {
   const firstName = preferences?.name?.trim().split(" ")[0];
 
   useEffect(() => {
-    posthog.capture("onboarding_celebration_viewed");
+    track("onboarding_celebration_viewed");
   }, []);
 
   return (

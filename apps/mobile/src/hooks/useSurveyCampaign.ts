@@ -4,7 +4,7 @@ import { api } from "@adhd-planner/convex/convex/_generated/api";
 import type { Id } from "@adhd-planner/convex/convex/_generated/dataModel";
 import type { SurveyCampaign } from "@adhd-planner/types";
 import { formatSurveyRewardCelebration } from "../lib/surveyRewards";
-import { posthog } from "../lib/posthog";
+import { track } from "../lib/analytics";
 
 interface UseSurveyCampaignOptions {
   onRewardGranted?: (message: string) => void;
@@ -71,7 +71,7 @@ export function useSurveyCampaign({
       setRemindLaterCampaignId(null);
       setActiveCampaignId(c._id as Id<"surveyCampaigns">);
       setFormCampaign(c);
-      posthog.capture("survey_invite_started", { campaign_id: c._id });
+      track("survey_invite_started", { campaign_id: c._id });
     },
     [dismissInvite],
   );
@@ -87,7 +87,7 @@ export function useSurveyCampaign({
 
   const handleDefer = useCallback(() => {
     if (!campaign) return;
-    posthog.capture("survey_invite_deferred", { campaign_id: campaign._id });
+    track("survey_invite_deferred", { campaign_id: campaign._id });
     setRemindLaterCampaignId(campaign._id as Id<"surveyCampaigns">);
     dismissInvite(campaign._id as Id<"surveyCampaigns">);
   }, [campaign, dismissInvite]);

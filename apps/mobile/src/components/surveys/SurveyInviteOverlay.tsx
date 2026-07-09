@@ -17,7 +17,7 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import type { SurveyCampaign } from "@adhd-planner/types";
 import { Mascot } from "../mascot/Mascot";
 import { formatSurveyReward } from "../../lib/surveyRewards";
-import { posthog } from "../../lib/posthog";
+import { track } from "../../lib/analytics";
 
 interface Props {
   campaign: SurveyCampaign;
@@ -35,7 +35,7 @@ export function SurveyInviteOverlay({
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
-    posthog.capture("survey_invite_shown", { campaign_id: campaign._id });
+    track("survey_invite_shown", { campaign_id: campaign._id });
   }, [campaign._id]);
 
   return (
