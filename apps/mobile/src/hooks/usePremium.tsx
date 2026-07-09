@@ -13,7 +13,7 @@ import { api } from "@adhd-planner/convex/convex/_generated/api";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { authClient } from "../lib/authClient";
-import { posthog } from "../lib/posthog";
+import { track, getDistinctId, getFeatureFlag } from "../lib/analytics";
 import { getDeviceId } from "../lib/deviceId";
 import { getSessionAnonymousState } from "../lib/sessionState";
 import { isInternalAuthEmail } from "../lib/authUsername";
@@ -160,7 +160,7 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
       const user = session.data.user;
       const attributeSyncs: Promise<void>[] = [
         Purchases.setAttributes({
-          $posthogUserId: posthog.getDistinctId(),
+          $posthogUserId: getDistinctId(),
         }),
       ];
       if (user.email && !isInternalAuthEmail(user.email)) {
@@ -194,9 +194,9 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
 
       // Track new subscription purchase (free → premium transition)
       if (subInfo.isPremium && !sdkPremium) {
-        posthog.capture("subscription_purchased", {
+        track("subscription_purchased", {
           variant: String(
-            posthog.getFeatureFlag("profile-upgrade-variant") ?? "unknown",
+            getFeatureFlag("profile-upgrade-variant") ?? "unknown",
           ),
         });
       }

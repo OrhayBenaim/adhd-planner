@@ -7,7 +7,7 @@ import { MascotHeader } from "../../src/components/onboarding/MascotHeader";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { useNeedsOnboarding } from "../../src/hooks/usePreferences";
 import { AuthFlow } from "../../src/components/auth/AuthFlow";
-import { posthog } from "../../src/lib/posthog";
+import { track } from "../../src/lib/analytics";
 
 type SubView = "welcome" | "signIn";
 
@@ -17,7 +17,7 @@ export default function WelcomeStep() {
   const needsOnboarding = useNeedsOnboarding();
 
   useEffect(() => {
-    posthog.capture("Intro page loaded");
+    track("Intro page loaded");
   }, []);
 
   useEffect(() => {

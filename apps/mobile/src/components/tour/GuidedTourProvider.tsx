@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useCallback, type ReactNode } from
 import { useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { authClient } from "../../lib/authClient";
-import { posthog } from "../../lib/posthog";
+import { track, trackTourStepAdvance } from "../../lib/analytics";
 import { TOUR_STEPS, type TourStepName } from "./constants";
 
 interface GuidedTourContextValue {
@@ -52,12 +52,12 @@ export function GuidedTourProvider({ children, enabled }: Props) {
     // Leaving celebration: persist only for signed-in users; anonymous users
     // see save-progress first, then we persist when they finish or skip.
     if (currentStep?.name === "celebration") {
-      posthog.capture("guided_tour_completed");
+      track("guided_tour_completed");
       if (!isAnonymous) {
         completeTour();
         return;
       }
-      posthog.capture("onboarding_save_progress_shown");
+      track("onboarding_save_progress_shown");
       setStepIndex((prev) => prev + 1);
       return;
     }
@@ -68,7 +68,7 @@ export function GuidedTourProvider({ children, enabled }: Props) {
       return;
     }
     const nextStep = TOUR_STEPS[nextIndex];
-    posthog.capture(nextStep.posthogEvent, {
+    trackTourStepAdvance(nextStep.posthogEvent, {
       step: nextStep.step,
       stepName: nextStep.name,
     });
@@ -76,7 +76,7 @@ export function GuidedTourProvider({ children, enabled }: Props) {
   }, [stepIndex, currentStep, isAnonymous, completeTour]);
 
   const skip = useCallback(() => {
-    posthog.capture("guided_tour_skipped");
+    track("guided_tour_skipped");
     completeTour();
   }, [completeTour]);
 
