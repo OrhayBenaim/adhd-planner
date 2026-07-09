@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, type RefObject } from "react";
 import { View, type LayoutRectangle } from "react-native";
 
-import { track } from "../../lib/analytics";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { TourIntroCard } from "../tour/TourIntroCard";
 import { TourSpotlight } from "../tour/TourSpotlight";
@@ -56,8 +55,11 @@ export function useHomeTour() {
     { mood: null, aiButton: null, taskCard: null, addButton: null },
   );
 
+  const currentStepIndex = tour?.currentStepIndex;
+  const currentStepName = tour?.currentStepName;
+
   useEffect(() => {
-    if (!tour) return;
+    if (currentStepIndex === undefined || currentStepName === undefined) return;
     let timer: ReturnType<typeof setTimeout> | null = null;
     const measure = (ref: RefObject<View | null>, type: TourLayoutAction["type"]) => {
       timer = setTimeout(() => {
@@ -72,33 +74,27 @@ export function useHomeTour() {
         );
       }, 250);
     };
-    if (tour.isTourStep("createTask")) {
+    if (currentStepName === "createTask") {
       measure(addNavButtonRef, "addButton");
-    } else if (tour.isTourStep("moodMeter")) {
+    } else if (currentStepName === "moodMeter") {
       measure(moodSliderRef, "mood");
-    } else if (tour.isTourStep("aiPick")) {
+    } else if (currentStepName === "aiPick") {
       measure(aiButtonRef, "aiButton");
-    } else if (tour.isTourStep("completeTask")) {
+    } else if (currentStepName === "completeTask") {
       measure(taskCardRef, "taskCard");
     }
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [tour?.currentStepIndex]);
-
-  useEffect(() => {
-    if (tour?.isTourStep("moodMeter")) {
-      track("guided_tour_task_created");
-    }
-  }, [tour?.currentStepIndex]);
+  }, [currentStepIndex, currentStepName]);
 
   const tryHandleAIPick = useCallback(
     (tasks: Task[], setSelectedTask: (task: Task | null) => void): boolean => {
-      if (!tour?.isTourStep("aiPick")) return false;
+      if (tour?.currentStepName !== "aiPick") return false;
       const firstTask = tasks.find((t) => !t.completed);
       if (firstTask) {
         setSelectedTask(firstTask);
-        tour.advance();
+        tour.reportAiPickHandled();
       }
       return true;
     },
@@ -106,17 +102,15 @@ export function useHomeTour() {
   );
 
   const notifyTaskCompleted = useCallback(() => {
-    if (!tour?.isTourStep("completeTask")) return;
-    track("guided_tour_task_completed");
-    tour.advance();
+    if (tour?.currentStepName !== "completeTask") return;
+    tour.reportTaskCompleted();
   }, [tour]);
 
   const handleAddPress = useCallback(
     (startAddTask: () => void) => {
-      if (tour?.isTourStep("createTask")) {
-        track("guided_tour_step_viewed", { step: 1, stepName: "createTask" });
+      if (tour?.currentStepName === "createTask") {
         startAddTask();
-        tour.advance();
+        tour.reportAddPressed();
         return;
       }
       startAddTask();
@@ -124,7 +118,7 @@ export function useHomeTour() {
     [tour],
   );
 
-  const isCompleteTaskStep = tour?.isTourStep("completeTask") ?? false;
+  const isCompleteTaskStep = tour?.currentStepName === "completeTask";
 
   const handleTaskLater = useCallback(
     (setSelectedTask: (task: Task | null) => void) => {
@@ -157,15 +151,12 @@ export function useHomeTour() {
 
 export function HomeTourIntro() {
   const tour = useGuidedTour();
-  if (!tour?.isTourStep("intro")) return null;
+  if (tour?.currentStepName !== "intro") return null;
 
   return (
     <View className="px-0 py-4">
       <TourIntroCard
-        onStart={() => {
-          track("guided_tour_started");
-          tour.advance();
-        }}
+        onStart={tour.reportIntroAcknowledged}
         onSkip={tour.skip}
       />
     </View>
@@ -182,7 +173,7 @@ export function HomeTourOverlays({ tourLayouts }: HomeTourOverlaysProps) {
 
   return (
     <>
-      {tour.isTourStep("createTask") && (
+      {tour.currentStepName === "createTask" && (
         <TourSpotlight
           targetLayout={tourLayouts.addButton}
           title={TOUR_STEPS[1].title}
@@ -193,7 +184,7 @@ export function HomeTourOverlays({ tourLayouts }: HomeTourOverlaysProps) {
           tooltipPosition="above"
         />
       )}
-      {tour.isTourStep("moodMeter") && (
+      {tour.currentStepName === "moodMeter" && (
         <TourSpotlight
           targetLayout={tourLayouts.mood}
           title={TOUR_STEPS[4].title}
@@ -201,11 +192,11 @@ export function HomeTourOverlays({ tourLayouts }: HomeTourOverlaysProps) {
           stepNumber={TOUR_STEPS[4].step}
           totalSteps={VISIBLE_TOUR_STEP_COUNT}
           buttonLabel={TOUR_STEPS[4].buttonLabel}
-          onNext={tour.advance}
+          onNext={tour.reportMoodStepAcknowledged}
           tooltipPosition="below"
         />
       )}
-      {tour.isTourStep("aiPick") && (
+      {tour.currentStepName === "aiPick" && (
         <TourSpotlight
           targetLayout={tourLayouts.aiButton}
           title={TOUR_STEPS[5].title}
@@ -215,7 +206,7 @@ export function HomeTourOverlays({ tourLayouts }: HomeTourOverlaysProps) {
           tooltipPosition="below"
         />
       )}
-      {tour.isTourStep("completeTask") && (
+      {tour.currentStepName === "completeTask" && (
         <TourSpotlight
           targetLayout={tourLayouts.taskCard}
           title={TOUR_STEPS[6].title}
@@ -225,11 +216,11 @@ export function HomeTourOverlays({ tourLayouts }: HomeTourOverlaysProps) {
           tooltipPosition="above"
         />
       )}
-      {tour.isTourStep("celebration") && (
-        <TourCelebration onFinish={tour.advance} />
+      {tour.currentStepName === "celebration" && (
+        <TourCelebration onFinish={tour.reportCelebrationFinished} />
       )}
-      {tour.isTourStep("saveProgress") && (
-        <SaveProgressOverlay onDone={tour.advance} />
+      {tour.currentStepName === "saveProgress" && (
+        <SaveProgressOverlay onDone={tour.reportSaveProgressDone} />
       )}
     </>
   );
