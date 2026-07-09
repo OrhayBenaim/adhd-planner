@@ -8,7 +8,6 @@ import { daySelectionToDate } from "../../lib/dateTimeConvert";
 import { GradientOption, type GradientPair } from "../GradientOption";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { TourTooltip } from "../tour/TourTooltip";
-import { TOUR_STEPS, VISIBLE_TOUR_STEP_COUNT } from "../tour/constants";
 
 const DAY_GRADIENTS: GradientPair[] = [
   ["#bde0fe", "#a2d2ff"],
@@ -25,6 +24,7 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const flow = useTaskCreationFlow();
     const tour = useGuidedTour();
+    const daySheetTour = tour?.daySheetTour ?? null;
     const isSelected = (day: string) => {
       if (!flow.editingExistingTaskId || !flow.selectedDay) return false;
       return daySelectionToDate(day) === flow.selectedDay;
@@ -51,14 +51,14 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
       setShowCustomInput(false);
       setCustomValue("");
       flow.selectDay(day);
-      if (tour?.isTourStep("pickDay")) tour.advance();
+      tour?.reportDaySelected();
     };
 
     const handleCustomSubmit = () => {
       if (customValue.trim()) {
         setShowCustomInput(false);
         flow.selectDay(customValue.trim());
-        if (tour?.isTourStep("pickDay")) tour.advance();
+        tour?.reportDaySelected();
         setCustomValue("");
       }
     };
@@ -68,7 +68,7 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
         ref={ref}
         index={-1}
         snapPoints={snapPoints}
-        enablePanDownToClose={!tour?.isTourStep("pickDay")}
+        enablePanDownToClose={!daySheetTour?.lockSheet}
         onClose={onClose}
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
@@ -79,7 +79,7 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
         <BottomSheetView className="px-6 pt-6">
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-xl font-semibold text-[#1e2939]">When is this due?</Text>
-            {!tour?.isTourStep("pickDay") && (
+            {!daySheetTour?.lockSheet && (
               <Pressable onPress={() => { Keyboard.dismiss(); onClose(); }}>
                 <Ionicons name="close" size={24} color="#364153" />
               </Pressable>
@@ -116,14 +116,14 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
               </View>
             )}
           </View>
-          {tour?.isTourStep("pickDay") && (
+          {daySheetTour && (
             <View className="mt-4">
               <TourTooltip
-                title={TOUR_STEPS[2].title}
-                description={TOUR_STEPS[2].description}
+                title={daySheetTour.tooltip.title}
+                description={daySheetTour.tooltip.description}
                 showMascot={false}
-                stepNumber={TOUR_STEPS[2].step}
-                totalSteps={VISIBLE_TOUR_STEP_COUNT}
+                stepNumber={daySheetTour.tooltip.stepNumber}
+                totalSteps={daySheetTour.tooltip.totalSteps}
                 arrow="up"
               />
             </View>

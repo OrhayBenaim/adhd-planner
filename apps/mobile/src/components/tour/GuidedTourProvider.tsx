@@ -1,17 +1,38 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { authClient } from "../../lib/authClient";
 import { track, trackTourStepAdvance } from "../../lib/analytics";
-import { TOUR_STEPS, type TourStepName } from "./constants";
+import {
+  createInitialGuidedTourState,
+  currentTourStepName,
+  getDaySheetTourUi,
+  getTimeSheetTourUi,
+  isTourActive,
+  transition,
+  type GuidedTourContext,
+  type GuidedTourEffect,
+  type GuidedTourEvent,
+  type TourSheetUi,
+} from "../../lib/guidedTourFlow";
+import type { TourStepName } from "../../lib/guidedTourSteps";
 
 interface GuidedTourContextValue {
   isActive: boolean;
   currentStepName: TourStepName;
   currentStepIndex: number;
-  advance: () => void;
+  daySheetTour: TourSheetUi | null;
+  timeSheetTour: TourSheetUi | null;
+  reportIntroAcknowledged: () => void;
+  reportAddPressed: () => void;
+  reportDaySelected: () => void;
+  reportTimeSelected: () => void;
+  reportMoodStepAcknowledged: () => void;
+  reportAiPickHandled: () => void;
+  reportTaskCompleted: () => void;
+  reportCelebrationFinished: () => void;
+  reportSaveProgressDone: () => void;
   skip: () => void;
-  isTourStep: (name: TourStepName) => boolean;
 }
 
 const GuidedTourContext = createContext<GuidedTourContextValue | null>(null);
@@ -25,79 +46,87 @@ interface Props {
   enabled: boolean;
 }
 
+function executeEffect(
+  effect: GuidedTourEffect,
+  completeTourMutation: () => Promise<unknown>,
+) {
+  switch (effect.type) {
+    case "track":
+      if (effect.properties !== undefined) {
+        track(effect.event, effect.properties as never);
+      } else {
+        track(effect.event);
+      }
+      break;
+    case "trackTourStepAdvance":
+      trackTourStepAdvance(effect.event, effect.properties);
+      break;
+    case "persistCompletion":
+      completeTourMutation().catch(() => {});
+      break;
+  }
+}
+
 export function GuidedTourProvider({ children, enabled }: Props) {
-  const [stepIndex, setStepIndex] = useState(0);
-  const [dismissed, setDismissed] = useState(false);
-  // Once the tour starts, keep it active until explicitly dismissed — even if
-  // `enabled` flips false after persisting completion mid-flow (save progress).
-  const [engaged, setEngaged] = useState(false);
   const completeTourMutation = useMutation(api.preferences.completeTour);
   const { data: session } = authClient.useSession();
   const isAnonymous =
     (session?.user as { isAnonymous?: boolean | null } | undefined)?.isAnonymous ?? true;
 
-  if (enabled && !engaged) {
-    setEngaged(true);
-  }
+  const [state, setState] = useState(createInitialGuidedTourState);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const tourContext = useMemo<GuidedTourContext>(() => ({ isAnonymous }), [isAnonymous]);
 
-  const isActive = engaged && !dismissed;
-  const currentStep = TOUR_STEPS[stepIndex];
-
-  const completeTour = useCallback(() => {
-    setDismissed(true);
-    completeTourMutation().catch(() => {});
-  }, [completeTourMutation]);
-
-  const advance = useCallback(() => {
-    // Leaving celebration: persist only for signed-in users; anonymous users
-    // see save-progress first, then we persist when they finish or skip.
-    if (currentStep?.name === "celebration") {
-      track("guided_tour_completed");
-      if (!isAnonymous) {
-        completeTour();
-        return;
+  const runTransition = useCallback(
+    (event: GuidedTourEvent) => {
+      const result = transition(stateRef.current, event, tourContext);
+      stateRef.current = result.state;
+      setState(result.state);
+      for (const effect of result.effects) {
+        executeEffect(effect, completeTourMutation);
       }
-      track("onboarding_save_progress_shown");
-      setStepIndex((prev) => prev + 1);
-      return;
-    }
-
-    const nextIndex = stepIndex + 1;
-    if (currentStep?.name === "saveProgress" || nextIndex >= TOUR_STEPS.length) {
-      completeTour();
-      return;
-    }
-    const nextStep = TOUR_STEPS[nextIndex];
-    trackTourStepAdvance(nextStep.posthogEvent, {
-      step: nextStep.step,
-      stepName: nextStep.name,
-    });
-    setStepIndex((prev) => prev + 1);
-  }, [stepIndex, currentStep, isAnonymous, completeTour]);
-
-  const skip = useCallback(() => {
-    track("guided_tour_skipped");
-    completeTour();
-  }, [completeTour]);
-
-  const isTourStep = useCallback(
-    (name: TourStepName) => isActive && currentStep?.name === name,
-    [isActive, currentStep],
+    },
+    [tourContext, completeTourMutation],
   );
 
-  if (!isActive) {
+  if (enabled && !state.engaged) {
+    runTransition({ type: "enabled" });
+  }
+
+  const report = useCallback(
+    (event: Exclude<GuidedTourEvent, { type: "enabled" | "skipRequested" }>) => {
+      runTransition(event);
+    },
+    [runTransition],
+  );
+
+  const skip = useCallback(() => {
+    runTransition({ type: "skipRequested" });
+  }, [runTransition]);
+
+  if (!isTourActive(state)) {
     return <>{children}</>;
   }
 
   return (
     <GuidedTourContext.Provider
       value={{
-        isActive,
-        currentStepName: currentStep.name,
-        currentStepIndex: stepIndex,
-        advance,
+        isActive: true,
+        currentStepName: currentTourStepName(state),
+        currentStepIndex: state.stepIndex,
+        daySheetTour: getDaySheetTourUi(state),
+        timeSheetTour: getTimeSheetTourUi(state),
+        reportIntroAcknowledged: () => report({ type: "introAcknowledged" }),
+        reportAddPressed: () => report({ type: "addPressed" }),
+        reportDaySelected: () => report({ type: "daySelected" }),
+        reportTimeSelected: () => report({ type: "timeSelected" }),
+        reportMoodStepAcknowledged: () => report({ type: "moodStepAcknowledged" }),
+        reportAiPickHandled: () => report({ type: "aiPickHandled" }),
+        reportTaskCompleted: () => report({ type: "taskCompleted" }),
+        reportCelebrationFinished: () => report({ type: "celebrationFinished" }),
+        reportSaveProgressDone: () => report({ type: "saveProgressDone" }),
         skip,
-        isTourStep,
       }}
     >
       {children}
