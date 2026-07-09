@@ -1,5 +1,5 @@
 import { convexTest } from "convex-test";
-import { expect, test, describe } from "vitest";
+import { describe, expect, test } from "vitest";
 import { internal, api } from "../_generated/api";
 import schema from "../schema";
 import { isSubscriptionActive } from "../lib/subscriptionStatus";
@@ -12,6 +12,32 @@ describe("isSubscriptionActive", () => {
   test("returns false when subscription is null", () => {
     expect(isSubscriptionActive(null, FIXED_NOW_MS)).toBe(false);
   });
+
+  test("returns false when inactive", () => {
+    expect(isSubscriptionActive({ isActive: false }, FIXED_NOW_MS)).toBe(false);
+  });
+
+  test("returns true for active subscription without expiration", () => {
+    expect(isSubscriptionActive({ isActive: true }, FIXED_NOW_MS)).toBe(true);
+  });
+
+  test("returns false when expiration is in the past", () => {
+    expect(
+      isSubscriptionActive(
+        { isActive: true, expiresAt: "2025-01-01T00:00:00.000Z" },
+        FIXED_NOW_MS,
+      ),
+    ).toBe(false);
+  });
+
+  test("returns true when expiration is in the future", () => {
+    expect(
+      isSubscriptionActive(
+        { isActive: true, expiresAt: "2026-01-01T00:00:00.000Z" },
+        FIXED_NOW_MS,
+      ),
+    ).toBe(true);
+  });
 });
 
 describe("isPremium", () => {
@@ -19,6 +45,7 @@ describe("isPremium", () => {
     const t = convexTest(schema, modules);
     const result = await t.query(internal.subscriptions.isPremium, {
       userId: "nonexistent",
+      nowMs: FIXED_NOW_MS,
     });
     expect(result).toBe(false);
   });
@@ -35,6 +62,7 @@ describe("isPremium", () => {
     });
     const result = await t.query(internal.subscriptions.isPremium, {
       userId: "user1",
+      nowMs: FIXED_NOW_MS,
     });
     expect(result).toBe(true);
   });
@@ -51,6 +79,7 @@ describe("isPremium", () => {
     });
     const result = await t.query(internal.subscriptions.isPremium, {
       userId: "user1",
+      nowMs: FIXED_NOW_MS,
     });
     expect(result).toBe(false);
   });
@@ -72,23 +101,32 @@ describe("isPremium", () => {
     });
     expect(result).toBe(false);
   });
+});
 
-  test("returns true for active subscription with future expiration", async () => {
+describe("listActiveSubscriberIds", () => {
+  test("excludes expired-but-flagged-active subscribers", async () => {
     const t = convexTest(schema, modules);
     await t.run(async (ctx) => {
       await ctx.db.insert("subscriptions", {
-        userId: "user1",
-        revenueCatId: "rc_1",
+        userId: "active",
+        revenueCatId: "rc_active",
         entitlement: "premium",
         isActive: true,
         expiresAt: "2099-01-01T00:00:00.000Z",
       });
+      await ctx.db.insert("subscriptions", {
+        userId: "lapsed",
+        revenueCatId: "rc_lapsed",
+        entitlement: "premium",
+        isActive: true,
+        expiresAt: "2020-01-01T00:00:00.000Z",
+      });
     });
-    const result = await t.query(internal.subscriptions.isPremium, {
-      userId: "user1",
+
+    const ids = await t.query(internal.subscriptions.listActiveSubscriberIds, {
       nowMs: FIXED_NOW_MS,
     });
-    expect(result).toBe(true);
+    expect(ids).toEqual(["active"]);
   });
 });
 
@@ -96,11 +134,13 @@ describe("getStatus", () => {
   test("returns null when no subscription exists", async () => {
     const t = convexTest(schema, modules);
     const asUser = t.withIdentity({ name: "Free", subject: "free_user" });
-    const result = await asUser.query(api.subscriptions.getStatus, {});
+    const result = await asUser.query(api.subscriptions.getStatus, {
+      nowMs: FIXED_NOW_MS,
+    });
     expect(result).toBeNull();
   });
 
-  test("returns raw subscription status when row exists", async () => {
+  test("returns effective status when row exists", async () => {
     const t = convexTest(schema, modules);
     await t.run(async (ctx) => {
       await ctx.db.insert("subscriptions", {
@@ -113,10 +153,34 @@ describe("getStatus", () => {
     });
 
     const asUser = t.withIdentity({ name: "Pro", subject: "premium_user" });
-    const result = await asUser.query(api.subscriptions.getStatus, {});
+    const result = await asUser.query(api.subscriptions.getStatus, {
+      nowMs: FIXED_NOW_MS,
+    });
     expect(result).toEqual({
       isActive: true,
       expiresAt: "2099-01-01T00:00:00.000Z",
+    });
+  });
+
+  test("returns inactive effective status for expired row", async () => {
+    const t = convexTest(schema, modules);
+    await t.run(async (ctx) => {
+      await ctx.db.insert("subscriptions", {
+        userId: "lapsed_user",
+        revenueCatId: "rc_2",
+        entitlement: "premium",
+        isActive: true,
+        expiresAt: "2020-01-01T00:00:00.000Z",
+      });
+    });
+
+    const asUser = t.withIdentity({ name: "Lapsed", subject: "lapsed_user" });
+    const result = await asUser.query(api.subscriptions.getStatus, {
+      nowMs: FIXED_NOW_MS,
+    });
+    expect(result).toEqual({
+      isActive: false,
+      expiresAt: "2020-01-01T00:00:00.000Z",
     });
   });
 });

@@ -10,8 +10,9 @@ import {
 import type { Doc } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 import { requireAuth } from "./lib/auth";
-import { grantCredits, grantPoints } from "./lib/rewards";
-import { getLocalToday } from "./lib/surveyDates";
+import { awardPoints } from "./progress";
+import { addCreditsToUser } from "./credits";
+import { today } from "./lib/calendar";
 
 const rewardTypeValidator = v.union(
   v.literal("points"),
@@ -160,14 +161,14 @@ export const deferAsTask = mutation({
     );
     if (surveyTask) return surveyTask._id;
 
-    const today = getLocalToday();
+    const todayStr = today(Date.now());
     return await ctx.db.insert("tasks", {
       userId,
       title: campaign.title,
       description: campaign.description,
       difficulty: 0,
       completed: false,
-      dueDate: today,
+      dueDate: todayStr,
       dueTime: "23:59",
       sourceType: "survey",
       sourceId: campaignId,
@@ -215,9 +216,9 @@ async function recordSurveyCompletion(
   const completedAt = Date.now();
 
   if (campaign.rewardType === "points") {
-    await grantPoints(ctx, userId, campaign.rewardAmount);
+    await awardPoints(ctx, userId, campaign.rewardAmount);
   } else if (campaign.rewardType === "ai_credits") {
-    await grantCredits(ctx, userId, campaign.rewardAmount);
+    await addCreditsToUser(ctx, userId, campaign.rewardAmount);
   }
 
   const rewardStatus =

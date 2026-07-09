@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
-import { requireAuth, requirePremium } from "./lib/auth";
+import { requireAuth } from "./lib/auth";
+import { requirePremium } from "./subscriptions";
 import {
   getTrendsSince,
   getWeeklyBoundaries,

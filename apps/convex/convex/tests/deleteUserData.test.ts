@@ -4,10 +4,20 @@ import schema from "../schema";
 
 const modules = import.meta.glob("../**/*.ts");
 
-test("deleteAccount removes all user data", async () => {
+test("deleteAccount removes all user data including survey completions", async () => {
   const t = convexTest(schema, modules);
 
-  // Seed data for user
+  const campaignId = await t.run(async (ctx) => {
+    return await ctx.db.insert("surveyCampaigns", {
+      posthogSurveyId: "survey-del",
+      title: "Delete test",
+      description: "x",
+      rewardType: "points",
+      rewardAmount: 1,
+      status: "active",
+    });
+  });
+
   await t.run(async (ctx) => {
     await ctx.db.insert("tasks", {
       userId: "user1",
@@ -35,14 +45,20 @@ test("deleteAccount removes all user data", async () => {
       freezesUsedThisWeek: 0,
       weekStart: "2026-03-10",
     });
+    await ctx.db.insert("surveyCompletions", {
+      userId: "user1",
+      campaignId,
+      completedAt: Date.now(),
+      rewardType: "points",
+      rewardAmount: 1,
+      rewardStatus: "granted",
+    });
   });
 
-  // Delete account
   const asUser = t.withIdentity({ name: "Test", subject: "user1" });
   const { api } = await import("../_generated/api");
   await asUser.mutation(api.account.deleteAccount);
 
-  // Verify all data is gone
   await t.run(async (ctx) => {
     const tasks = await ctx.db
       .query("tasks")
@@ -61,5 +77,11 @@ test("deleteAccount removes all user data", async () => {
       .withIndex("by_user", (q) => q.eq("userId", "user1"))
       .first();
     expect(streak).toBeNull();
+
+    const completions = await ctx.db
+      .query("surveyCompletions")
+      .withIndex("by_user", (q) => q.eq("userId", "user1"))
+      .collect();
+    expect(completions).toHaveLength(0);
   });
 });
