@@ -12,7 +12,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { SPRING_BOUNCY } from "../../animations/springs";
 import { useTaskCreationFlow } from "../home/TaskCreationFlowProvider";
 import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
-import { posthog } from "../../lib/posthog";
+import { track } from "../../lib/analytics";
 import { ScrollingWaveform } from "../ScrollingWaveform";
 
 type InputState = { text: string; mode: "text" | "recording" };
@@ -76,7 +76,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
     const handleMicPress = async () => {
       Keyboard.dismiss();
       await requestPermissions();
-      posthog.capture("voice_input_used");
+      track("voice_input_used");
       dispatch({ type: "setMode", mode: "recording" });
       startRecording();
     };

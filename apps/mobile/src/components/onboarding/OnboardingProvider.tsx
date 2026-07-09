@@ -2,7 +2,7 @@ import { createContext, useContext, useReducer, useState, useCallback, type Reac
 import * as Sentry from "@sentry/react-native";
 import { useSavePreferences } from "../../hooks/usePreferences";
 import { router } from "expo-router";
-import { posthog } from "../../lib/posthog";
+import { track } from "../../lib/analytics";
 
 interface OnboardingState {
   name: string;
@@ -92,7 +92,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
         strengths: data.strengths,
         notificationsEnabled: data.notificationsEnabled,
       });
-      posthog.capture("onboarding_completed");
+      track("onboarding_completed");
     },
     [state, savePreferences]
   );

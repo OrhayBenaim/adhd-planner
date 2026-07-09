@@ -14,7 +14,7 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { Mascot } from "../mascot/Mascot";
 import { AuthFlow } from "../auth/AuthFlow";
 import { usePreferences } from "../../hooks/usePreferences";
-import { posthog } from "../../lib/posthog";
+import { track } from "../../lib/analytics";
 
 type SubView = "main" | "options";
 
@@ -29,12 +29,12 @@ export function SaveProgressOverlay({ onDone }: Props) {
   const preferences = usePreferences();
 
   const handleLinked = useCallback(() => {
-    posthog.capture("onboarding_account_linked");
+    track("onboarding_account_linked");
     onDone();
   }, [onDone]);
 
   const handleSkip = useCallback(() => {
-    posthog.capture("onboarding_save_progress_skipped");
+    track("onboarding_save_progress_skipped");
     onDone();
   }, [onDone]);
 

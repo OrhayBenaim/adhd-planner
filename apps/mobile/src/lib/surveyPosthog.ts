@@ -1,18 +1,20 @@
 import type { Survey } from "@posthog/core";
-import { posthog } from "./posthog";
+import { track } from "./analytics";
+import { getPostHogClient } from "./posthog";
 
 export type SurveyResponseValue = number | string;
 
 export async function loadSurveyDefinition(
   posthogSurveyId: string,
 ): Promise<Survey | null> {
+  const posthog = getPostHogClient();
   await Promise.all([posthog.ready(), posthog._onSurveysReady()]);
   const surveys = await posthog.getSurveys();
   return surveys.find((s) => s.id === posthogSurveyId) ?? null;
 }
 
 export function captureSurveyShown(survey: Survey): void {
-  posthog.capture("survey shown", { $survey_id: survey.id });
+  track("survey shown", { $survey_id: survey.id });
 }
 
 export function submitSurveyResponses(
@@ -24,9 +26,9 @@ export function submitSurveyResponses(
       `$survey_response_${questionId}`,
       value,
     ]),
-  );
+  ) as Record<`$survey_response_${string}`, number | string>;
 
-  posthog.capture("survey sent", {
+  track("survey sent", {
     $survey_id: survey.id,
     $survey_completed: true,
     $survey_questions: survey.questions.map((q) => ({
@@ -36,5 +38,5 @@ export function submitSurveyResponses(
     ...responseProps,
   });
 
-  void posthog.flush().catch(() => undefined);
+  void getPostHogClient().flush().catch(() => undefined);
 }
