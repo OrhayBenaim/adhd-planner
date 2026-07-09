@@ -19,7 +19,7 @@ struct CompleteTaskIntent: AppIntent {
 
     func perform() async throws -> some IntentResult {
         let defaults = UserDefaults(suiteName: WidgetData.appGroup)
-        let pendingKey = "@pending_task_completions"
+        let pendingKey = WidgetData.pendingTaskCompletionsKey
 
         // Append to pending completions
         var ids: [String] = []

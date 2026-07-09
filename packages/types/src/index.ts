@@ -1,6 +1,16 @@
 // Domain types shared between apps
 export type SurveyRewardType = "points" | "pro_days" | "ai_credits";
 
+export {
+  formatWidgetData,
+  getMoodEmoji,
+  getMoodLabel,
+  WIDGET_STORAGE_KEYS,
+  type MoodLabel,
+  type WidgetData,
+  type WidgetTaskItem,
+} from "./widgetContract";
+
 export interface Task {
   _id: string;
   userId: string;
