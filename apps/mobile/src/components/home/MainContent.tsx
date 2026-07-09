@@ -35,7 +35,7 @@ import { useSurveyCampaign } from "../../hooks/useSurveyCampaign";
 import { useRatingPrompt } from "../../hooks/useRatingPrompt";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { useNotificationRouting } from "../../hooks/useNotificationRouting";
-import { posthog } from "../../lib/posthog";
+import { track } from "../../lib/analytics";
 import { getLocalToday, getLocalDateStringDaysAhead } from "../../lib/dateTimeConvert";
 import { useHomeTour, HomeTourIntro, HomeTourOverlays } from "./HomeTour";
 
@@ -189,7 +189,7 @@ export function MainContent() {
     async (task: typeof selectedTask) => {
       if (!task) return;
       const result = await completeTask(task._id);
-      posthog.capture("task_completed");
+      track("task_completed");
       setSelectedTask(null);
       showToast(result?.earned ?? 0);
       notifyTaskCompleted();

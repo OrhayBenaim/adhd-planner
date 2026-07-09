@@ -9,7 +9,7 @@ import * as Sentry from "@sentry/react-native";
 import { useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { authClient } from "../../../lib/authClient";
-import { posthog } from "../../../lib/posthog";
+import { track } from "../../../lib/analytics";
 import { usePremium } from "../../../hooks/usePremium";
 import { clearHadLinkedAccountMarker } from "../../../lib/sessionState";
 import { isInternalAuthEmail } from "../../../lib/authUsername";
@@ -46,13 +46,13 @@ export function AuthenticatedProfile({
   // Fire upgrade_cta_viewed when non-premium user sees the profile
   useEffect(() => {
     if (!isPremium && upgradeVariant) {
-      posthog.capture("upgrade_cta_viewed", { variant: String(upgradeVariant) });
+      track("upgrade_cta_viewed", { variant: String(upgradeVariant) });
     }
   }, [isPremium, upgradeVariant]);
 
   const handleUpgrade = useCallback(
     (source: string = "feature_card") => {
-      posthog.capture("paywall_opened", { variant: String(upgradeVariant), source });
+      track("paywall_opened", { variant: String(upgradeVariant), source });
       const offering = upgradeVariant === "locked-teasers" ? "feature_value" : undefined;
       showPaywall(offering);
     },

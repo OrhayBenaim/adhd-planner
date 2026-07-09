@@ -7,13 +7,13 @@ import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayo
 import { MascotHeader } from "../../src/components/onboarding/MascotHeader";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { PRODUCTIVE_TIMES } from "../../src/constants/onboarding";
-import { posthog } from "../../src/lib/posthog";
+import { track } from "../../src/lib/analytics";
 
 export default function WorkTimeStep() {
   const { state, toggleArrayItem } = useOnboarding();
 
   useEffect(() => {
-    posthog.capture("onboarding_step_viewed", { step: "work_time", step_number: 2 });
+    track("onboarding_step_viewed", { step: "work_time", step_number: 2 });
   }, []);
 
   const firstName = state.name.trim().split(" ")[0];

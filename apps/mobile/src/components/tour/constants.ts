@@ -1,3 +1,5 @@
+import type { TourStepEvent } from "../../lib/analytics";
+
 export type TourStepName =
   | "intro"
   | "createTask"
@@ -18,7 +20,7 @@ export interface TourStepDef {
   title: string;
   description: string;
   buttonLabel?: string;
-  posthogEvent: string;
+  posthogEvent: TourStepEvent;
 }
 
 export const TOUR_STEPS: TourStepDef[] = [

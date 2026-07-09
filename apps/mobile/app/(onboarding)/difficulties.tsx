@@ -7,13 +7,13 @@ import { MascotHeader } from "../../src/components/onboarding/MascotHeader";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { ChipGrid } from "../../src/components/onboarding/ChipGrid";
 import { DIFFICULTIES } from "../../src/constants/onboarding";
-import { posthog } from "../../src/lib/posthog";
+import { track } from "../../src/lib/analytics";
 
 export default function DifficultiesStep() {
   const { state, toggleArrayItem } = useOnboarding();
 
   useEffect(() => {
-    posthog.capture("onboarding_step_viewed", { step: "difficulties", step_number: 3 });
+    track("onboarding_step_viewed", { step: "difficulties", step_number: 3 });
   }, []);
 
   return (
