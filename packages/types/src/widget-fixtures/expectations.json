@@ -1,0 +1,36 @@
+{
+  "storageKeys": {
+    "widgetData": "@widget_data",
+    "pendingMood": "@pending_mood",
+    "pendingTaskCompletions": "@pending_task_completions"
+  },
+  "moodBoundaries": [
+    { "level": 0, "label": "Exhausted", "emoji": "😢" },
+    { "level": 20, "label": "Exhausted", "emoji": "😢" },
+    { "level": 21, "label": "Low Energy", "emoji": "😔" },
+    { "level": 40, "label": "Low Energy", "emoji": "😔" },
+    { "level": 41, "label": "Focused", "emoji": "😐" },
+    { "level": 60, "label": "Focused", "emoji": "😐" },
+    { "level": 61, "label": "Motivated", "emoji": "🙂" },
+    { "level": 80, "label": "Motivated", "emoji": "🙂" },
+    { "level": 81, "label": "Super Motivated", "emoji": "😊" },
+    { "level": 100, "label": "Super Motivated", "emoji": "😊" }
+  ],
+  "fixtures": [
+    "full-with-tasks.json",
+    "minimal-no-tasks.json",
+    "mood-boundary-0.json",
+    "mood-boundary-20.json",
+    "mood-boundary-21.json",
+    "mood-boundary-40.json",
+    "mood-boundary-41.json",
+    "mood-boundary-60.json",
+    "mood-boundary-61.json",
+    "mood-boundary-80.json",
+    "mood-boundary-81.json",
+    "mood-boundary-100.json",
+    "malformed.json",
+    "empty.json"
+  ],
+  "parseOnlyFixtures": ["malformed.json", "empty.json"]
+}

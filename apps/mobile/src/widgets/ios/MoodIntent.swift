@@ -21,7 +21,7 @@ struct SetMoodIntent: AppIntent {
         let defaults = UserDefaults(suiteName: WidgetData.appGroup)
 
         // Store pending mood for the app to pick up
-        defaults?.set(String(moodLevel), forKey: "@pending_mood")
+        defaults?.set(String(moodLevel), forKey: WidgetData.pendingMoodKey)
 
         // Update widget data so the widget refreshes immediately
         if let jsonString = defaults?.string(forKey: WidgetData.storageKey),

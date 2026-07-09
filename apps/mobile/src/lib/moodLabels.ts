@@ -1,10 +1,3 @@
-type MoodLabel =
-  | "Exhausted"
-  | "Low Energy"
-  | "Focused"
-  | "Motivated"
-  | "Super Motivated";
-
 type DifficultyLabel =
   | "Scoring..."
   | "Not rated"
@@ -14,13 +7,7 @@ type DifficultyLabel =
   | "Hard"
   | "Very Hard";
 
-export function getMoodLabel(value: number): MoodLabel {
-  if (value <= 20) return "Exhausted";
-  if (value <= 40) return "Low Energy";
-  if (value <= 60) return "Focused";
-  if (value <= 80) return "Motivated";
-  return "Super Motivated";
-}
+export { getMoodLabel } from "@adhd-planner/types";
 
 export function getDifficultyLabel(value: number): DifficultyLabel {
   if (value < 0) return "Scoring...";
