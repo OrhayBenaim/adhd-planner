@@ -1,5 +1,5 @@
-import { forwardRef, useState, useCallback, useEffect } from "react";
-import { View, Text } from "react-native";
+import { forwardRef, useState, useCallback, useEffect, type ComponentType } from "react";
+import { View, Text, type TextInputProps } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, {
@@ -11,17 +11,10 @@ import { useSheetNav } from "../home/SheetNavProvider";
 import { usePreferences, useUpdatePreferences } from "../../hooks/usePreferences";
 import { AnonymousProfile } from "./profile/AnonymousProfile";
 import { AuthenticatedProfile } from "./profile/AuthenticatedProfile";
-import { AuthOptions } from "../auth/AuthOptions";
-import { SignUpWithUsername } from "../auth/SignUpWithUsername";
-import { SignInWithUsername } from "../auth/SignInWithUsername";
+import { AuthFlow } from "../auth/AuthFlow";
 import { getSessionAnonymousState } from "../../lib/sessionState";
 
-type SubView =
-  | "main"
-  | "linkOptions"
-  | "signInOptions"
-  | "signUpUsername"
-  | "signInUsername";
+type SubView = "main" | "linkOptions" | "signInOptions";
 
 function SubViewHeader({ onBack, onClose }: { onBack: () => void; onClose: () => void }) {
   return (
@@ -55,6 +48,8 @@ function MainHeader({ onClose }: { onClose: () => void }) {
 interface Props {
   onClose: () => void;
 }
+
+const SheetInput = BottomSheetTextInput as ComponentType<TextInputProps>;
 
 export const ProfileSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
@@ -93,6 +88,17 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
       closeSheet();
     }, [resetState, closeSheet]);
 
+    const authHeader = useCallback(
+      (backToMain: () => void) =>
+        ({ view, onBack }: { view: "options" | "username"; onBack: () => void }) => (
+          <SubViewHeader
+            onBack={view === "options" ? backToMain : onBack}
+            onClose={closeSheet}
+          />
+        ),
+      [closeSheet],
+    );
+
     let content;
 
     if (isAnonymous === undefined) {
@@ -102,47 +108,29 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
           <Text className="text-sm text-[#6a7282]">Loading profile...</Text>
         </View>
       );
-    } else if (subView === "signUpUsername" && isAnonymous) {
+    } else if (subView === "linkOptions" && isAnonymous) {
       content = (
         <View className="px-6 pt-6">
-          <SubViewHeader onBack={() => setSubView("linkOptions")} onClose={closeSheet} />
-          <SignUpWithUsername
-            onSuccess={handleAuthSuccess}
-            name={userName}
-            onSwitchToSignIn={() => setSubView("signInOptions")}
-            InputComponent={BottomSheetTextInput as any}
-          />
-        </View>
-      );
-    } else if (subView === "signInUsername" && isAnonymous) {
-      content = (
-        <View className="px-6 pt-6">
-          <SubViewHeader onBack={() => setSubView("signInOptions")} onClose={closeSheet} />
-          <SignInWithUsername
-            onSuccess={handleAuthSuccess}
-            InputComponent={BottomSheetTextInput as any}
-          />
-        </View>
-      );
-    } else if (subView === "linkOptions") {
-      content = (
-        <View className="px-6 pt-6">
-          <SubViewHeader onBack={() => setSubView("main")} onClose={closeSheet} />
-          <AuthOptions
+          <AuthFlow
+            key="link"
             mode="link"
             onSuccess={handleAuthSuccess}
-            onUsernamePress={() => setSubView("signUpUsername")}
+            presentation={{ usernameBack: "none", signUpName: userName }}
+            InputComponent={SheetInput}
+            renderHeader={authHeader(() => setSubView("main"))}
           />
         </View>
       );
-    } else if (subView === "signInOptions") {
+    } else if (subView === "signInOptions" && isAnonymous) {
       content = (
         <View className="px-6 pt-6">
-          <SubViewHeader onBack={() => setSubView("main")} onClose={closeSheet} />
-          <AuthOptions
+          <AuthFlow
+            key="signIn"
             mode="signIn"
             onSuccess={handleAuthSuccess}
-            onUsernamePress={() => setSubView("signInUsername")}
+            presentation={{ usernameBack: "none" }}
+            InputComponent={SheetInput}
+            renderHeader={authHeader(() => setSubView("main"))}
           />
         </View>
       );
