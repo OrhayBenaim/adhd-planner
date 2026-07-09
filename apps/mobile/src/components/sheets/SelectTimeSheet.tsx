@@ -8,7 +8,6 @@ import { timeSelectionToTime } from "../../lib/dateTimeConvert";
 import { GradientOption } from "../GradientOption";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { TourTooltip } from "../tour/TourTooltip";
-import { TOUR_STEPS, VISIBLE_TOUR_STEP_COUNT } from "../tour/constants";
 
 interface Props {
   onClose: () => void;
@@ -18,6 +17,7 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const flow = useTaskCreationFlow();
     const tour = useGuidedTour();
+    const timeSheetTour = tour?.timeSheetTour ?? null;
     const isSelected = (time: string) => {
       if (!flow.editingExistingTaskId || !flow.selectedTime) return false;
       return timeSelectionToTime(time) === flow.selectedTime;
@@ -44,14 +44,14 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
       setShowCustomInput(false);
       setCustomValue("");
       flow.selectTime(time);
-      if (tour?.isTourStep("pickTime")) tour.advance();
+      tour?.reportTimeSelected();
     };
 
     const handleCustomSubmit = () => {
       if (customValue.trim()) {
         setShowCustomInput(false);
         flow.selectTime(customValue.trim());
-        if (tour?.isTourStep("pickTime")) tour.advance();
+        tour?.reportTimeSelected();
         setCustomValue("");
       }
     };
@@ -61,7 +61,7 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
         ref={ref}
         index={-1}
         snapPoints={snapPoints}
-        enablePanDownToClose={!tour?.isTourStep("pickTime")}
+        enablePanDownToClose={!timeSheetTour?.lockSheet}
         onClose={onClose}
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
@@ -72,7 +72,7 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
         <BottomSheetView className="px-6 pt-6">
           <View className="flex-row items-center justify-between mb-6">
             <Text className="text-xl font-semibold text-[#1e2939]">What time?</Text>
-            {!tour?.isTourStep("pickTime") && (
+            {!timeSheetTour?.lockSheet && (
               <Pressable onPress={() => { Keyboard.dismiss(); onClose(); }}>
                 <Ionicons name="close" size={24} color="#364153" />
               </Pressable>
@@ -108,14 +108,14 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
               </View>
             )}
           </View>
-          {tour?.isTourStep("pickTime") && (
+          {timeSheetTour && (
             <View className="mt-4">
               <TourTooltip
-                title={TOUR_STEPS[3].title}
-                description={TOUR_STEPS[3].description}
+                title={timeSheetTour.tooltip.title}
+                description={timeSheetTour.tooltip.description}
                 showMascot={false}
-                stepNumber={TOUR_STEPS[3].step}
-                totalSteps={VISIBLE_TOUR_STEP_COUNT}
+                stepNumber={timeSheetTour.tooltip.stepNumber}
+                totalSteps={timeSheetTour.tooltip.totalSteps}
                 arrow="up"
               />
             </View>
