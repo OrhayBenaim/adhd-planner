@@ -8,7 +8,8 @@ import { useOnboarding } from "../../src/components/onboarding/OnboardingProvide
 import { useNeedsOnboarding } from "../../src/hooks/usePreferences";
 import { AuthFlow } from "../../src/components/auth/AuthFlow";
 import type { AuthFlowView } from "../../src/lib/authFlow";
-import { useAndroidRootBack } from "../../src/components/home/useAndroidRootBack";
+import { useAndroidRootBack } from "../../src/hooks/useAndroidRootBack";
+import { ExitArmingToast } from "../../src/components/ExitArmingToast";
 import { track } from "../../src/lib/analytics";
 
 type SubView = "welcome" | "signIn";
@@ -103,15 +104,6 @@ export default function WelcomeStep() {
             />
           </ScrollView>
         </KeyboardAvoidingView>
-        {exitToastVisible ? (
-          <View className="absolute top-24 left-0 right-0 items-center z-[950] px-6">
-            <View className="bg-white rounded-full px-5 py-3 shadow-sm border border-[#f3f4f6]">
-              <Text className="text-sm font-medium text-[#0A0A0A]">
-                Press back again to exit
-              </Text>
-            </View>
-          </View>
-        ) : null}
       </OnboardingLayout>
     );
   }
@@ -160,15 +152,7 @@ export default function WelcomeStep() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      {exitToastVisible ? (
-        <View className="absolute top-24 left-0 right-0 items-center z-[950] px-6">
-          <View className="bg-white rounded-full px-5 py-3 shadow-sm border border-[#f3f4f6]">
-            <Text className="text-sm font-medium text-[#0A0A0A]">
-              Press back again to exit
-            </Text>
-          </View>
-        </View>
-      ) : null}
+      <ExitArmingToast visible={exitToastVisible} />
     </OnboardingLayout>
   );
 }

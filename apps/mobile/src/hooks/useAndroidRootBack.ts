@@ -5,7 +5,7 @@ import {
   resolveBackAction,
   type BackAction,
   type RootBackState,
-} from "../../lib/rootBackAction";
+} from "../lib/rootBackAction";
 
 export interface AndroidRootBackHandlers {
   skipTour?: () => void;
