@@ -4,7 +4,9 @@
  * Given a snapshot of what's open on a root screen (Home / Welcome), returns
  * exactly one next action. Callers interpret effects (BackHandler, toast, etc.).
  *
- * Priority is outermost-first (overlays before sheets before exit arming).
+ * Priority is outermost-first (visual stacking: overlays before sheets before
+ * exit arming). Callers do not pass open-order; “most recent” in product copy
+ * means the outermost surface the user is interacting with.
  * Transient points / "no tasks" toasts are intentionally absent from the snapshot.
  */
 import type { FlowStep } from "./taskCreationFlow";
@@ -12,6 +14,7 @@ import type { AuthFlowView } from "./authFlow";
 
 export const EXIT_ARMING_MS = 2000;
 
+/** Mirrors SheetNavProvider's ActiveSheet — kept here so the pure module stays RN-free. */
 export type ActiveSheetName =
   | "none"
   | "addTask"

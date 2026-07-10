@@ -27,7 +27,8 @@ import { useHome } from "./HomeProvider";
 import { useSheetNav } from "./SheetNavProvider";
 import { useTaskCreationFlow } from "./TaskCreationFlowProvider";
 import { useRootBackContribution } from "./RootBackContribution";
-import { useAndroidRootBack } from "./useAndroidRootBack";
+import { useAndroidRootBack } from "../../hooks/useAndroidRootBack";
+import { ExitArmingToast } from "../ExitArmingToast";
 import { usePremium } from "../../hooks/usePremium";
 import { useHomeExperience } from "../../hooks/useHomeExperience";
 import { useRatingPrompt } from "../../hooks/useRatingPrompt";
@@ -393,15 +394,7 @@ export function MainContent() {
         </View>
       ) : null}
 
-      {exitToastVisible ? (
-        <View className="absolute top-24 left-0 right-0 items-center z-[950] px-6">
-          <View className="bg-white rounded-full px-5 py-3 shadow-sm border border-[#f3f4f6]">
-            <Text className="text-sm font-medium text-[#0A0A0A]">
-              Press back again to exit
-            </Text>
-          </View>
-        </View>
-      ) : null}
+      <ExitArmingToast visible={exitToastVisible} />
 
       {/* Bottom nav */}
       <BottomNav
