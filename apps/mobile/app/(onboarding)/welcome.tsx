@@ -1,12 +1,14 @@
 import { View, Text, TextInput, KeyboardAvoidingView, Platform, ScrollView, Pressable } from "react-native";
 import { router } from "expo-router";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
 import { MascotHeader } from "../../src/components/onboarding/MascotHeader";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { useNeedsOnboarding } from "../../src/hooks/usePreferences";
 import { AuthFlow } from "../../src/components/auth/AuthFlow";
+import type { AuthFlowView } from "../../src/lib/authFlow";
+import { useAndroidRootBack } from "../../src/components/home/useAndroidRootBack";
 import { track } from "../../src/lib/analytics";
 
 type SubView = "welcome" | "signIn";
@@ -14,6 +16,8 @@ type SubView = "welcome" | "signIn";
 export default function WelcomeStep() {
   const { state, updateField } = useOnboarding();
   const [subView, setSubView] = useState<SubView>("welcome");
+  const [authView, setAuthView] = useState<AuthFlowView>("options");
+  const authBackRef = useRef<(() => void) | null>(null);
   const needsOnboarding = useNeedsOnboarding();
 
   useEffect(() => {
@@ -30,6 +34,37 @@ export default function WelcomeStep() {
     // Navigation handled by needsOnboarding effect once Convex syncs
   }, []);
 
+  const welcomeToForm = useCallback(() => {
+    setSubView("welcome");
+    setAuthView("options");
+  }, []);
+
+  const authGoBack = useCallback(() => {
+    authBackRef.current?.();
+  }, []);
+
+  const getBackState = useCallback(
+    () => ({
+      welcomeSubView: subView,
+      welcomeAuthView: authView,
+    }),
+    [subView, authView],
+  );
+
+  const backHandlers = useMemo(
+    () => ({
+      welcomeToForm,
+      authGoBack,
+    }),
+    [welcomeToForm, authGoBack],
+  );
+
+  const { exitToastVisible } = useAndroidRootBack(
+    getBackState,
+    backHandlers,
+    subView === "signIn",
+  );
+
   if (subView === "signIn") {
     return (
       <OnboardingLayout step={1} showFooter={false}>
@@ -45,27 +80,38 @@ export default function WelcomeStep() {
             <AuthFlow
               mode="signIn"
               onSuccess={handleSignInSuccess}
+              onViewChange={setAuthView}
               presentation={{
                 usernameSignInTitle: "Welcome back",
                 usernameSignInSubtitle: "Sign in to your account",
                 usernameBack: "text",
               }}
-              renderFooter={({ view }) =>
-                view === "options" ? (
+              renderFooter={({ view, onBack }) => {
+                authBackRef.current = onBack;
+                return view === "options" ? (
                   <View className="items-center pb-6">
                     <Pressable
-                      onPress={() => setSubView("welcome")}
+                      onPress={welcomeToForm}
                       className="flex-row items-center justify-center h-14"
                       style={{ gap: 6 }}
                     >
                       <Text className="text-lg font-medium text-[#6a7282]">Back</Text>
                     </Pressable>
                   </View>
-                ) : null
-              }
+                ) : null;
+              }}
             />
           </ScrollView>
         </KeyboardAvoidingView>
+        {exitToastVisible ? (
+          <View className="absolute top-24 left-0 right-0 items-center z-[950] px-6">
+            <View className="bg-white rounded-full px-5 py-3 shadow-sm border border-[#f3f4f6]">
+              <Text className="text-sm font-medium text-[#0A0A0A]">
+                Press back again to exit
+              </Text>
+            </View>
+          </View>
+        ) : null}
       </OnboardingLayout>
     );
   }
@@ -114,6 +160,15 @@ export default function WelcomeStep() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      {exitToastVisible ? (
+        <View className="absolute top-24 left-0 right-0 items-center z-[950] px-6">
+          <View className="bg-white rounded-full px-5 py-3 shadow-sm border border-[#f3f4f6]">
+            <Text className="text-sm font-medium text-[#0A0A0A]">
+              Press back again to exit
+            </Text>
+          </View>
+        </View>
+      ) : null}
     </OnboardingLayout>
   );
 }

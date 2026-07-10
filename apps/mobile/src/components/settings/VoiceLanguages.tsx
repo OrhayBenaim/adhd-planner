@@ -108,10 +108,12 @@ export function useVoiceLanguages() {
   );
 
   const toggleExpanded = useCallback(() => setExpanded((v) => !v), []);
+  const collapse = useCallback(() => setExpanded(false), []);
 
   return {
     expanded,
     toggleExpanded,
+    collapse,
     locales: expanded ? locales : [],
     installedLocales,
     downloading,

@@ -250,3 +250,32 @@ export function removePendingTask(state: FlowState, taskId: string): FlowTransit
 export function reset(): FlowTransition {
   return { state: initialFlowState, effects: [{ type: "closeSheet" }] };
 }
+
+/**
+ * One back step in the creation wizard.
+ * From add-task (or idle), abandons the flow. From day/time while editing a
+ * pending task, returns to summary. Otherwise rewinds to the previous sheet.
+ */
+export function goBack(state: FlowState): FlowTransition {
+  switch (state.step) {
+    case "idle":
+    case "addTask":
+      return reset();
+    case "selectDay":
+      if (state.editingTaskId) {
+        return goTo({ ...state, editingTaskId: null }, "taskSummary");
+      }
+      return goTo(state, "addTask");
+    case "selectTime":
+      if (state.editingTaskId) {
+        return goTo({ ...state, editingTaskId: null }, "taskSummary");
+      }
+      return goTo(state, "selectDay");
+    case "taskSummary":
+      return goTo(state, "selectTime");
+    default: {
+      const _exhaustive: never = state.step;
+      return _exhaustive;
+    }
+  }
+}

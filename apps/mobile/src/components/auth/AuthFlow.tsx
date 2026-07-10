@@ -59,6 +59,8 @@ export interface AuthFlowProps {
   renderHeader?: (props: { view: AuthFlowView; onBack: () => void }) => ReactNode;
   /** Footer chrome (e.g. back to welcome / overlay main). */
   renderFooter?: (props: { view: AuthFlowView; onBack: () => void }) => ReactNode;
+  /** Notifies parent when options ↔ username changes (for Android root back). */
+  onViewChange?: (view: AuthFlowView) => void;
 }
 
 /**
@@ -73,16 +75,23 @@ export function AuthFlow({
   InputComponent,
   renderHeader,
   renderFooter,
+  onViewChange,
 }: AuthFlowProps) {
   const [state, setState] = useState(() => initialAuthFlowState(mode));
   const stateRef = useRef(state);
   stateRef.current = state;
+  const onViewChangeRef = useRef(onViewChange);
+  onViewChangeRef.current = onViewChange;
 
   const apply = useCallback(
     (event: AuthFlowEvent) => {
       const transition = transitionAuthFlow(stateRef.current, event);
+      const viewChanged = transition.state.view !== stateRef.current.view;
       stateRef.current = transition.state;
       setState(transition.state);
+      if (viewChanged) {
+        onViewChangeRef.current?.(transition.state.view);
+      }
       for (const effect of transition.effects) {
         if (effect.type === "onSuccess") {
           void onSuccess();

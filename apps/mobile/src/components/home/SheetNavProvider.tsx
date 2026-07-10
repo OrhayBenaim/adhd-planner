@@ -1,5 +1,5 @@
 // apps/mobile/src/components/home/SheetNavProvider.tsx
-import { createContext, useContext, useCallback, useMemo, useRef, type ReactNode } from "react";
+import { createContext, useContext, useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import type BottomSheet from "@gorhom/bottom-sheet";
 
 export type ActiveSheet =
@@ -17,9 +17,10 @@ export type ActiveSheet =
 export type SheetEntry = { name: ActiveSheet; ref: React.RefObject<BottomSheet | null> };
 
 interface SheetNavContextValue {
+  activeSheet: ActiveSheet;
   openSheet: (sheet: ActiveSheet) => void;
   closeSheet: () => void;
-  onSheetClose: () => void;
+  onSheetClose: (closed: ActiveSheet) => void;
   registerSheet: (entry: SheetEntry) => void;
 }
 
@@ -39,7 +40,8 @@ export function SheetNavProvider({ children }: { children: ReactNode }) {
   const sheetsRef = useRef<Map<ActiveSheet, React.RefObject<BottomSheet | null>> | null>(null);
   sheetsRef.current ??= new Map();
   const sheets = sheetsRef.current;
-  const activeSheetRef = useRef<ActiveSheet | null>(null);
+  const activeSheetRef = useRef<ActiveSheet>("none");
+  const [activeSheet, setActiveSheet] = useState<ActiveSheet>("none");
 
   const registerSheet = useCallback((entry: SheetEntry) => {
     sheets.set(entry.name, entry.ref);
@@ -47,6 +49,7 @@ export function SheetNavProvider({ children }: { children: ReactNode }) {
 
   const openSheet = useCallback((sheet: ActiveSheet) => {
     activeSheetRef.current = sheet;
+    setActiveSheet(sheet);
     sheets.forEach((ref, name) => {
       if (name !== sheet) ref.current?.close();
     });
@@ -54,20 +57,23 @@ export function SheetNavProvider({ children }: { children: ReactNode }) {
   }, [sheets]);
 
   const closeSheet = useCallback(() => {
-    activeSheetRef.current = null;
+    activeSheetRef.current = "none";
+    setActiveSheet("none");
     sheets.forEach((ref) => ref.current?.close());
   }, [sheets]);
 
-  // Guarded version for onClose callbacks — won't close a newly-opened sheet
-  const onSheetClose = useCallback(() => {
-    if (activeSheetRef.current === null) {
-      closeSheet();
+  // Named so pan-down clears only when the dismissed sheet is still active;
+  // transitions (openSheet already pointed at the next sheet) are ignored.
+  const onSheetClose = useCallback((closed: ActiveSheet) => {
+    if (activeSheetRef.current === closed) {
+      activeSheetRef.current = "none";
+      setActiveSheet("none");
     }
-  }, [closeSheet]);
+  }, []);
 
   const value = useMemo(
-    () => ({ openSheet, closeSheet, onSheetClose, registerSheet }),
-    [openSheet, closeSheet, onSheetClose, registerSheet]
+    () => ({ activeSheet, openSheet, closeSheet, onSheetClose, registerSheet }),
+    [activeSheet, openSheet, closeSheet, onSheetClose, registerSheet]
   );
 
   return (
