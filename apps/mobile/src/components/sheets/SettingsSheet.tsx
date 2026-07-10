@@ -4,6 +4,7 @@ import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { useSheetNav } from "../home/SheetNavProvider";
+import { useRegisterRootBackContribution } from "../home/RootBackContribution";
 import { useSettings } from "../../hooks/useSettings";
 import { usePremium } from "../../hooks/usePremium";
 import { ProBadge } from "../ProBadge";
@@ -66,6 +67,11 @@ export const SettingsSheet = forwardRef<BottomSheet, Props>(
     const { closeSheet } = useSheetNav();
     const { isPremium, showPaywall } = usePremium();
     const voice = useVoiceLanguages();
+
+    useRegisterRootBackContribution("settings", {
+      settingsVoiceExpanded: voice.expanded,
+      collapseVoiceLanguages: voice.collapse,
+    });
 
     const header = useCallback(
       () => (

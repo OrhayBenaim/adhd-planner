@@ -1,7 +1,7 @@
 // apps/mobile/src/components/home/MainContent.tsx
 import { View, ScrollView, Text } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -26,6 +26,8 @@ import { RatingPromptBanner } from "../RatingPromptBanner";
 import { useHome } from "./HomeProvider";
 import { useSheetNav } from "./SheetNavProvider";
 import { useTaskCreationFlow } from "./TaskCreationFlowProvider";
+import { useRootBackContribution } from "./RootBackContribution";
+import { useAndroidRootBack } from "./useAndroidRootBack";
 import { usePremium } from "../../hooks/usePremium";
 import { useHomeExperience } from "../../hooks/useHomeExperience";
 import { useRatingPrompt } from "../../hooks/useRatingPrompt";
@@ -54,8 +56,9 @@ export function MainContent() {
     surveyRewardToast,
     evaluateAiPick,
   } = useHomeExperience(tasks);
-  const { openSheet } = useSheetNav();
+  const { openSheet, closeSheet, activeSheet } = useSheetNav();
   const flow = useTaskCreationFlow();
+  const { contribution } = useRootBackContribution();
   const homeTour = useHomeTour();
   const guidedTour = useGuidedTour();
   const ratingPrompt = useRatingPrompt();
@@ -71,6 +74,73 @@ export function MainContent() {
   } = homeTour;
 
   const { isPremium, showPaywall } = usePremium();
+
+  const ratingVisible =
+    ratingPrompt.visible && !survey.reminderVisible && !guidedTour?.isActive;
+
+  const getBackState = useCallback(
+    () => ({
+      surveyFormOpen: survey.formVisible,
+      surveyInviteOpen: survey.overlayVisible,
+      ratingPromptVisible: ratingVisible,
+      tourActive: !!guidedTour?.isActive,
+      activeSheet,
+      taskFlowStep: flow.step,
+      profileSubView: contribution.profileSubView,
+      profileAuthView: contribution.profileAuthView,
+      settingsVoiceExpanded: contribution.settingsVoiceExpanded,
+    }),
+    [
+      survey.formVisible,
+      survey.overlayVisible,
+      ratingVisible,
+      guidedTour?.isActive,
+      activeSheet,
+      flow.step,
+      contribution.profileSubView,
+      contribution.profileAuthView,
+      contribution.settingsVoiceExpanded,
+    ],
+  );
+
+  const backHandlers = useMemo(
+    () => ({
+      skipTour: () => guidedTour?.skip(),
+      dismissSurveyInvite: survey.handleDismissOverlay,
+      dismissSurveyForm: survey.closeSurveyForm,
+      dismissRatingPrompt: ratingPrompt.handleDismiss,
+      rewindTaskFlow: () => flow.goBack(),
+      closeSheetAndIdleFlow: () => flow.reset(),
+      closeSheet,
+      authGoBack: contribution.authGoBack,
+      profileToMain: contribution.profileToMain,
+      collapseVoiceLanguages: contribution.collapseVoiceLanguages,
+    }),
+    [
+      guidedTour,
+      survey.handleDismissOverlay,
+      survey.closeSurveyForm,
+      ratingPrompt.handleDismiss,
+      flow,
+      closeSheet,
+      contribution.authGoBack,
+      contribution.profileToMain,
+      contribution.collapseVoiceLanguages,
+    ],
+  );
+
+  const dismissibleOpen =
+    survey.formVisible ||
+    survey.overlayVisible ||
+    !!guidedTour?.isActive ||
+    ratingVisible ||
+    activeSheet !== "none";
+
+  const { exitToastVisible } = useAndroidRootBack(
+    getBackState,
+    backHandlers,
+    dismissibleOpen,
+  );
 
   // AI button animation — local to this component
   const aiScale = useSharedValue(1);
@@ -274,9 +344,7 @@ export function MainContent() {
           </View>
         )}
 
-        {ratingPrompt.visible &&
-          !survey.reminderVisible &&
-          !guidedTour?.isActive && (
+        {ratingVisible && (
             <View className="px-6">
               <RatingPromptBanner
                 onRate={ratingPrompt.handleRate}
@@ -320,6 +388,16 @@ export function MainContent() {
           <View className="bg-white rounded-full px-5 py-3 shadow-sm border border-[#f3f4f6]">
             <Text className="text-sm font-medium text-[#0A0A0A]">
               {surveyRewardToast}
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
+      {exitToastVisible ? (
+        <View className="absolute top-24 left-0 right-0 items-center z-[950] px-6">
+          <View className="bg-white rounded-full px-5 py-3 shadow-sm border border-[#f3f4f6]">
+            <Text className="text-sm font-medium text-[#0A0A0A]">
+              Press back again to exit
             </Text>
           </View>
         </View>
