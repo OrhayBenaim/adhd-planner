@@ -9,7 +9,6 @@ import { View, Text, type TextInputProps } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import { useSocialAuth } from "../../hooks/useSocialAuth";
-import { useBackStep } from "../../hooks/useAndroidBack";
 import {
   initialAuthFlowState,
   transitionAuthFlow,
@@ -60,11 +59,6 @@ export interface AuthFlowProps {
   renderHeader?: (props: { view: AuthFlowView; onBack: () => void }) => ReactNode;
   /** Footer chrome (e.g. back to welcome / overlay main). */
   renderFooter?: (props: { view: AuthFlowView; onBack: () => void }) => ReactNode;
-  /**
-   * On root screens: Android hardware back rewinds username → options.
-   * Leave off for stack routes (sign-in-gate) so back keeps popping the route.
-   */
-  hardwareBackStep?: boolean;
 }
 
 /**
@@ -79,7 +73,6 @@ export function AuthFlow({
   InputComponent,
   renderHeader,
   renderFooter,
-  hardwareBackStep = false,
 }: AuthFlowProps) {
   const [state, setState] = useState(() => initialAuthFlowState(mode));
   const stateRef = useRef(state);
@@ -132,8 +125,6 @@ export function AuthFlow({
   const handleBack = useCallback(() => {
     apply({ type: "GO_BACK" });
   }, [apply]);
-
-  useBackStep(hardwareBackStep && state.view === "username", handleBack);
 
   const socialBusyOrMachine = state.status === "busy" || socialBusy;
   const {

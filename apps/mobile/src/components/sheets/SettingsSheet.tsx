@@ -4,7 +4,6 @@ import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetFlatList } from "@gorhom/bottom-sheet";
 import { useSheetNav } from "../home/SheetNavProvider";
-import { useBackStep } from "../../hooks/useAndroidBack";
 import { useSettings } from "../../hooks/useSettings";
 import { usePremium } from "../../hooks/usePremium";
 import { ProBadge } from "../ProBadge";
@@ -64,12 +63,9 @@ interface Props {
 export const SettingsSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const { settings, updateSetting, adminAiEnabled } = useSettings();
-    const { closeSheet, activeSheet } = useSheetNav();
+    const { closeSheet } = useSheetNav();
     const { isPremium, showPaywall } = usePremium();
     const voice = useVoiceLanguages();
-
-    // Android back collapses the expanded section before the sheet closes.
-    useBackStep(activeSheet === "settings" && voice.expanded, voice.collapse);
 
     const header = useCallback(
       () => (

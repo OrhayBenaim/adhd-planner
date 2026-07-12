@@ -7,7 +7,7 @@ import { MascotHeader } from "../../src/components/onboarding/MascotHeader";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { useNeedsOnboarding } from "../../src/hooks/usePreferences";
 import { AuthFlow } from "../../src/components/auth/AuthFlow";
-import { useBackStep, useExitArming } from "../../src/hooks/useAndroidBack";
+import { useAndroidRootBack } from "../../src/hooks/useAndroidBack";
 import { ExitArmingToast } from "../../src/components/ExitArmingToast";
 import { track } from "../../src/lib/analytics";
 
@@ -32,10 +32,13 @@ export default function WelcomeStep() {
     // Navigation handled by needsOnboarding effect once Convex syncs
   }, []);
 
-  // Welcome is a root screen: bare form arms exit; the sign-in sub-view takes
-  // one back step to the form (AuthFlow rewinds username → options itself).
-  const { exitToastVisible } = useExitArming(subView === "signIn");
-  useBackStep(subView === "signIn", () => setSubView("welcome"));
+  const { exitToastVisible } = useAndroidRootBack(() => {
+    if (subView === "signIn") {
+      setSubView("welcome");
+      return true;
+    }
+    return false;
+  });
 
   if (subView === "signIn") {
     return (
@@ -52,7 +55,6 @@ export default function WelcomeStep() {
             <AuthFlow
               mode="signIn"
               onSuccess={handleSignInSuccess}
-              hardwareBackStep
               presentation={{
                 usernameSignInTitle: "Welcome back",
                 usernameSignInSubtitle: "Sign in to your account",

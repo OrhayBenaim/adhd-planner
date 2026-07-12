@@ -12,7 +12,6 @@ import {
   updatePendingTitle,
   removePendingTask,
   reset,
-  goBack,
   buildPendingTasks,
 } from "../taskCreationFlow";
 import { daySelectionToDate, timeSelectionToTime } from "../dateTimeConvert";
@@ -235,46 +234,5 @@ describe("reset", () => {
     const { state, effects } = reset();
     expect(state).toEqual(initialFlowState);
     expect(effectTypes(effects)).toEqual(["closeSheet"]);
-  });
-});
-
-describe("goBack", () => {
-  it("from addTask abandons the flow", () => {
-    const { state, effects } = goBack({ ...initialFlowState, step: "addTask", title: "x" });
-    expect(state).toEqual(initialFlowState);
-    expect(effectTypes(effects)).toEqual(["closeSheet"]);
-  });
-
-  it("rewinds selectTime → selectDay → addTask", () => {
-    const fromTime = goBack({ ...initialFlowState, step: "selectTime", title: "x", selectedDay: "2026-01-01" });
-    expect(fromTime.state.step).toBe("selectDay");
-    expect(openedSheet(fromTime.effects)).toBe("selectDay");
-
-    const fromDay = goBack(fromTime.state);
-    expect(fromDay.state.step).toBe("addTask");
-    expect(openedSheet(fromDay.effects)).toBe("addTask");
-  });
-
-  it("from taskSummary rewinds to selectTime", () => {
-    const { state, effects } = goBack({
-      ...initialFlowState,
-      step: "taskSummary",
-      pendingTasks: buildPendingTasks(["a b"]),
-    });
-    expect(state.step).toBe("selectTime");
-    expect(openedSheet(effects)).toBe("selectTime");
-  });
-
-  it("while editing a pending task, day/time back returns to summary", () => {
-    const pending = buildPendingTasks(["a b", "c d"]);
-    const { state, effects } = goBack({
-      ...initialFlowState,
-      step: "selectDay",
-      pendingTasks: pending,
-      editingTaskId: pending[0].id,
-    });
-    expect(state.step).toBe("taskSummary");
-    expect(state.editingTaskId).toBeNull();
-    expect(openedSheet(effects)).toBe("taskSummary");
   });
 });

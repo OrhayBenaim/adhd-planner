@@ -1,3 +1,8 @@
 # Android back: stack for routes, custom only on roots
 
-Expo Router already pops stack screens on Android back. We do not reimplement that. RN `Modal` overlays (survey invite/form) also dismiss themselves via `onRequestClose`. Custom back handling lives only on root screens (Home and first onboarding Welcome): dismiss the most recent dismissible surface one back-step at a time; when nothing remains, arm exit (~2s) with a small toast, then exit on a second back. `@gorhom/bottom-sheet` gets no free hardware-back support, so sheets need explicit handling — done with per-surface `BackHandler` listeners (LIFO: last registered wins), focus-gated so stack routes are untouched. In-app chevrons are not migrated onto this handler in the first change.
+Expo Router already pops stack screens on Android back. RN `Modal` overlays (survey invite/form) dismiss via `onRequestClose`. Custom handling lives only on root screens (Home, first Welcome), with one focus-gated `BackHandler` each (`useAndroidRootBack`):
+
+1. If a dismissible surface is open (sheet, tour, Welcome sign-in) → close it.
+2. Otherwise → arm exit (~2s toast); second back exits the app.
+
+`@gorhom/bottom-sheet` does not handle hardware back; closing the open sheet is enough. In-app chevrons still handle sheet-internal steps.
