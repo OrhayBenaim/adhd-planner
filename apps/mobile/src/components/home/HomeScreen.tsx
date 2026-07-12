@@ -4,7 +4,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { HomeProvider } from "./HomeProvider";
 import { SheetNavProvider } from "./SheetNavProvider";
 import { TaskCreationFlowProvider } from "./TaskCreationFlowProvider";
-import { RootBackContributionProvider } from "./RootBackContribution";
 import { MainContent } from "./MainContent";
 import { SheetManager } from "./SheetManager";
 import { usePushToken } from "../../hooks/usePushToken";
@@ -24,12 +23,10 @@ export function HomeScreen() {
       <SheetNavProvider>
         <TaskCreationFlowProvider>
           <GuidedTourProvider enabled={!hasCompletedTour}>
-            <RootBackContributionProvider>
-              <SafeAreaView className="flex-1 bg-[#f5f7fa]">
-                <MainContent />
-                <SheetManager />
-              </SafeAreaView>
-            </RootBackContributionProvider>
+            <SafeAreaView className="flex-1 bg-[#f5f7fa]">
+              <MainContent />
+              <SheetManager />
+            </SafeAreaView>
           </GuidedTourProvider>
         </TaskCreationFlowProvider>
       </SheetNavProvider>

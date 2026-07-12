@@ -1,7 +1,7 @@
 // apps/mobile/src/components/home/MainContent.tsx
 import { View, ScrollView, Text } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -24,10 +24,9 @@ import { SurveyFormOverlay } from "../surveys/SurveyFormOverlay";
 import { SurveyReminderBanner } from "../surveys/SurveyReminderBanner";
 import { RatingPromptBanner } from "../RatingPromptBanner";
 import { useHome } from "./HomeProvider";
-import { useSheetNav } from "./SheetNavProvider";
+import { useSheetNav, type ActiveSheet } from "./SheetNavProvider";
 import { useTaskCreationFlow } from "./TaskCreationFlowProvider";
-import { useRootBackContribution } from "./RootBackContribution";
-import { useAndroidRootBack } from "../../hooks/useAndroidRootBack";
+import { useBackStep, useExitArming } from "../../hooks/useAndroidBack";
 import { ExitArmingToast } from "../ExitArmingToast";
 import { usePremium } from "../../hooks/usePremium";
 import { useHomeExperience } from "../../hooks/useHomeExperience";
@@ -35,6 +34,8 @@ import { useRatingPrompt } from "../../hooks/useRatingPrompt";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { track } from "../../lib/analytics";
 import { useHomeTour, HomeTourIntro, HomeTourOverlays } from "./HomeTour";
+
+const FLOW_SHEETS: ActiveSheet[] = ["addTask", "selectDay", "selectTime", "taskSummary"];
 
 export function MainContent() {
   const {
@@ -59,7 +60,6 @@ export function MainContent() {
   } = useHomeExperience(tasks);
   const { openSheet, closeSheet, activeSheet } = useSheetNav();
   const flow = useTaskCreationFlow();
-  const { contribution } = useRootBackContribution();
   const homeTour = useHomeTour();
   const guidedTour = useGuidedTour();
   const ratingPrompt = useRatingPrompt();
@@ -76,72 +76,20 @@ export function MainContent() {
 
   const { isPremium, showPaywall } = usePremium();
 
-  const ratingVisible =
-    ratingPrompt.visible && !survey.reminderVisible && !guidedTour?.isActive;
-
-  const getBackState = useCallback(
-    () => ({
-      surveyFormOpen: survey.formVisible,
-      surveyInviteOpen: survey.overlayVisible,
-      ratingPromptVisible: ratingVisible,
-      tourActive: !!guidedTour?.isActive,
-      activeSheet,
-      taskFlowStep: flow.step,
-      profileSubView: contribution.profileSubView,
-      profileAuthView: contribution.profileAuthView,
-      settingsVoiceExpanded: contribution.settingsVoiceExpanded,
-    }),
-    [
-      survey.formVisible,
-      survey.overlayVisible,
-      ratingVisible,
-      guidedTour?.isActive,
-      activeSheet,
-      flow.step,
-      contribution.profileSubView,
-      contribution.profileAuthView,
-      contribution.settingsVoiceExpanded,
-    ],
-  );
-
-  const backHandlers = useMemo(
-    () => ({
-      skipTour: () => guidedTour?.skip(),
-      dismissSurveyInvite: survey.handleDismissOverlay,
-      dismissSurveyForm: survey.closeSurveyForm,
-      dismissRatingPrompt: ratingPrompt.handleDismiss,
-      rewindTaskFlow: () => flow.goBack(),
-      closeSheetAndIdleFlow: () => flow.reset(),
-      closeSheet,
-      authGoBack: contribution.authGoBack,
-      profileToMain: contribution.profileToMain,
-      collapseVoiceLanguages: contribution.collapseVoiceLanguages,
-    }),
-    [
-      guidedTour,
-      survey.handleDismissOverlay,
-      survey.closeSurveyForm,
-      ratingPrompt.handleDismiss,
-      flow,
-      closeSheet,
-      contribution.authGoBack,
-      contribution.profileToMain,
-      contribution.collapseVoiceLanguages,
-    ],
-  );
-
-  const dismissibleOpen =
-    survey.formVisible ||
-    survey.overlayVisible ||
-    !!guidedTour?.isActive ||
-    ratingVisible ||
-    activeSheet !== "none";
-
-  const { exitToastVisible } = useAndroidRootBack(
-    getBackState,
-    backHandlers,
-    dismissibleOpen,
-  );
+  // Android back: exit arming is the fallback; the back step below registers
+  // later while a surface is open, so it wins (BackHandler is LIFO).
+  // Survey overlays are RN Modals and dismiss themselves via onRequestClose.
+  const surfaceOpen = activeSheet !== "none" || !!guidedTour?.isActive;
+  const { exitToastVisible } = useExitArming(surfaceOpen);
+  useBackStep(surfaceOpen, () => {
+    if (guidedTour?.isActive) {
+      guidedTour.skip();
+    } else if (FLOW_SHEETS.includes(activeSheet)) {
+      flow.goBack();
+    } else {
+      closeSheet();
+    }
+  });
 
   // AI button animation — local to this component
   const aiScale = useSharedValue(1);
@@ -345,7 +293,9 @@ export function MainContent() {
           </View>
         )}
 
-        {ratingVisible && (
+        {ratingPrompt.visible &&
+          !survey.reminderVisible &&
+          !guidedTour?.isActive && (
             <View className="px-6">
               <RatingPromptBanner
                 onRate={ratingPrompt.handleRate}
