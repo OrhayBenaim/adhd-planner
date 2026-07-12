@@ -1,9 +1,18 @@
 // apps/mobile/src/components/home/SheetNavProvider.tsx
 import { createContext, useContext, useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import type BottomSheet from "@gorhom/bottom-sheet";
-import type { ActiveSheetName } from "../../lib/rootBackAction";
 
-export type ActiveSheet = ActiveSheetName;
+export type ActiveSheet =
+  | "none"
+  | "addTask"
+  | "selectDay"
+  | "selectTime"
+  | "allTasks"
+  | "settings"
+  | "preferences"
+  | "taskSummary"
+  | "profile"
+  | "insights";
 
 export type SheetEntry = { name: ActiveSheet; ref: React.RefObject<BottomSheet | null> };
 

@@ -1,4 +1,4 @@
-import { forwardRef, useState, useCallback, useEffect, useRef, type ComponentType } from "react";
+import { forwardRef, useState, useCallback, useEffect, type ComponentType } from "react";
 import { View, Text, type TextInputProps } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
@@ -8,12 +8,11 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import { authClient } from "../../lib/authClient";
 import { useSheetNav } from "../home/SheetNavProvider";
-import { useRegisterRootBackContribution } from "../home/RootBackContribution";
+import { useBackStep } from "../../hooks/useAndroidBack";
 import { usePreferences, useUpdatePreferences } from "../../hooks/usePreferences";
 import { AnonymousProfile } from "./profile/AnonymousProfile";
 import { AuthenticatedProfile } from "./profile/AuthenticatedProfile";
 import { AuthFlow } from "../auth/AuthFlow";
-import type { AuthFlowView } from "../../lib/authFlow";
 import { getSessionAnonymousState } from "../../lib/sessionState";
 
 type SubView = "main" | "linkOptions" | "signInOptions";
@@ -55,13 +54,11 @@ const SheetInput = BottomSheetTextInput as ComponentType<TextInputProps>;
 
 export const ProfileSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
-    const { closeSheet } = useSheetNav();
+    const { closeSheet, activeSheet } = useSheetNav();
     const { data: session } = authClient.useSession();
     const preferences = usePreferences();
 
     const [subView, setSubView] = useState<SubView>("main");
-    const [authView, setAuthView] = useState<AuthFlowView>("options");
-    const authBackRef = useRef<(() => void) | null>(null);
     const updatePreferences = useUpdatePreferences();
     const [editName, setEditName] = useState("");
     const [nameLoaded, setNameLoaded] = useState(false);
@@ -69,17 +66,11 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
     const isAnonymous = getSessionAnonymousState(session);
     const userName = preferences?.name ?? session?.user?.name ?? "User";
 
-    const profileToMain = useCallback(() => setSubView("main"), []);
-    const authGoBack = useCallback(() => {
-      authBackRef.current?.();
-    }, []);
-
-    useRegisterRootBackContribution("profile", {
-      profileSubView: subView,
-      profileAuthView: authView,
-      authGoBack,
-      profileToMain,
-    });
+    // Android back rewinds toward main before the sheet closes. AuthFlow's own
+    // back step (username → options) registers later, so it wins when showing.
+    useBackStep(activeSheet === "profile" && subView !== "main", () =>
+      setSubView("main"),
+    );
 
     useEffect(() => {
       if (preferences?.name && !nameLoaded) {
@@ -97,7 +88,6 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
 
     const resetState = useCallback(() => {
       setSubView("main");
-      setAuthView("options");
     }, []);
 
     const handleAuthSuccess = useCallback(() => {
@@ -107,15 +97,12 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
 
     const authHeader = useCallback(
       (backToMain: () => void) =>
-        ({ view, onBack }: { view: "options" | "username"; onBack: () => void }) => {
-          authBackRef.current = onBack;
-          return (
-            <SubViewHeader
-              onBack={view === "options" ? backToMain : onBack}
-              onClose={closeSheet}
-            />
-          );
-        },
+        ({ view, onBack }: { view: "options" | "username"; onBack: () => void }) => (
+          <SubViewHeader
+            onBack={view === "options" ? backToMain : onBack}
+            onClose={closeSheet}
+          />
+        ),
       [closeSheet],
     );
 
@@ -135,7 +122,7 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
             key="link"
             mode="link"
             onSuccess={handleAuthSuccess}
-            onViewChange={setAuthView}
+            hardwareBackStep
             presentation={{ usernameBack: "none", signUpName: userName }}
             InputComponent={SheetInput}
             renderHeader={authHeader(() => setSubView("main"))}
@@ -149,7 +136,7 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
             key="signIn"
             mode="signIn"
             onSuccess={handleAuthSuccess}
-            onViewChange={setAuthView}
+            hardwareBackStep
             presentation={{ usernameBack: "none" }}
             InputComponent={SheetInput}
             renderHeader={authHeader(() => setSubView("main"))}
