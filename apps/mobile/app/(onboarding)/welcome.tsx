@@ -7,6 +7,8 @@ import { MascotHeader } from "../../src/components/onboarding/MascotHeader";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
 import { useNeedsOnboarding } from "../../src/hooks/usePreferences";
 import { AuthFlow } from "../../src/components/auth/AuthFlow";
+import { useAndroidRootBack } from "../../src/hooks/useAndroidBack";
+import { ExitArmingToast } from "../../src/components/ExitArmingToast";
 import { track } from "../../src/lib/analytics";
 
 type SubView = "welcome" | "signIn";
@@ -29,6 +31,14 @@ export default function WelcomeStep() {
   const handleSignInSuccess = useCallback(() => {
     // Navigation handled by needsOnboarding effect once Convex syncs
   }, []);
+
+  const { exitToastVisible } = useAndroidRootBack(() => {
+    if (subView === "signIn") {
+      setSubView("welcome");
+      return true;
+    }
+    return false;
+  });
 
   if (subView === "signIn") {
     return (
@@ -114,6 +124,7 @@ export default function WelcomeStep() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <ExitArmingToast visible={exitToastVisible} />
     </OnboardingLayout>
   );
 }
