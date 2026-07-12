@@ -39,15 +39,15 @@ export function SheetManager() {
 
   return (
     <>
-      <AddTaskSheet ref={addSheetRef} onClose={onSheetClose} />
-      <SelectDaySheet ref={daySheetRef} onClose={onSheetClose} />
-      <SelectTimeSheet ref={timeSheetRef} onClose={onSheetClose} />
-      <TaskSummarySheet ref={taskSummaryRef} onClose={onSheetClose} />
-      <AllTasksSheet ref={allTasksSheetRef} onClose={onSheetClose} />
-      <SettingsSheet ref={settingsSheetRef} onClose={onSheetClose} />
-      <PreferencesSheet ref={preferencesSheetRef} onClose={onSheetClose} />
-      <ProfileSheet ref={profileSheetRef} onClose={onSheetClose} />
-      <InsightsSheet ref={insightsSheetRef} onClose={onSheetClose} />
+      <AddTaskSheet ref={addSheetRef} onClose={() => onSheetClose("addTask")} />
+      <SelectDaySheet ref={daySheetRef} onClose={() => onSheetClose("selectDay")} />
+      <SelectTimeSheet ref={timeSheetRef} onClose={() => onSheetClose("selectTime")} />
+      <TaskSummarySheet ref={taskSummaryRef} onClose={() => onSheetClose("taskSummary")} />
+      <AllTasksSheet ref={allTasksSheetRef} onClose={() => onSheetClose("allTasks")} />
+      <SettingsSheet ref={settingsSheetRef} onClose={() => onSheetClose("settings")} />
+      <PreferencesSheet ref={preferencesSheetRef} onClose={() => onSheetClose("preferences")} />
+      <ProfileSheet ref={profileSheetRef} onClose={() => onSheetClose("profile")} />
+      <InsightsSheet ref={insightsSheetRef} onClose={() => onSheetClose("insights")} />
     </>
   );
 }
