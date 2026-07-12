@@ -18,7 +18,6 @@ import {
   updatePendingTitle as updatePendingTitleFlow,
   removePendingTask as removePendingTaskFlow,
   reset as resetFlow,
-  goBack as goBackFlow,
 } from "../../lib/taskCreationFlow";
 
 export type { PendingTask };
@@ -44,7 +43,6 @@ interface TaskCreationFlowContextValue {
   updatePendingTitle: (taskId: string, title: string) => void;
   removePendingTask: (taskId: string) => void;
   reset: () => void;
-  goBack: () => void;
 }
 
 const TaskCreationFlowContext = createContext<TaskCreationFlowContextValue | null>(null);
@@ -154,10 +152,6 @@ export function TaskCreationFlowProvider({ children }: { children: ReactNode }) 
     void apply(resetFlow());
   }, [apply]);
 
-  const goBack = useCallback(() => {
-    void apply(goBackFlow(stateRef.current));
-  }, [apply]);
-
   const value = useMemo(
     () => ({
       step: state.step,
@@ -177,7 +171,6 @@ export function TaskCreationFlowProvider({ children }: { children: ReactNode }) 
       updatePendingTitle,
       removePendingTask,
       reset,
-      goBack,
     }),
     [
       state,
@@ -191,7 +184,6 @@ export function TaskCreationFlowProvider({ children }: { children: ReactNode }) 
       updatePendingTitle,
       removePendingTask,
       reset,
-      goBack,
     ]
   );
 

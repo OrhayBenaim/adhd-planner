@@ -24,9 +24,9 @@ import { SurveyFormOverlay } from "../surveys/SurveyFormOverlay";
 import { SurveyReminderBanner } from "../surveys/SurveyReminderBanner";
 import { RatingPromptBanner } from "../RatingPromptBanner";
 import { useHome } from "./HomeProvider";
-import { useSheetNav, type ActiveSheet } from "./SheetNavProvider";
+import { useSheetNav } from "./SheetNavProvider";
 import { useTaskCreationFlow } from "./TaskCreationFlowProvider";
-import { useBackStep, useExitArming } from "../../hooks/useAndroidBack";
+import { useAndroidRootBack } from "../../hooks/useAndroidBack";
 import { ExitArmingToast } from "../ExitArmingToast";
 import { usePremium } from "../../hooks/usePremium";
 import { useHomeExperience } from "../../hooks/useHomeExperience";
@@ -34,8 +34,6 @@ import { useRatingPrompt } from "../../hooks/useRatingPrompt";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { track } from "../../lib/analytics";
 import { useHomeTour, HomeTourIntro, HomeTourOverlays } from "./HomeTour";
-
-const FLOW_SHEETS: ActiveSheet[] = ["addTask", "selectDay", "selectTime", "taskSummary"];
 
 export function MainContent() {
   const {
@@ -76,19 +74,17 @@ export function MainContent() {
 
   const { isPremium, showPaywall } = usePremium();
 
-  // Android back: exit arming is the fallback; the back step below registers
-  // later while a surface is open, so it wins (BackHandler is LIFO).
-  // Survey overlays are RN Modals and dismiss themselves via onRequestClose.
-  const surfaceOpen = activeSheet !== "none" || !!guidedTour?.isActive;
-  const { exitToastVisible } = useExitArming(surfaceOpen);
-  useBackStep(surfaceOpen, () => {
+  // Surveys use RN Modal (onRequestClose). Sheets/tour need explicit dismiss.
+  const { exitToastVisible } = useAndroidRootBack(() => {
     if (guidedTour?.isActive) {
       guidedTour.skip();
-    } else if (FLOW_SHEETS.includes(activeSheet)) {
-      flow.goBack();
-    } else {
-      closeSheet();
+      return true;
     }
+    if (activeSheet !== "none") {
+      closeSheet();
+      return true;
+    }
+    return false;
   });
 
   // AI button animation — local to this component

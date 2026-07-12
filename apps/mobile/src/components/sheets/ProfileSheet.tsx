@@ -8,7 +8,6 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import { authClient } from "../../lib/authClient";
 import { useSheetNav } from "../home/SheetNavProvider";
-import { useBackStep } from "../../hooks/useAndroidBack";
 import { usePreferences, useUpdatePreferences } from "../../hooks/usePreferences";
 import { AnonymousProfile } from "./profile/AnonymousProfile";
 import { AuthenticatedProfile } from "./profile/AuthenticatedProfile";
@@ -54,7 +53,7 @@ const SheetInput = BottomSheetTextInput as ComponentType<TextInputProps>;
 
 export const ProfileSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
-    const { closeSheet, activeSheet } = useSheetNav();
+    const { closeSheet } = useSheetNav();
     const { data: session } = authClient.useSession();
     const preferences = usePreferences();
 
@@ -65,12 +64,6 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
 
     const isAnonymous = getSessionAnonymousState(session);
     const userName = preferences?.name ?? session?.user?.name ?? "User";
-
-    // Android back rewinds toward main before the sheet closes. AuthFlow's own
-    // back step (username → options) registers later, so it wins when showing.
-    useBackStep(activeSheet === "profile" && subView !== "main", () =>
-      setSubView("main"),
-    );
 
     useEffect(() => {
       if (preferences?.name && !nameLoaded) {
@@ -122,7 +115,6 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
             key="link"
             mode="link"
             onSuccess={handleAuthSuccess}
-            hardwareBackStep
             presentation={{ usernameBack: "none", signUpName: userName }}
             InputComponent={SheetInput}
             renderHeader={authHeader(() => setSubView("main"))}
@@ -136,7 +128,6 @@ export const ProfileSheet = forwardRef<BottomSheet, Props>(
             key="signIn"
             mode="signIn"
             onSuccess={handleAuthSuccess}
-            hardwareBackStep
             presentation={{ usernameBack: "none" }}
             InputComponent={SheetInput}
             renderHeader={authHeader(() => setSubView("main"))}
