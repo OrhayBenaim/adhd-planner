@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+
+Always after worktree merge to main, cleanup set worktree
