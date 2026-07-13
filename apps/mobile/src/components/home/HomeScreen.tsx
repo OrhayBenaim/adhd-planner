@@ -5,6 +5,7 @@ import { HomeProvider } from "./HomeProvider";
 import { SheetNavProvider } from "./SheetNavProvider";
 import { TaskCreationFlowProvider } from "./TaskCreationFlowProvider";
 import { MainContent } from "./MainContent";
+import { HomeBackHandler } from "./HomeBackHandler";
 import { SheetManager } from "./SheetManager";
 import { usePushToken } from "../../hooks/usePushToken";
 import { track } from "../../lib/analytics";
@@ -24,6 +25,7 @@ export function HomeScreen() {
         <TaskCreationFlowProvider>
           <GuidedTourProvider enabled={!hasCompletedTour}>
             <SafeAreaView className="flex-1 bg-[#f5f7fa]">
+              <HomeBackHandler />
               <MainContent />
               <SheetManager />
             </SafeAreaView>

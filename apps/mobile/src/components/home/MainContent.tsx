@@ -26,8 +26,6 @@ import { RatingPromptBanner } from "../RatingPromptBanner";
 import { useHome } from "./HomeProvider";
 import { useSheetNav } from "./SheetNavProvider";
 import { useTaskCreationFlow } from "./TaskCreationFlowProvider";
-import { useAndroidRootBack } from "../../hooks/useAndroidBack";
-import { ExitArmingToast } from "../ExitArmingToast";
 import { usePremium } from "../../hooks/usePremium";
 import { useHomeExperience } from "../../hooks/useHomeExperience";
 import { useRatingPrompt } from "../../hooks/useRatingPrompt";
@@ -56,7 +54,7 @@ export function MainContent() {
     surveyRewardToast,
     evaluateAiPick,
   } = useHomeExperience(tasks);
-  const { openSheet, closeSheet, activeSheet } = useSheetNav();
+  const { openSheet } = useSheetNav();
   const flow = useTaskCreationFlow();
   const homeTour = useHomeTour();
   const guidedTour = useGuidedTour();
@@ -73,19 +71,6 @@ export function MainContent() {
   } = homeTour;
 
   const { isPremium, showPaywall } = usePremium();
-
-  // Surveys use RN Modal (onRequestClose). Sheets/tour need explicit dismiss.
-  const { exitToastVisible } = useAndroidRootBack(() => {
-    if (guidedTour?.isActive) {
-      guidedTour.skip();
-      return true;
-    }
-    if (activeSheet !== "none") {
-      closeSheet();
-      return true;
-    }
-    return false;
-  });
 
   // AI button animation — local to this component
   const aiScale = useSharedValue(1);
@@ -339,8 +324,6 @@ export function MainContent() {
           </View>
         </View>
       ) : null}
-
-      <ExitArmingToast visible={exitToastVisible} />
 
       {/* Bottom nav */}
       <BottomNav
