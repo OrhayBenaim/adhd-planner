@@ -32,13 +32,15 @@ export default function WelcomeStep() {
     // Navigation handled by needsOnboarding effect once Convex syncs
   }, []);
 
-  const { exitToastVisible } = useAndroidRootBack(() => {
+  const onDismiss = useCallback((): boolean => {
     if (subView === "signIn") {
       setSubView("welcome");
       return true;
     }
     return false;
-  });
+  }, [subView]);
+
+  const { exitToastVisible } = useAndroidRootBack(onDismiss);
 
   if (subView === "signIn") {
     return (

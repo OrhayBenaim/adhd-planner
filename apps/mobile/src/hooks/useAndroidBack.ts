@@ -9,7 +9,7 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BackHandler, Platform } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 
 const EXIT_ARMING_MS = 2000;
 
