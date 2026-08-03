@@ -13,7 +13,7 @@ import { api } from "@adhd-planner/convex/convex/_generated/api";
 import * as Linking from "expo-linking";
 import { router } from "expo-router";
 import { authClient } from "../lib/authClient";
-import { track, getDistinctId, getFeatureFlag } from "../lib/analytics";
+import { getDistinctId } from "../lib/analytics";
 import { getDeviceId } from "../lib/deviceId";
 import { getSessionAnonymousState } from "../lib/sessionState";
 import { isInternalAuthEmail } from "../lib/authUsername";
@@ -193,15 +193,6 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
     const listener = (info: CustomerInfo) => {
       const subInfo = extractSubscriptionInfo(info);
       dispatch({ type: "PREMIUM_CHANGED", ...subInfo });
-
-      // Track new subscription purchase (free → premium transition)
-      if (subInfo.isPremium && !sdkPremium) {
-        track("subscription_purchased", {
-          variant: String(
-            getFeatureFlag("profile-upgrade-variant") ?? "unknown",
-          ),
-        });
-      }
     };
     if (!isAnonymous && session?.data?.user.id) {
       const apiKey =
@@ -220,7 +211,6 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   }, [
     isAnonymous,
     session.data?.user?.id,
-    sdkPremium,
     extractSubscriptionInfo,
   ]);
 
