@@ -4,6 +4,7 @@ import Purchases, { type PurchasesOffering } from "react-native-purchases";
 import RevenueCatUI from "react-native-purchases-ui";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { usePremium } from "../src/hooks/usePremium";
+import { track, getFeatureFlag } from "../src/lib/analytics";
 
 export default function PaywallScreen() {
   const { isAnonymous } = usePremium();
@@ -37,7 +38,14 @@ export default function PaywallScreen() {
           ...(offering ? { offering } : {}),
         }}
         onDismiss={() => router.replace("/")}
-        onPurchaseCompleted={() => router.replace("/")}
+        onPurchaseCompleted={() => {
+          track("subscription_purchased", {
+            variant: String(
+              getFeatureFlag("profile-upgrade-variant") ?? "unknown",
+            ),
+          });
+          router.replace("/");
+        }}
         onRestoreCompleted={() => router.replace("/")}
       />
     </View>

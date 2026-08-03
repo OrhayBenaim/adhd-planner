@@ -1,3 +1,5 @@
+import { ConvexError } from "convex/values";
+
 /** Max lengths for string fields */
 export const MAX_TITLE = 500;
 export const MAX_DESCRIPTION = 5000;
@@ -12,7 +14,7 @@ const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 export function assertMaxLength(value: string, max: number, field: string): void {
   if (value.length > max) {
-    throw new Error(`${field} exceeds maximum length of ${max}`);
+    throw new ConvexError(`${field} exceeds maximum length of ${max}`);
   }
 }
 
@@ -23,24 +25,24 @@ export function assertArrayLimits(
   field: string,
 ): void {
   if (arr.length > maxItems) {
-    throw new Error(`${field} exceeds maximum of ${maxItems} items`);
+    throw new ConvexError(`${field} exceeds maximum of ${maxItems} items`);
   }
   for (const item of arr) {
     if (item.length > maxItemLength) {
-      throw new Error(`${field} item exceeds maximum length of ${maxItemLength}`);
+      throw new ConvexError(`${field} item exceeds maximum length of ${maxItemLength}`);
     }
   }
 }
 
 export function assertDateFormat(value: string): void {
   if (!DATE_RE.test(value)) {
-    throw new Error(`Invalid date format, expected YYYY-MM-DD`);
+    throw new ConvexError(`Invalid date format, expected YYYY-MM-DD`);
   }
 }
 
 export function assertTimeFormat(value: string): void {
   if (!TIME_RE.test(value)) {
-    throw new Error(`Invalid time format, expected HH:mm`);
+    throw new ConvexError(`Invalid time format, expected HH:mm`);
   }
 }
 

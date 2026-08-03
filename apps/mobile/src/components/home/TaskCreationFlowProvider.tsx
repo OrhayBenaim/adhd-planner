@@ -1,4 +1,6 @@
 // apps/mobile/src/components/home/TaskCreationFlowProvider.tsx
+import { Alert } from "react-native";
+import { ConvexError } from "convex/values";
 import { createContext, useContext, useState, useCallback, useMemo, useRef, type ReactNode } from "react";
 import { useHome } from "./HomeProvider";
 import { useSheetNav } from "./SheetNavProvider";
@@ -91,7 +93,16 @@ export function TaskCreationFlowProvider({ children }: { children: ReactNode }) 
             break;
         }
       }
-      await Promise.all(mutations);
+      try {
+        await Promise.all(mutations);
+      } catch (error) {
+        Alert.alert(
+          "Couldn't save task",
+          error instanceof ConvexError && typeof error.data === "string"
+            ? error.data
+            : "Couldn't save changes. Please try again.",
+        );
+      }
     },
     [closeSheet, openSheet, createTask, updateTask]
   );

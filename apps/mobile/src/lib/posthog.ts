@@ -4,6 +4,15 @@ function createClient(): PostHog {
   return new PostHog(process.env.EXPO_PUBLIC_POSTHOG_KEY!, {
     host: "https://eu.i.posthog.com",
     captureAppLifecycleEvents: true,
+    // Requires "Record user sessions" enabled in PostHog project settings.
+    enableSessionReplay: true,
+    sessionReplayConfig: {
+      // Keep masking ON: task titles are personal data.
+      maskAllTextInputs: true,
+      maskAllImages: true,
+      captureLog: true,
+      captureNetworkTelemetry: true,
+    },
   });
 }
 
