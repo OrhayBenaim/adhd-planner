@@ -3,7 +3,7 @@
     "name": "Lullio",
     "slug": "lullio",
     "scheme": "lullio",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "orientation": "portrait",
     "icon": "./assets/ios-light.png",
     "userInterfaceStyle": "automatic",
@@ -41,7 +41,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#BDE0FE"
       },
-      "versionCode": 36,
+      "versionCode": 37,
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "adjustResize",
       "package": "com.ottersprod.lullio",
