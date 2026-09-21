@@ -1,92 +1,32 @@
-import { View } from "react-native";
-import { AppPressable as Pressable } from "./AppPressable";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
-import { SPRING_BOUNCY } from "../animations/springs";
+import { Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SvgXml } from "react-native-svg";
+import { AppPressable } from "./AppPressable";
+import { homeArtwork } from "../../assets/home/artwork";
+import { homeColors, homeStyles } from "./home/theme";
 
 interface Props {
+  onTodayPress: () => void;
   onListPress: () => void;
-  onPreferencesPress: () => void;
   onAddPress: () => void;
-  onSettingsPress: () => void;
-  onProfilePress: () => void;
-  /** Ref to the add (+) button wrapper, used by the guided tour spotlight. */
   addButtonRef?: React.Ref<View>;
 }
 
-function NavButton({
-  onPress,
-  children,
-  gradient,
-}: {
-  onPress: () => void;
-  children: React.ReactNode;
-  gradient?: boolean;
-}) {
-  const scale = useSharedValue(1);
-  const style = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  return (
-    <Animated.View style={style}>
-      <Pressable
-        onPress={onPress}
-        onPressIn={() => { scale.value = withSpring(0.92, SPRING_BOUNCY); }}
-        onPressOut={() => { scale.value = withSpring(1, SPRING_BOUNCY); }}
-      >
-        {gradient ? (
-          <View style={{ width: 64, height: 64, borderRadius: 32, boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)" }}>
-            <LinearGradient
-              colors={["#a2d2ff", "#cdb4db"]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 0, y: 1 }}
-              style={{ width: 64, height: 64, borderRadius: 32, alignItems: "center", justifyContent: "center" }}
-            >
-              {children}
-            </LinearGradient>
-          </View>
-        ) : (
-          <View className="w-14 h-14 bg-white rounded-full items-center justify-center" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
-            {children}
-          </View>
-        )}
-      </Pressable>
-    </Animated.View>
-  );
-}
-
-export function BottomNav({ onListPress, onPreferencesPress, onAddPress, onSettingsPress, onProfilePress, addButtonRef }: Props) {
-  return (
-    <View className="absolute bottom-0 left-0 right-0 bg-white/80 border-t border-[#f3f4f6] px-6 pt-6 pb-8">
-      <View className="flex-row items-center justify-center gap-6">
-        <NavButton onPress={onListPress}>
-          <Ionicons name="list-outline" size={24} color="#364153" />
-        </NavButton>
-
-        <NavButton onPress={onPreferencesPress}>
-          <Ionicons name="color-palette-outline" size={24} color="#364153" />
-        </NavButton>
-
-        <View ref={addButtonRef} collapsable={false}>
-          <NavButton onPress={onAddPress} gradient>
-            <Ionicons name="add" size={28} color="#fff" />
-          </NavButton>
-        </View>
-
-        <NavButton onPress={onSettingsPress}>
-          <Ionicons name="settings-outline" size={24} color="#364153" />
-        </NavButton>
-
-        <NavButton onPress={onProfilePress}>
-          <Ionicons name="person-outline" size={24} color="#364153" />
-        </NavButton>
-      </View>
-    </View>
-  );
+export function BottomNav({ onTodayPress, onListPress, onAddPress, addButtonRef }: Props) {
+  const insets = useSafeAreaInsets();
+  return <View style={{ backgroundColor: "white", borderTopWidth: 1, borderColor: homeColors.border,
+    paddingHorizontal: 24, paddingTop: 8, paddingBottom: Math.max(insets.bottom, 14), flexDirection: "row", justifyContent: "space-between", gap: 12 }}>
+    {([
+      { label: "Today", icon: homeArtwork.home, onPress: onTodayPress },
+      { label: "My plan", icon: homeArtwork.list, onPress: onListPress },
+      { label: "Add", icon: homeArtwork.plus, onPress: onAddPress },
+    ]).map((item, index) => <View key={item.label} ref={index === 2 ? addButtonRef : undefined} collapsable={false} style={{ flex: 1, maxWidth: 100 }}>
+      <AppPressable accessibilityRole="button" accessibilityLabel={item.label} accessibilityState={{ selected: index === 0 }}
+        onPress={item.onPress} style={{ minHeight: 60, borderRadius: 20, alignItems: "center", justifyContent: "center", gap: 3,
+          backgroundColor: index === 0 ? homeColors.selected : "transparent" }}>
+        <SvgXml xml={item.icon} width={26} height={26} />
+        <Text style={[homeStyles.caption, index === 0 && { fontFamily: "Inter-SemiBold", color: homeColors.ink }]}>{item.label}</Text>
+      </AppPressable>
+    </View>)}
+  </View>;
 }

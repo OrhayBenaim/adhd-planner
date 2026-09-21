@@ -6,6 +6,7 @@ import type { Task } from "@adhd-planner/types";
 
 import { useSurveyCampaign } from "./useSurveyCampaign";
 import { useNotificationRouting } from "./useNotificationRouting";
+import { useQueryTime } from "./useQueryTime";
 import { getLocalToday } from "../lib/dateTimeConvert";
 import {
   UNSCORED_BANNER_DELAY_MS,
@@ -28,11 +29,12 @@ export interface HomeExperience {
   banner: BannerVisibility;
   survey: ReturnType<typeof useSurveyCampaign>;
   surveyRewardToast: string | null;
-  evaluateAiPick: (moodLevel: number) => AiPickOutcome;
+  evaluateAiPick: (moodLevel: number, excludeTaskId?: string) => AiPickOutcome;
 }
 
 export function useHomeExperience(tasks: readonly Task[]): HomeExperience {
-  const ceilingStatus = useQuery(api.ai.getCeilingStatus, { nowMs: Date.now() });
+  const nowMs = useQueryTime();
+  const ceilingStatus = useQuery(api.ai.getCeilingStatus, { nowMs });
   const creditBalance = useQuery(api.credits.getMyBalance);
   const aiPickDaysAhead =
     useQuery(api.appConfig.getPublic, { key: "aiPickDaysAhead" }) ?? 7;
@@ -90,10 +92,11 @@ export function useHomeExperience(tasks: readonly Task[]): HomeExperience {
   );
 
   const evaluateAiPick = useCallback(
-    (moodLevel: number): AiPickOutcome =>
+    (moodLevel: number, excludeTaskId?: string): AiPickOutcome =>
       pickTaskForMood({
         tasks,
         moodLevel,
+        excludeTaskId,
         today: getLocalToday(),
         daysAhead: aiPickDaysAhead,
       }),

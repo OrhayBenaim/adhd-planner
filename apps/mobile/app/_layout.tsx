@@ -28,6 +28,9 @@ export const convex = new ConvexReactClient(
 function RootLayout() {
   const [fontsLoaded] = useFonts({
     ...Ionicons.font,
+    "Inter-Regular": require("../assets/fonts/Inter-Regular.ttf"),
+    "Inter-SemiBold": require("../assets/fonts/Inter-SemiBold.ttf"),
+    "Nunito-ExtraBold": require("../assets/fonts/Nunito-ExtraBold.ttf"),
   });
   if (!fontsLoaded) {
     return <LoadingScreen />;

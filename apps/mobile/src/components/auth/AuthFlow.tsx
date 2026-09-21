@@ -5,7 +5,7 @@ import {
   type ComponentType,
   type ReactNode,
 } from "react";
-import { View, Text, type TextInputProps } from "react-native";
+import { View, Text, type TextInputProps, type StyleProp, type ViewStyle } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import { useSocialAuth } from "../../hooks/useSocialAuth";
@@ -50,6 +50,8 @@ export interface AuthFlowPresentation {
 }
 
 export interface AuthFlowProps {
+  style?: StyleProp<ViewStyle>;
+  renderOptions?: (props: { onSocial: (provider: "google" | "apple") => void; onUsername: () => void; busy: boolean }) => ReactNode;
   mode: AuthFlowMode;
   onSuccess: () => void | Promise<void>;
   onBeforeAuth?: () => Promise<void>;
@@ -66,6 +68,8 @@ export interface AuthFlowProps {
  * Interprets the pure auth-flow state machine in src/lib/authFlow.ts.
  */
 export function AuthFlow({
+  style,
+  renderOptions,
   mode,
   onSuccess,
   onBeforeAuth,
@@ -145,10 +149,14 @@ export function AuthFlow({
     ) : null;
 
   return (
-    <View>
+    <View style={style}>
       {renderHeader?.({ view: state.view, onBack: handleBack })}
 
-      {state.view === "options" && (
+      {state.view === "options" && (renderOptions ? renderOptions({
+        onSocial: handleSocialSignIn,
+        onUsername: () => apply({ type: "CHOOSE_USERNAME" }),
+        busy: socialBusyOrMachine,
+      }) : (
         <View>
           {!hideOptionsHeader && (
             <>
@@ -164,7 +172,7 @@ export function AuthFlow({
             showShadow={socialShowShadow}
           />
         </View>
-      )}
+      ))}
 
       {state.view === "username" && state.usernameView === "signIn" && (
         <SignInWithUsername

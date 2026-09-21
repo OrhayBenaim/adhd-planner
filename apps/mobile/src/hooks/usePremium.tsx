@@ -19,6 +19,7 @@ import { getSessionAnonymousState } from "../lib/sessionState";
 import { isInternalAuthEmail } from "../lib/authUsername";
 import { evaluateBackendPremium } from "../lib/subscriptionStatus";
 import { usePreferences } from "./usePreferences";
+import { useQueryTime } from "./useQueryTime";
 
 const ENTITLEMENT_ID = "Lullio Pro";
 
@@ -116,10 +117,11 @@ export function PremiumProvider({ children }: { children: ReactNode }) {
   const isAnonymous = getSessionAnonymousState(session.data) ?? true;
   const { isAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
   const registerDeviceIdMutation = useMutation(api.settings.registerDeviceId);
+  const nowMs = useQueryTime();
   const backendSubscription = useQuery(
     api.subscriptions.getStatus,
     !isAnonymous && isAuthenticated && !isConvexAuthLoading
-      ? { nowMs: Date.now() }
+      ? { nowMs }
       : "skip",
   );
   const isBackendPremium = evaluateBackendPremium(backendSubscription);

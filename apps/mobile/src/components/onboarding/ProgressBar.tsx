@@ -1,48 +1,25 @@
-import { View } from "react-native";
+import { View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import Animated, { FadeIn } from "react-native-reanimated";
-import { TOTAL_STEPS } from "../../constants/onboarding";
+import { onboardingColors as colors } from "./theme";
 
-const STEP_IDS = Array.from({ length: TOTAL_STEPS }, (_, i) => `step-${i + 1}`);
+const LABELS = ["Started", "You", "Hard", "Easy", "Times", "Save"];
 
-interface Props {
-  currentStep: number; // 1-based
-}
-
-/** Paw prints walking along a path — one paw per onboarding step. */
-export function ProgressBar({ currentStep }: Props) {
+export function ProgressBar({ currentStep }: { currentStep: number }) {
   return (
-    <View className="flex-row items-center justify-center gap-1 px-6 pt-6">
-      {STEP_IDS.map((id, i) => {
-        const reached = i < currentStep;
-        const isCurrent = i === currentStep - 1;
-        return (
-          <View key={id} className="flex-row items-center">
-            {i > 0 && (
-              <View
-                className="w-6 h-[2px] rounded-full mx-1"
-                style={{ backgroundColor: reached ? "#cdb4db" : "#e5e7eb" }}
-              />
-            )}
-            {isCurrent ? (
-              <Animated.View entering={FadeIn.duration(300)}>
-                <Ionicons
-                  name="paw"
-                  size={20}
-                  color="#a2d2ff"
-                  style={{ transform: [{ rotate: i % 2 === 0 ? "-12deg" : "12deg" }] }}
-                />
-              </Animated.View>
-            ) : (
-              <Ionicons
-                name="paw"
-                size={16}
-                color={reached ? "#cdb4db" : "#e5e7eb"}
-                style={{ transform: [{ rotate: i % 2 === 0 ? "-12deg" : "12deg" }] }}
-              />
-            )}
+    <View accessible accessibilityRole="progressbar" accessibilityLabel={`Onboarding: ${LABELS[currentStep]}`}
+      accessibilityValue={{ min: 1, max: 5, now: currentStep }}
+      style={{ flexDirection: "row", height: 52, alignItems: "center", gap: 2, paddingTop: 8, paddingBottom: 4 }}>
+      {LABELS.map((label, i) => {
+        const current = i === currentStep;
+        const color = current ? colors.accent : i < currentStep ? colors.primary : colors.border;
+        return <View key={label} style={{ flex: 1, alignItems: "center", gap: 4, opacity: i > currentStep ? 0.5 : 1 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 2, height: current ? 26 : 22 }}>
+            {i > 0 && <View style={{ width: 10, height: 2, borderRadius: 1, backgroundColor: color }} />}
+            <Ionicons name="paw" size={current ? 22 : 18} color={color}
+              style={{ transform: [{ rotate: i % 2 === 0 ? "12deg" : "-12deg" }] }} />
           </View>
-        );
+          <Text style={{ fontFamily: "Inter-Regular", fontSize: 10, lineHeight: 13, color: i <= currentStep ? colors.ink : colors.body }}>{label}</Text>
+        </View>;
       })}
     </View>
   );

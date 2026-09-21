@@ -1,47 +1,23 @@
-import { View, ScrollView } from "react-native";
-import { router } from "expo-router";
 import { useEffect } from "react";
-import Animated, { FadeInDown } from "react-native-reanimated";
+import { router } from "expo-router";
 import { OnboardingLayout } from "../../src/components/onboarding/OnboardingLayout";
-import { MascotHeader } from "../../src/components/onboarding/MascotHeader";
+import { PreferenceStep } from "../../src/components/onboarding/PreferenceStep";
 import { useOnboarding } from "../../src/components/onboarding/OnboardingProvider";
-import { ChipGrid } from "../../src/components/onboarding/ChipGrid";
 import { DIFFICULTIES } from "../../src/constants/onboarding";
 import { track } from "../../src/lib/analytics";
 
-export default function DifficultiesStep() {
+export default function PreferenceScreen() {
   const { state, toggleArrayItem } = useOnboarding();
-
   useEffect(() => {
-    track("onboarding_step_viewed", { step: "difficulties", step_number: 3 });
+    track("onboarding_step_viewed", { step: "difficulties", step_number: 2 });
   }, []);
-
+  const next = () => router.push("/(onboarding)/strengths");
   return (
-    <OnboardingLayout
-      step={3}
-      onBack={() => router.back()}
-      onContinue={() => router.push("/(onboarding)/strengths")}
-      continueEnabled={state.difficulties.length > 0}
-    >
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View className="items-center">
-          <MascotHeader
-            pose="wave"
-            title="What feels hard to start?"
-            subtitle="No judgment here — knowing this helps me pick the right task at the right moment."
-            mascotSize={110}
-          />
-
-          <Animated.View entering={FadeInDown.duration(400).delay(200)} className="w-full mt-8">
-            <ChipGrid
-              items={DIFFICULTIES}
-              selected={state.difficulties}
-              onToggle={(label) => toggleArrayItem("difficulties", label)}
-              variant="difficulties"
-            />
-          </Animated.View>
-        </View>
-      </ScrollView>
+    <OnboardingLayout step={2} onBack={() => router.back()} onContinue={next} onSkip={next}>
+      <PreferenceStep title={"What feels hard\nto start?"} encouragement={"We can make the\nfirst step smaller."}
+        image={require("../../assets/onboarding/reaching.png")}
+        items={DIFFICULTIES} selected={state.difficulties}
+        onToggle={label => toggleArrayItem("difficulties", label)} />
     </OnboardingLayout>
   );
 }

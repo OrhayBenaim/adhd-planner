@@ -43,7 +43,7 @@
       },
       "versionCode": 41,
       "predictiveBackGestureEnabled": false,
-      "softwareKeyboardLayoutMode": "adjustResize",
+      "softwareKeyboardLayoutMode": "adjustPan",
       "package": "com.ottersprod.lullio",
       "googleServicesFile": "./google-services.json",
       "permissions": [

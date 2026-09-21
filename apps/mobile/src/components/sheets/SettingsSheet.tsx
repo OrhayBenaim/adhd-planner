@@ -63,7 +63,7 @@ interface Props {
 export const SettingsSheet = forwardRef<BottomSheet, Props>(
   ({ onClose }, ref) => {
     const { settings, updateSetting, adminAiEnabled } = useSettings();
-    const { closeSheet } = useSheetNav();
+    const { closeSheet, openSheet } = useSheetNav();
     const { isPremium, showPaywall } = usePremium();
     const voice = useVoiceLanguages();
 
@@ -75,6 +75,16 @@ export const SettingsSheet = forwardRef<BottomSheet, Props>(
             <Pressable onPress={closeSheet}>
               <Ionicons name="close" size={24} color="#364153" />
             </Pressable>
+          </View>
+          <View style={{ marginBottom: 16, gap: 8 }}>
+            {([{ label: "Profile & account", sheet: "profile" }, { label: "Preferences", sheet: "preferences" },
+              ...(isPremium ? [{ label: "Insights", sheet: "insights" }] : [])] as const).map(item => (
+              <Pressable key={item.sheet} accessibilityRole="button" onPress={() => openSheet(item.sheet as "profile" | "preferences" | "insights")}
+                style={{ minHeight: 48, borderRadius: 14, backgroundColor: "#fff5f8", paddingHorizontal: 16, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                <Text style={{ fontFamily: "Inter-SemiBold", color: "#510b31", fontSize: 15 }}>{item.label}</Text>
+                <Ionicons name="chevron-forward" size={18} color="#771344" />
+              </Pressable>
+            ))}
           </View>
           <SettingRow icon="notifications-outline" color="#a2d2ff" title="Notifications" subtitle="Task reminders"
             value={settings.notifications} onChange={(v) => updateSetting("notifications", v)} />
@@ -91,7 +101,7 @@ export const SettingsSheet = forwardRef<BottomSheet, Props>(
           <VoiceLanguagesHeader expanded={voice.expanded} onToggle={voice.toggleExpanded} />
         </View>
       ),
-      [settings, adminAiEnabled, isPremium, showPaywall, closeSheet, updateSetting, voice.expanded, voice.toggleExpanded],
+      [settings, adminAiEnabled, isPremium, showPaywall, closeSheet, openSheet, updateSetting, voice.expanded, voice.toggleExpanded],
     );
 
     return (
