@@ -8,12 +8,14 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
 import { SPRING_BOUNCY } from "../../animations/springs";
 import { useTaskCreationFlow } from "../home/TaskCreationFlowProvider";
 import { useSpeechRecognition } from "../../hooks/useSpeechRecognition";
 import { track } from "../../lib/analytics";
 import { ScrollingWaveform } from "../ScrollingWaveform";
+import { homeColors, homeStyles } from "../home/theme";
+
+const PLACEHOLDER = "#a99fb3";
 
 type InputState = { text: string; mode: "text" | "recording" };
 type InputAction =
@@ -29,6 +31,45 @@ function inputReducer(state: InputState, action: InputAction): InputState {
     case "startEdit": return { text: action.text, mode: "text" };
     case "reset": return { ...state, text: "" };
   }
+}
+
+function CircleButton({
+  icon,
+  onPress,
+  tone,
+  disabled = false,
+  accessibilityLabel,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  onPress: () => void;
+  tone: "primary" | "soft";
+  disabled?: boolean;
+  accessibilityLabel: string;
+}) {
+  const scale = useSharedValue(1);
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return (
+    <Animated.View style={style}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        onPress={onPress}
+        onPressIn={() => { scale.value = withSpring(0.92, SPRING_BOUNCY); }}
+        onPressOut={() => { scale.value = withSpring(1, SPRING_BOUNCY); }}
+        style={{
+          width: 60,
+          height: 60,
+          borderRadius: 30,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: tone === "primary" ? homeColors.primary : homeColors.selected,
+          opacity: disabled ? 0.5 : 1,
+        }}
+      >
+        <Ionicons name={icon} size={26} color={tone === "primary" ? homeColors.white : homeColors.primary} />
+      </Pressable>
+    </Animated.View>
+  );
 }
 
 interface Props {
@@ -58,18 +99,8 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
       }
     }, [flow.editingExistingTaskId, flow.title]);
 
-    const micScale = useSharedValue(1);
-    const confirmScale = useSharedValue(1);
-
-    const micStyle = useAnimatedStyle(() => ({
-      transform: [{ scale: micScale.value }],
-    }));
-    const confirmStyle = useAnimatedStyle(() => ({
-      transform: [{ scale: confirmScale.value }],
-    }));
-
     const snapPoints = useMemo(
-      () => [mode === "recording" ? "45%" : "38%"],
+      () => [mode === "recording" ? "43%" : "39%"],
       [mode],
     );
 
@@ -124,124 +155,109 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustPan"
-        backgroundStyle={{ borderTopLeftRadius: 48, borderTopRightRadius: 48 }}
+        backgroundStyle={{ borderTopLeftRadius: 40, borderTopRightRadius: 40 }}
         handleIndicatorStyle={{ display: "none" }}
       >
-        <BottomSheetView className="px-6 pt-6">
+        <BottomSheetView style={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: 28, gap: 18 }}>
           {/* Header */}
-          <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-xl font-semibold text-[#1e2939]">
-              {isEditing ? "Edit Task" : "Add New Task"}
+          <View className="flex-row items-center justify-between">
+            <Text style={[homeStyles.heading, { fontSize: 26, lineHeight: 35 }]}>
+              {mode === "recording" ? "Listening…" : isEditing ? "Edit task" : "Add a task"}
             </Text>
-            <Pressable onPress={handleClose}>
-              <Ionicons name="close" size={24} color="#364153" />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              onPress={handleClose}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: homeColors.selected,
+              }}
+            >
+              <Ionicons name="close" size={20} color={homeColors.primary} />
             </Pressable>
           </View>
 
-          {/* Body: text input or recording */}
+          {/* Body: text input or live transcript */}
           {mode === "text" ? (
             <BottomSheetTextInput
-              className="border border-[#e5e7eb] rounded-3xl p-4 text-base text-[#1e2939] min-h-[128px]"
-              placeholder="Describe your task..."
-              placeholderTextColor="#99a1af"
+              style={[
+                homeStyles.body,
+                {
+                  height: 118,
+                  padding: 16,
+                  borderRadius: 24,
+                  borderWidth: 1,
+                  borderColor: homeColors.border,
+                  backgroundColor: homeColors.surface,
+                  color: homeColors.ink,
+                },
+              ]}
+              placeholder="Describe your task…"
+              placeholderTextColor={PLACEHOLDER}
               value={text}
               onChangeText={(t) => dispatch({ type: "setText", text: t })}
               multiline
               textAlignVertical="top"
             />
           ) : (
-            <>
-              {/* Transcript display */}
-              <View
-                className="min-h-[128px] rounded-3xl px-4 py-4 mb-2"
-                style={{ borderWidth: 1.1, borderColor: "#e5e7eb" }}
-              >
-                <Text
-                  className="text-base leading-6"
-                  style={{ color: transcript ? "#1e2939" : "#99a1af" }}
-                >
-                  {transcript || "Describe your task..."}
-                </Text>
-              </View>
-
-             
-            </>
+            <View
+              style={{
+                height: 118,
+                padding: 16,
+                borderRadius: 24,
+                borderWidth: 2,
+                borderColor: homeColors.primary,
+                backgroundColor: homeColors.surface,
+              }}
+            >
+              <Text style={[homeStyles.body, { color: transcript ? homeColors.ink : PLACEHOLDER }]}>
+                {transcript || "Describe your task…"}
+              </Text>
+            </View>
           )}
 
-          {/* Action buttons */}
-          <View className="flex-row items-center justify-end gap-4 mt-4">
-            { mode === 'recording' &&
-              <LinearGradient
-                colors={["rgba(162,210,255,0.2)", "rgba(205,180,219,0.2)"]}
-                start={{ x: 0, y: 0.5 }}
-                end={{ x: 1, y: 0.5 }}
+          {/* Actions */}
+          <View
+            className="flex-row items-center"
+            style={{ gap: mode === "recording" ? 12 : 16, justifyContent: "flex-end" }}
+          >
+            {mode === "recording" && (
+              <View
                 style={{
-                  height: 48,
-                  borderRadius: 9999,
+                  flex: 1,
+                  height: 60,
+                  borderRadius: 999,
                   flexDirection: "row",
                   alignItems: "center",
                   overflow: "hidden",
-                  flex: 1
+                  backgroundColor: homeColors.selected,
                 }}
               >
                 <ScrollingWaveform volume={volume} />
-              </LinearGradient>}
-            {/* Mic / Cancel-recording button */}
-            {!isEditing && (
-              <Animated.View style={micStyle}>
-                <Pressable
-                  onPress={mode !== "recording" ? handleMicPress : handleCancelRecording}
-                  onPressIn={() => { micScale.value = withSpring(0.92, SPRING_BOUNCY); }}
-                  onPressOut={() => { micScale.value = withSpring(1, SPRING_BOUNCY); }}
-                >
-                  <LinearGradient
-                    colors={["#a2d2ff", "#cdb4db"]}
-                    start={{ x: 0.5, y: 0 }}
-                    end={{ x: 0.5, y: 1 }}
-                    style={{
-                      width: 64,
-                      height: 64,
-                      borderRadius: 9999,
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)",
-                    }}
-                  >
-                    <Ionicons
-                      name={mode === "recording"  ? "close" : "mic-outline"}
-                      size={28}
-                      color="#fff"
-                    />
-                  </LinearGradient>
-                </Pressable>
-              </Animated.View>
+              </View>
             )}
 
-            {/* Confirm button */}
-            <Animated.View style={confirmStyle}>
-              <Pressable
-                onPress={mode === "text" ? handleTextConfirm : handleRecordingConfirm}
-                onPressIn={() => { confirmScale.value = withSpring(0.92, SPRING_BOUNCY); }}
-                onPressOut={() => { confirmScale.value = withSpring(1, SPRING_BOUNCY); }}
-              >
-                <LinearGradient
-                  colors={["#bde0fe", "#a2d2ff"]}
-                  start={{ x: 0.5, y: 0 }}
-                  end={{ x: 0.5, y: 1 }}
-                  style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: 9999,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    opacity: confirmHasContent ? 1 : 0.5,
-                    boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)",
-                  }}
-                >
-                  <Ionicons name="checkmark" size={28} color="#fff" />
-                </LinearGradient>
-              </Pressable>
-            </Animated.View>
+            {/* Mic, or cancel while recording */}
+            {!isEditing && (
+              <CircleButton
+                tone="soft"
+                icon={mode === "recording" ? "close" : "mic-outline"}
+                accessibilityLabel={mode === "recording" ? "Cancel recording" : "Dictate a task"}
+                onPress={mode === "recording" ? handleCancelRecording : handleMicPress}
+              />
+            )}
+
+            <CircleButton
+              tone="primary"
+              icon="checkmark"
+              accessibilityLabel="Save task"
+              disabled={!confirmHasContent}
+              onPress={mode === "text" ? handleTextConfirm : handleRecordingConfirm}
+            />
           </View>
         </BottomSheetView>
       </BottomSheet>
