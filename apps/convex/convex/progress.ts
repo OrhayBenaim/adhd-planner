@@ -82,6 +82,7 @@ export const get = query({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
-    return progress ?? progressShape;
+    const { level, points, pointsToNextLevel } = progress ?? progressShape;
+    return { level, points, pointsToNextLevel };
   },
 });

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useReducer, useRef, type RefObject } from "react";
-import { View, type LayoutRectangle } from "react-native";
+import { View, useWindowDimensions, type LayoutRectangle } from "react-native";
 
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { TourIntroCard } from "../tour/TourIntroCard";
-import { TourSpotlight } from "../tour/TourSpotlight";
+import { TOUR_SCRIM_COLOR, TourSpotlight } from "../tour/TourSpotlight";
 import { TourCelebration } from "../tour/TourCelebration";
 import { SaveProgressOverlay } from "../tour/SaveProgressOverlay";
 import { TOUR_STEPS, VISIBLE_TOUR_STEP_COUNT } from "../tour/constants";
@@ -32,6 +32,7 @@ export type HomeTourRefs = {
 
 export function useHomeTour() {
   const tour = useGuidedTour();
+  const viewport = useWindowDimensions();
 
   const rootViewRef = useRef<View>(null);
   const moodSliderRef = useRef<View>(null);
@@ -86,7 +87,7 @@ export function useHomeTour() {
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [currentStepIndex, currentStepName]);
+  }, [currentStepIndex, currentStepName, viewport.width, viewport.height]);
 
   const tryHandleAIPick = useCallback(
     (tasks: Task[], setSelectedTask: (task: Task | null) => void): boolean => {
@@ -120,14 +121,6 @@ export function useHomeTour() {
 
   const isCompleteTaskStep = tour?.currentStepName === "completeTask";
 
-  const handleTaskLater = useCallback(
-    (setSelectedTask: (task: Task | null) => void) => {
-      if (isCompleteTaskStep) return;
-      setSelectedTask(null);
-    },
-    [isCompleteTaskStep],
-  );
-
   const ensureTourTaskSelected = useCallback(
     (tasks: Task[], selectedTask: Task | null, setSelectedTask: (task: Task | null) => void) => {
       if (!isCompleteTaskStep || selectedTask) return;
@@ -143,7 +136,6 @@ export function useHomeTour() {
     tryHandleAIPick,
     notifyTaskCompleted,
     handleAddPress,
-    handleTaskLater,
     ensureTourTaskSelected,
     isCompleteTaskStep,
   };
@@ -154,7 +146,7 @@ export function HomeTourIntro() {
   if (tour?.currentStepName !== "intro") return null;
 
   return (
-    <View className="px-0 py-4">
+    <View accessibilityViewIsModal style={{ position: "absolute", inset: 0, zIndex: 900, justifyContent: "center", backgroundColor: TOUR_SCRIM_COLOR }}>
       <TourIntroCard
         onStart={tour.reportIntroAcknowledged}
         onSkip={tour.skip}
@@ -173,6 +165,7 @@ export function HomeTourOverlays({ tourLayouts }: HomeTourOverlaysProps) {
 
   return (
     <>
+      <HomeTourIntro />
       {tour.currentStepName === "createTask" && (
         <TourSpotlight
           targetLayout={tourLayouts.addButton}
@@ -213,7 +206,7 @@ export function HomeTourOverlays({ tourLayouts }: HomeTourOverlaysProps) {
           description={TOUR_STEPS[6].description}
           stepNumber={TOUR_STEPS[6].step}
           totalSteps={VISIBLE_TOUR_STEP_COUNT}
-          tooltipPosition="above"
+          tooltipPosition="below"
         />
       )}
       {tour.currentStepName === "celebration" && (

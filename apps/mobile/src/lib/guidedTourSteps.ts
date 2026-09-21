@@ -71,7 +71,7 @@ export const TOUR_STEPS: TourStepDef[] = [
     step: 5,
     type: "action",
     title: "Your personal task picker",
-    description: "Tap the sparkles and I'll fetch the best task for your mood and energy.",
+    description: "Tap it and I'll fetch the best task for your mood and energy.",
     posthogEvent: "guided_tour_step_viewed",
   },
   {
@@ -79,7 +79,7 @@ export const TOUR_STEPS: TourStepDef[] = [
     step: 6,
     type: "action",
     title: "Nice! Now let's crush it",
-    description: "When you're done, tap Complete on the task to earn your first XP.",
+    description: "When you're done, tap Done on the task to earn your first XP.",
     posthogEvent: "guided_tour_step_viewed",
   },
   {

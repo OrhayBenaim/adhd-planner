@@ -27,7 +27,7 @@ export interface AnalyticsEvents {
   "Home page loaded": void;
   "Intro page loaded": void;
   onboarding_step_viewed: {
-    step: "work_time" | "difficulties" | "strengths" | "notifications";
+    step: "work_time" | "difficulties" | "strengths" | "notifications" | "save_progress";
     step_number: 2 | 3 | 4 | 5;
   };
   onboarding_completed: void;

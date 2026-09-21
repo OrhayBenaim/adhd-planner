@@ -19,6 +19,7 @@ export interface AiPickInput {
   moodLevel: number;
   today: string;
   daysAhead: number;
+  excludeTaskId?: string;
 }
 
 export interface BannerVisibilityInput {
@@ -49,6 +50,7 @@ export function pickTaskForMood({
   moodLevel,
   today,
   daysAhead,
+  excludeTaskId,
 }: AiPickInput): AiPickOutcome {
   const cutoff = dateStringDaysAhead(today, daysAhead);
 
@@ -66,7 +68,8 @@ export function pickTaskForMood({
     return { type: "none-in-window", daysAhead };
   }
 
-  const best = eligible.find((t) => t.difficulty <= moodLevel);
+  const best = eligible.find((t) => t.difficulty <= moodLevel && t._id !== excludeTaskId)
+    ?? eligible.find((t) => t.difficulty <= moodLevel);
   if (!best) {
     return { type: "none-match-energy" };
   }

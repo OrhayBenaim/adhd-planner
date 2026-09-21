@@ -1,5 +1,6 @@
 // apps/mobile/src/components/home/HomeScreen.tsx
 import { useEffect } from "react";
+import { StatusBar } from "expo-status-bar";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HomeProvider } from "./HomeProvider";
 import { SheetNavProvider } from "./SheetNavProvider";
@@ -24,7 +25,8 @@ export function HomeScreen() {
       <SheetNavProvider>
         <TaskCreationFlowProvider>
           <GuidedTourProvider enabled={!hasCompletedTour}>
-            <SafeAreaView className="flex-1 bg-[#f5f7fa]">
+            <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: "#d6f1fe" }}>
+              <StatusBar style="dark" />
               <HomeBackHandler />
               <MainContent />
               <SheetManager />

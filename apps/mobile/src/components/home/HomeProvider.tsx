@@ -14,6 +14,7 @@ import type { StreakData, Task, UserProgress } from "@adhd-planner/types";
 import { usePersistedSelectedTask } from "../../hooks/usePersistedSelectedTask";
 import { useWidgetSync } from "../../hooks/useWidgetSync";
 import { usePremium } from "../../hooks/usePremium";
+import { useQueryTime } from "../../hooks/useQueryTime";
 
 const DEFAULT_PROGRESS: UserProgress = {
   level: 1,
@@ -72,7 +73,8 @@ export function HomeProvider({ children }: { children: ReactNode }) {
     () => progressData ?? DEFAULT_PROGRESS,
     [progressData],
   );
-  const streak = useQuery(api.streaks.get, { nowMs: Date.now() });
+  const nowMs = useQueryTime();
+  const streak = useQuery(api.streaks.get, { nowMs });
   const { isPremium } = usePremium();
 
   const completeFromWidget = useCallback(

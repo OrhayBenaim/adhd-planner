@@ -132,20 +132,21 @@ Code: `RatingPromptBanner.tsx`, `AiCeilingBanner.tsx`, `PointsToast.tsx`, `ExitA
 
 ## Onboarding
 
-`welcome → work-time → difficulties → strengths → notifications`
+`welcome → difficulties → strengths → work-time → save-progress`
 
-Code: `app/(onboarding)/*`, `OnboardingProvider.tsx`
+Code: `app/(onboarding)/*`, `OnboardingProvider.tsx`, `PreferenceStep.tsx`, `OnboardingAuth.tsx`
 
-Parent: `13:767`
+Parent: `193:31` on In progress; account options: `263:589`.
 
 | Frame | Node | Step |
 |-------|------|------|
-| Onboarding - name | `12:367` | welcome |
-| Onboarding time / selected | `12:395`, `12:432` | work-time |
-| Onboarding whats difficult / selected | `12:469`, `12:516` | difficulties |
-| Onboarding whats easy / selected | `12:569`, `12:616` | strengths |
-| Onboarding notification | `12:669` | notifications |
-| Onboarding sign-in / options | `12:695`, `12:720` | welcome (auth) |
+| Welcome | `196:4` | welcome |
+| Difficulties | `197:72` | difficulties |
+| Strengths | `198:33` | strengths |
+| Best times | `199:34` | work-time |
+| Save progress | `259:369` | save-progress |
+| Create account / options | `263:592` | save-progress (link account) |
+| Sign in / options | `263:595` | welcome / save-progress (sign in) |
 
 ## Guided tour
 
@@ -197,3 +198,34 @@ Unshipped. Same flow names as Production when the frame is a draft of that journ
 | Frame | Node | Flow |
 |-------|------|------|
 | Onboarding UX v2 | `79:12` | Onboarding — labeled 6-paw progress (Ready already done, no Ready screen); smart defaults. Change notes `79:430`. **Awaiting approval** |
+| Lullio / A softer start | `161:2` | Onboarding concept: welcome → choose a focus → try a tiny action → celebrate |
+| Lullio / Editable welcome | `196:4` | Onboarding concept — welcome |
+| Lullio / Difficulties | `197:72` | Onboarding — difficulties |
+| Lullio / Strengths | `198:33` | Onboarding — strengths |
+| Lullio / Best times | `199:34` | Onboarding — work-time |
+| Lullio / Save progress | `259:369` | Onboarding — save-progress |
+| Lullio / Editable home | `201:36` | Home — next task, mood, and daily progress |
+| Lullio / Settings | `219:461` | Settings — account, preferences, reminders |
+| Lullio / Profile & account | `274:653` | Profile — account details, sign out, delete |
+| Lullio / Subscription | `274:737` | Purchase — plan status and management |
+| Lullio / Settings / Difficulties | `273:979` | Preferences — difficulties tab |
+| Lullio / Settings / Strengths | `273:1074` | Preferences — strengths tab |
+| Lullio / Best work times | `229:141` | Preferences — times tab |
+| Lullio / Voice languages | `279:679` | Settings — offline speech models |
+| Lullio / Achievements | `279:780` | Achievements — badge grid |
+| Lullio / My plan | `280:724` | All tasks — list grouped by day |
+| Lullio / My plan / empty | `280:906` | All tasks — empty state |
+| Lullio / Insights | `281:760` | Insights — weekly stats |
+| Lullio / Add a task | `282:750` | Task creation — addTask |
+| Lullio / Add a task / voice | `282:839` | Task creation — addTask (voice) |
+| Lullio / Pick a day | `284:778` | Task creation — selectDay |
+| Lullio / Pick a time | `284:865` | Task creation — selectTime |
+| Lullio / Review tasks | `284:952` | Task creation — taskSummary |
+| Lullio / Tour / intro | `285:820` | Guided tour — intro |
+| Lullio / Tour / add a task | `285:897` | Guided tour — createTask |
+| Lullio / Tour / pick a day | `285:973` | Guided tour — pickDay |
+| Lullio / Tour / pick a time | `285:1078` | Guided tour — pickTime |
+| Lullio / Tour / mood meter | `286:876` | Guided tour — moodMeter |
+| Lullio / Tour / pick for me | `286:954` | Guided tour — aiPick |
+| Lullio / Tour / complete a task | `286:1030` | Guided tour — completeTask |
+| Lullio / Tour / celebration | `286:1106` | Guided tour — celebration |
