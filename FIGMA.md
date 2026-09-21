@@ -226,6 +226,5 @@ Unshipped. Same flow names as Production when the frame is a draft of that journ
 | Lullio / Tour / pick a day | `285:973` | Guided tour — pickDay |
 | Lullio / Tour / pick a time | `285:1078` | Guided tour — pickTime |
 | Lullio / Tour / mood meter | `286:876` | Guided tour — moodMeter |
-| Lullio / Tour / pick for me | `286:954` | Guided tour — aiPick |
 | Lullio / Tour / complete a task | `286:1030` | Guided tour — completeTask |
 | Lullio / Tour / celebration | `286:1106` | Guided tour — celebration |
