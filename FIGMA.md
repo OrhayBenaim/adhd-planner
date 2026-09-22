@@ -191,6 +191,21 @@ Marketing creatives, not an in-app journey. Section `74:17` on Production.
 | Store collage | `42:24` | Collage |
 | Icon / Icon dark | `46:24`, `46:74` | App icon |
 
+## Website
+
+The public site, not an in-app journey. Section `348:65` (`Landing · Lullio — shipped`) on Production.
+
+Code: `apps/portfolio/index.html`, `terms.html`, `privacy.html`, `site.css`, `legal.js`
+
+| Frame | Node | Step |
+|-------|------|------|
+| Landing / desktop · final | `366:259` | Landing (hero pinned while the deck advances) |
+| Scroll keyframes | `366:532` | Landing — deck states and scroll/motion rules |
+| Landing / mobile · final | `366:3272` | Landing (mobile, swipeable deck) |
+| Terms of Service / desktop · mobile | `356:1061`, `356:1325` | Terms |
+| Privacy Policy / desktop · mobile | `356:1153`, `356:1389` | Privacy |
+| Landing components | `348:66` | Store badge, nav, footer, dog line |
+
 ## Shared assets
 
 `Icons and Assets` (`326:1611`) on Production. Clone from these instead of re-importing artwork.
