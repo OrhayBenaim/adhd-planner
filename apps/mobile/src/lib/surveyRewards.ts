@@ -6,7 +6,7 @@ export function formatSurveyReward(
 ): string {
   switch (rewardType) {
     case "points":
-      return `Earn ${rewardAmount} points`;
+      return `Earn ${rewardAmount} XP`;
     case "pro_days":
       return rewardAmount === 7
         ? "Earn 1 week of Pro"
@@ -22,7 +22,7 @@ export function formatSurveyRewardCelebration(
 ): string {
   switch (rewardType) {
     case "points":
-      return `+${rewardAmount} points unlocked!`;
+      return `+${rewardAmount} XP unlocked!`;
     case "pro_days":
       return rewardAmount === 7
         ? "1 week of Pro unlocked!"

@@ -41,9 +41,9 @@ Code: `taskCreationFlow.ts`, `TaskCreationFlowProvider.tsx`
 | Custom time | `5:147` | selectTime (custom) |
 | Task summary | `123:252` | taskSummary |
 
-## All tasks
+## My plan
 
-Code: `AllTasksSheet.tsx`
+Code: `app/(app)/plan.tsx`, `PlanScreen.tsx`, `taskGroups.ts`
 
 | Frame | Node | Step |
 |-------|------|------|
@@ -51,7 +51,7 @@ Code: `AllTasksSheet.tsx`
 
 ## Settings
 
-Code: `SettingsSheet.tsx`
+Code: `app/(app)/settings/index.tsx`, `components/settings/*`
 
 | Frame | Node | Step |
 |-------|------|------|
@@ -59,7 +59,7 @@ Code: `SettingsSheet.tsx`
 
 ## Preferences
 
-Code: `PreferencesSheet.tsx`, `SegmentedControl.tsx`, `ChipGrid.tsx`
+Code: `app/(app)/settings/work-times.tsx`, `difficulties.tsx`, `strengths.tsx`, `onboarding/OptionRows.tsx`
 
 | Frame | Node | Step |
 |-------|------|------|
@@ -67,7 +67,7 @@ Code: `PreferencesSheet.tsx`, `SegmentedControl.tsx`, `ChipGrid.tsx`
 
 ## Profile
 
-Code: `ProfileSheet.tsx`, `sheets/profile/*`, `auth/AuthFlow.tsx`
+Code: `app/(app)/settings/profile.tsx`, `auth/AuthFlow.tsx`
 
 | Frame | Node | Step |
 |-------|------|------|
@@ -87,7 +87,7 @@ Code: `InsightsSheet.tsx`
 
 ## Achievements
 
-Code: `app/achievements.tsx`, `convex/achievementDefs.ts`
+Code: `app/(app)/settings/achievements.tsx`, `convex/achievementDefs.ts`
 
 | Frame | Node | Step |
 |-------|------|------|
@@ -97,7 +97,7 @@ Code: `app/achievements.tsx`, `convex/achievementDefs.ts`
 
 `upgrade tap → sign-in gate (anonymous only) → paywall`
 
-Code: `app/sign-in-gate.tsx`, `app/paywall.tsx`, `usePremium.tsx`
+Code: `app/sign-in-gate.tsx`, `app/paywall.tsx`, `app/(app)/settings/subscription.tsx`, `usePremium.tsx`
 
 | Frame | Node | Step |
 |-------|------|------|
@@ -195,6 +195,8 @@ Off-canvas on Production. Clone from these instead of re-importing artwork.
 
 Unshipped. Same flow names as Production when the frame is a draft of that journey.
 
+Settings and its detail screens share the parent `273:590`.
+
 | Frame | Node | Flow |
 |-------|------|------|
 | Onboarding UX v2 | `79:12` | Onboarding — labeled 6-paw progress (Ready already done, no Ready screen); smart defaults. Change notes `79:430`. **Awaiting approval** |
@@ -205,16 +207,17 @@ Unshipped. Same flow names as Production when the frame is a draft of that journ
 | Lullio / Best times | `199:34` | Onboarding — work-time |
 | Lullio / Save progress | `259:369` | Onboarding — save-progress |
 | Lullio / Editable home | `201:36` | Home — next task, mood, and daily progress |
-| Lullio / Settings | `219:461` | Settings — account, preferences, reminders |
+| Lullio / Home / no match | `309:1032` | Home — tasks exist but none match the current energy |
+| Lullio / Settings | `289:1293` | Settings — account, preferences, reminders |
 | Lullio / Profile & account | `274:653` | Profile — account details, sign out, delete |
 | Lullio / Subscription | `274:737` | Purchase — plan status and management |
-| Lullio / Settings / Difficulties | `273:979` | Preferences — difficulties tab |
-| Lullio / Settings / Strengths | `273:1074` | Preferences — strengths tab |
-| Lullio / Best work times | `229:141` | Preferences — times tab |
+| Lullio / Settings / Difficulties | `273:979` | Preferences — difficulties |
+| Lullio / Settings / Strengths | `273:1074` | Preferences — strengths |
+| Lullio / Best work times | `289:1353` | Preferences — best work times |
 | Lullio / Voice languages | `279:679` | Settings — offline speech models |
 | Lullio / Achievements | `279:780` | Achievements — badge grid |
-| Lullio / My plan | `280:724` | All tasks — list grouped by day |
-| Lullio / My plan / empty | `280:906` | All tasks — empty state |
+| Lullio / My plan | `280:724` | My plan — list grouped by day |
+| Lullio / My plan / empty | `280:906` | My plan — empty state |
 | Lullio / Insights | `281:760` | Insights — weekly stats |
 | Lullio / Add a task | `282:750` | Task creation — addTask |
 | Lullio / Add a task / voice | `282:839` | Task creation — addTask (voice) |
@@ -228,3 +231,15 @@ Unshipped. Same flow names as Production when the frame is a draft of that journ
 | Lullio / Tour / mood meter | `286:876` | Guided tour — moodMeter |
 | Lullio / Tour / complete a task | `286:1030` | Guided tour — completeTask |
 | Lullio / Tour / celebration | `286:1106` | Guided tour — celebration |
+| Lullio / Tour / save progress | `313:1046` | Guided tour — saveProgress |
+| Lullio / Tour / save progress / options | `313:1122` | Guided tour — saveProgress (auth options) |
+| Sign in / username | `300:935` | Profile / Onboarding — username sign-in form |
+| Create account / username | `300:956` | Profile / Onboarding — username sign-up form |
+| Sign-in gate / options | `300:977` | Purchase — sign-in gate |
+| Lullio / Rating prompt | `301:997` | Home banners — rating prompt |
+| Lullio / Survey invite | `305:1378` | Surveys — invite |
+| Lullio / Survey reminder | `301:1137` | Surveys — deferred |
+| Lullio / Survey / rating question | `305:1519` | Surveys — rating question |
+| Lullio / Survey / open question | `305:1660` | Surveys — open question |
+| Lullio / Survey / thank you | `305:1801` | Surveys — reward granted |
+| Lullio / Survey reward | `301:1277` | Surveys — reward toast (home) |

@@ -6,7 +6,6 @@ export type TourStepName =
   | "pickDay"
   | "pickTime"
   | "moodMeter"
-  | "aiPick"
   | "completeTask"
   | "celebration"
   | "saveProgress";
@@ -67,16 +66,8 @@ export const TOUR_STEPS: TourStepDef[] = [
     posthogEvent: "guided_tour_step_viewed",
   },
   {
-    name: "aiPick",
-    step: 5,
-    type: "action",
-    title: "Your personal task picker",
-    description: "Tap it and I'll fetch the best task for your mood and energy.",
-    posthogEvent: "guided_tour_step_viewed",
-  },
-  {
     name: "completeTask",
-    step: 6,
+    step: 5,
     type: "action",
     title: "Nice! Now let's crush it",
     description: "When you're done, tap Done on the task to earn your first XP.",
@@ -84,7 +75,7 @@ export const TOUR_STEPS: TourStepDef[] = [
   },
   {
     name: "celebration",
-    step: 7,
+    step: 6,
     type: "button",
     title: "You did it!",
     description: "That's the whole loop. Add tasks, match your mood, and get things done.",
@@ -93,7 +84,7 @@ export const TOUR_STEPS: TourStepDef[] = [
   },
   {
     name: "saveProgress",
-    step: 8,
+    step: 7,
     type: "button",
     title: "Save your progress",
     description: "Link an account so your tasks and XP are safe across devices.",
@@ -102,7 +93,7 @@ export const TOUR_STEPS: TourStepDef[] = [
 ];
 
 /** Number of user-facing numbered steps (createTask..completeTask). */
-export const VISIBLE_TOUR_STEP_COUNT = 6;
+export const VISIBLE_TOUR_STEP_COUNT = 5;
 
 export function tourStepAt(index: number): TourStepDef {
   const step = TOUR_STEPS[index];

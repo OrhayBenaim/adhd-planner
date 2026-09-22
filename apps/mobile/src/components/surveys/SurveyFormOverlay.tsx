@@ -13,7 +13,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppPressable as Pressable } from "../AppPressable";
 import { BlurView } from "expo-blur";
-import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useMutation } from "convex/react";
@@ -22,6 +21,8 @@ import { api } from "@adhd-planner/convex/convex/_generated/api";
 import type { Id } from "@adhd-planner/convex/convex/_generated/dataModel";
 import type { SurveyCampaign } from "@adhd-planner/types";
 import { Mascot } from "../mascot/Mascot";
+import { OnboardingButton } from "../onboarding/OnboardingButton";
+import { homeColors, homeStyles } from "../home/theme";
 import {
   formatSurveyReward,
   formatSurveyRewardCelebration,
@@ -33,7 +34,7 @@ import {
   type SurveyResponseValue,
 } from "../../lib/surveyPosthog";
 
-const RATING_EMOJIS = ["😞", "😕", "😐", "🙂", "😄"] as const;
+const RATING_VALUES = [1, 2, 3, 4, 5] as const;
 
 interface Props {
   campaign: SurveyCampaign;
@@ -168,7 +169,7 @@ export function SurveyFormOverlay({ campaign, onClose, onSubmitted }: Props) {
           style={StyleSheet.absoluteFill}
         >
           <Animated.View entering={FadeIn.duration(180)} style={StyleSheet.absoluteFill}>
-            <View className="absolute inset-0 bg-black/55" />
+            <View style={[StyleSheet.absoluteFill, homeStyles.scrim]} />
             {Platform.OS === "ios" && (
               <BlurView intensity={28} tint="dark" style={StyleSheet.absoluteFill} />
             )}
@@ -180,89 +181,73 @@ export function SurveyFormOverlay({ campaign, onClose, onSubmitted }: Props) {
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: "center",
-            paddingHorizontal: 20,
+            paddingHorizontal: 24,
             paddingVertical: 16,
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           <Animated.View entering={FadeInDown.duration(220)}>
-            <View
-              className="bg-white rounded-3xl px-6 pt-5 pb-6 overflow-hidden"
-              style={{ boxShadow: "0px 16px 48px rgba(0, 0, 0, 0.28)" }}
-            >
-              <LinearGradient
-                colors={["#a2d2ff", "#cdb4db"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: 6,
-                }}
-              />
-
+            <View style={homeStyles.modalCard}>
               <RNPressable
                 onPress={onClose}
                 hitSlop={12}
-                className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-[#f5f7fa] items-center justify-center"
+                style={homeStyles.modalDismiss}
                 accessibilityRole="button"
                 accessibilityLabel="Close"
               >
-                <Ionicons name="close" size={18} color="#6a7282" />
+                <Ionicons name="close" size={18} color={homeColors.ink} />
               </RNPressable>
 
               {thankYou ? (
-                <View className="items-center py-6 px-2">
-                  <Mascot pose="celebrate" size={120} />
-                  <Text className="text-xl font-semibold text-[#0A0A0A] text-center mt-4 mb-2">
-                    Thank you!
+                <>
+                  <Mascot pose="celebrate" size={150} />
+                  <Text style={homeStyles.modalTitle}>That really helps</Text>
+                  <Text style={homeStyles.modalBody}>
+                    Your answers go straight to the team.
                   </Text>
-                  <Text className="text-base text-[#6A7282] text-center">
-                    {formatSurveyRewardCelebration(
-                      campaign.rewardType,
-                      campaign.rewardAmount,
-                    )}
-                  </Text>
-                </View>
+                  <View style={homeStyles.pill}>
+                    <Text style={homeStyles.pillLabel}>
+                      {formatSurveyRewardCelebration(
+                        campaign.rewardType,
+                        campaign.rewardAmount,
+                      )}
+                    </Text>
+                  </View>
+                </>
               ) : loadError ? (
-                <View className="items-center py-8 px-2">
-                  <Text className="text-base text-[#6A7282] text-center mb-4">
-                    {loadError}
-                  </Text>
-                  <Pressable onPress={onClose} className="py-2 px-4">
-                    <Text className="text-sm font-medium text-[#364153]">Close</Text>
+                <>
+                  <Text style={homeStyles.modalBody}>{loadError}</Text>
+                  <Pressable
+                    onPress={onClose}
+                    accessibilityRole="button"
+                    style={{ minHeight: 44, justifyContent: "center" }}
+                  >
+                    <Text style={homeStyles.link}>Close</Text>
                   </Pressable>
-                </View>
+                </>
               ) : !survey || !currentQuestion ? (
-                <View className="items-center py-12">
-                  <ActivityIndicator size="large" color="#a2d2ff" />
-                  <Text className="text-sm text-[#6A7282] mt-4">Loading survey…</Text>
+                <View style={{ paddingVertical: 32, alignItems: "center", gap: 14 }}>
+                  <ActivityIndicator size="large" color={homeColors.primary} />
+                  <Text style={homeStyles.modalBody}>Loading survey…</Text>
                 </View>
               ) : (
                 <>
-                  <View className="items-center mt-2 mb-4">
-                    <View className="bg-[#bde0fe]/30 rounded-full px-3 py-1 mb-3">
-                      <Text className="text-xs font-semibold text-[#364153] uppercase tracking-wide">
-                        Question {stepIndex + 1} of {questions.length}
-                      </Text>
-                    </View>
-                    <Mascot pose="wave" size={90} />
+                  <View style={homeStyles.eyebrowPill}>
+                    <Text style={homeStyles.eyebrowPillLabel}>
+                      {`QUESTION ${stepIndex + 1} OF ${questions.length}`}
+                    </Text>
                   </View>
 
-                  <Text className="text-xl font-semibold text-[#0A0A0A] text-center mb-6 leading-7">
+                  <Text style={homeStyles.modalTitle}>
                     {"question" in currentQuestion ? currentQuestion.question : ""}
                   </Text>
 
                   {currentQuestion.type === "rating" ? (
-                    <View className="mb-6">
-                      <View className="flex-row justify-between gap-2">
-                        {RATING_EMOJIS.map((emoji, index) => {
-                          const value = index + 1;
-                          const selected =
-                            responses[currentQuestion.id] === value;
+                    <View style={{ alignSelf: "stretch", gap: 8 }}>
+                      <View style={{ flexDirection: "row", gap: 8 }}>
+                        {RATING_VALUES.map((value) => {
+                          const selected = responses[currentQuestion.id] === value;
                           return (
                             <Pressable
                               key={value}
@@ -276,77 +261,91 @@ export function SurveyFormOverlay({ campaign, onClose, onSubmitted }: Props) {
                                     ? ratingLabels?.high
                                     : undefined
                               }
-                              className={`flex-1 min-h-[56px] rounded-2xl items-center justify-center border-2 ${
-                                selected
-                                  ? "border-[#a2d2ff] bg-[#bde0fe]/40"
-                                  : "border-[#f3f4f6] bg-[#f5f7fa]"
-                              }`}
+                              style={{
+                                flex: 1,
+                                minHeight: 54,
+                                borderRadius: 14,
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor: selected
+                                  ? homeColors.selected
+                                  : homeColors.white,
+                                borderColor: selected
+                                  ? homeColors.primary
+                                  : homeColors.border,
+                                borderWidth: selected ? 2 : 1,
+                              }}
                             >
-                              <Text style={{ fontSize: 32 }}>{emoji}</Text>
+                              <Text
+                                style={{
+                                  fontFamily: "Inter-SemiBold",
+                                  fontSize: 17,
+                                  lineHeight: 24,
+                                  color: homeColors.ink,
+                                }}
+                              >
+                                {value}
+                              </Text>
                             </Pressable>
                           );
                         })}
                       </View>
                       {ratingLabels ? (
-                        <View className="flex-row justify-between mt-2 px-1">
-                          <Text className="text-xs text-[#6A7282]">
-                            {ratingLabels.low}
-                          </Text>
-                          <Text className="text-xs text-[#6A7282]">
-                            {ratingLabels.high}
-                          </Text>
+                        <View
+                          style={{
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                          }}
+                        >
+                          <Text style={homeStyles.caption}>{ratingLabels.low}</Text>
+                          <Text style={homeStyles.caption}>{ratingLabels.high}</Text>
                         </View>
                       ) : null}
                     </View>
                   ) : null}
 
                   {currentQuestion.type === "open" ? (
-                    <View className="mb-4">
+                    <View style={{ alignSelf: "stretch", gap: 14 }}>
                       <TextInput
                         value={openText}
                         onChangeText={setOpenText}
-                        placeholder="Share your thoughts…"
-                        placeholderTextColor="#99a1af"
+                        placeholder="Type anything, or skip it."
+                        placeholderTextColor={homeColors.muted}
                         multiline
                         textAlignVertical="top"
                         accessibilityLabel="Survey answer"
-                        className="bg-[#bde0fe]/20 border border-[#bde0fe]/60 rounded-2xl px-4 py-3 text-base text-[#0A0A0A] min-h-[120px]"
+                        style={{
+                          minHeight: 112,
+                          borderRadius: 14,
+                          borderWidth: 1,
+                          borderColor: homeColors.border,
+                          backgroundColor: homeColors.white,
+                          padding: 16,
+                          fontFamily: "Inter-Regular",
+                          fontSize: 16,
+                          lineHeight: 22,
+                          color: homeColors.ink,
+                        }}
                       />
-                      <Pressable onPress={handleOpenNext} className="mt-4">
-                        <LinearGradient
-                          colors={["#a2d2ff", "#cdb4db"]}
-                          start={{ x: 0, y: 0 }}
-                          end={{ x: 1, y: 0 }}
-                          style={{
-                            borderRadius: 24,
-                            paddingVertical: 15,
-                            alignItems: "center",
-                            opacity:
-                              !openText.trim() && !currentQuestion.optional
-                                ? 0.5
-                                : 1,
-                          }}
-                        >
-                          <Text className="text-white font-semibold text-base">
-                            {isLastStep ? "Submit" : "Next"}
-                          </Text>
-                        </LinearGradient>
-                      </Pressable>
+                      <OnboardingButton
+                        label={isLastStep ? "Submit" : "Next"}
+                        onPress={handleOpenNext}
+                        disabled={!openText.trim() && !currentQuestion.optional}
+                      />
                       {currentQuestion.optional ? (
                         <Pressable
                           onPress={handleSkipOptional}
-                          className="mt-3 items-center py-2"
+                          accessibilityRole="button"
+                          style={{ minHeight: 44, justifyContent: "center" }}
                         >
-                          <Text className="text-sm font-medium text-[#6A7282]">
-                            Skip
-                          </Text>
+                          <Text style={homeStyles.link}>Skip this one</Text>
                         </Pressable>
                       ) : null}
                     </View>
                   ) : null}
 
-                  <View className="bg-[#bde0fe]/25 border border-[#bde0fe]/50 rounded-2xl px-4 py-3 mt-2">
-                    <Text className="text-center text-sm font-semibold text-[#0A0A0A]">
+                  <View style={homeStyles.pill}>
+                    <Text style={homeStyles.pillLabel}>
                       {formatSurveyReward(campaign.rewardType, campaign.rewardAmount)}
                     </Text>
                   </View>

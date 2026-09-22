@@ -3,6 +3,7 @@ import { View, Text, Keyboard } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import { SheetBackdrop } from "./SheetBackdrop";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -146,6 +147,7 @@ export const AddTaskSheet = forwardRef<BottomSheet, Props>(
         ref={ref}
         index={-1}
         snapPoints={snapPoints}
+        backdropComponent={SheetBackdrop}
         enablePanDownToClose
         onClose={() => {
           if (mode === "recording") cancelRecording();
