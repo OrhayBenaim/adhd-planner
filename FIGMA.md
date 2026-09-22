@@ -221,6 +221,7 @@ Unshipped. Same flow names as Production when the frame is a draft of that journ
 | 06 / Settings / flow | `232:870` | Settings — earlier draft |
 | Implementation reference | `203:48` | Working notes for the Lullio redesign |
 | Previous onboarding layouts / retained artwork | `259:368` | Artwork kept from the pre-Lullio onboarding |
+| Store listing · Lullio · draft | `338:1071` | Store listing — Lullio redesign of section `74:17` |
 
 ## Archive
 
