@@ -87,18 +87,14 @@ describe("signed-in happy path", () => {
     state = time.state;
 
     const mood = transition(state, { type: "moodStepAcknowledged" }, signedIn);
-    expect(currentTourStepName(mood.state)).toBe("aiPick");
+    expect(currentTourStepName(mood.state)).toBe("completeTask");
     state = mood.state;
-
-    const aiPick = transition(state, { type: "aiPickHandled" }, signedIn);
-    expect(currentTourStepName(aiPick.state)).toBe("completeTask");
-    state = aiPick.state;
 
     const completed = transition(state, { type: "taskCompleted" }, signedIn);
     expect(currentTourStepName(completed.state)).toBe("celebration");
     expect(effectSummary(completed.effects)).toEqual([
       "track:guided_tour_task_completed",
-      'advance:guided_tour_completed:{"step":7,"stepName":"celebration"}',
+      'advance:guided_tour_completed:{"step":6,"stepName":"celebration"}',
     ]);
     state = completed.state;
 
@@ -137,7 +133,6 @@ describe("skip", () => {
     "pickDay",
     "pickTime",
     "moodMeter",
-    "aiPick",
     "completeTask",
     "celebration",
     "saveProgress",
@@ -224,7 +219,7 @@ describe("analytics quirks", () => {
   it("fires guided_tour_completed twice around celebration", () => {
     const entering = transition(atStep(createInitialGuidedTourState(), "completeTask"), { type: "taskCompleted" }, signedIn);
     expect(effectSummary(entering.effects)).toContain(
-      'advance:guided_tour_completed:{"step":7,"stepName":"celebration"}',
+      'advance:guided_tour_completed:{"step":6,"stepName":"celebration"}',
     );
 
     const leaving = transition(entering.state, { type: "celebrationFinished" }, signedIn);

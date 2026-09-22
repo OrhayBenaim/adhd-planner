@@ -35,6 +35,20 @@ function pick(
 }
 
 describe("pickTaskForMood", () => {
+  it("picks a different matching task when one is already selected", () => {
+    const current = makeTask({ _id: "current", dueDate: TODAY, difficulty: 30 });
+    const next = makeTask({ _id: "next", dueDate: CUTOFF, difficulty: 40 });
+    expect(pickTaskForMood({ tasks: [current, next], moodLevel: 50, today: TODAY, daysAhead: DAYS_AHEAD, excludeTaskId: current._id }))
+      .toEqual({ type: "picked", task: next });
+  });
+
+  it("keeps the current task when alternatives do not match the energy level", () => {
+    const current = makeTask({ _id: "current", dueDate: TODAY, difficulty: 30 });
+    const hard = makeTask({ _id: "hard", dueDate: TODAY, difficulty: 90 });
+    expect(pickTaskForMood({ tasks: [current, hard], moodLevel: 50, today: TODAY, daysAhead: DAYS_AHEAD, excludeTaskId: current._id }))
+      .toEqual({ type: "picked", task: current });
+  });
+
   it("returns none-in-window for an empty task list", () => {
     expect(pick([], 50)).toEqual({ type: "none-in-window", daysAhead: DAYS_AHEAD });
   });

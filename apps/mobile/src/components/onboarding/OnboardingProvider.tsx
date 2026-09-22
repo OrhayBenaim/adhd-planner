@@ -1,4 +1,5 @@
-import { createContext, useContext, useReducer, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useReducer, useRef, useState, useCallback, type ReactNode } from "react";
+import { Alert } from "react-native";
 import * as Sentry from "@sentry/react-native";
 import { useSavePreferences } from "../../hooks/usePreferences";
 import { router } from "expo-router";
@@ -65,6 +66,7 @@ export function useOnboarding() {
 export function OnboardingProvider({ children }: { children: ReactNode }) {
   const savePreferences = useSavePreferences();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   const [state, dispatch] = useReducer(onboardingReducer, initialState);
 
   const updateField = useCallback(
@@ -86,7 +88,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     async (overrides?: Partial<OnboardingState>) => {
       const data = { ...state, ...overrides };
       await savePreferences({
-        name: data.name,
+        name: data.name.trim(),
         bestWorkTimes: data.bestWorkTimes,
         difficulties: data.difficulties,
         strengths: data.strengths,
@@ -99,13 +101,17 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
   const submitOnboarding = useCallback(
     async (overrides?: Partial<OnboardingState>) => {
+      if (submittingRef.current) return;
+      submittingRef.current = true;
       setIsSubmitting(true);
       try {
         await saveOnboardingData(overrides);
         router.replace("/");
       } catch (error) {
         Sentry.captureException(error);
+        Alert.alert("Couldn't save your preferences", "Your answers are still here. Please try again.");
       } finally {
+        submittingRef.current = false;
         setIsSubmitting(false);
       }
     },

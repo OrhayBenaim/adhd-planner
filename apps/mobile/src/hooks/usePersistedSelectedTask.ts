@@ -13,10 +13,13 @@ import {
 /**
  * Selected task with AsyncStorage (cold start) + Convex userSessionState (sync).
  * On initial load: local interim, then server wins when the query resolves.
+ *
+ * The third element reports whether the stored selection has been restored yet,
+ * so callers do not overwrite it with an auto-pick while it is still loading.
  */
 export function usePersistedSelectedTask(
   tasks: Task[] | undefined,
-): [Task | null, (task: Task | null) => void] {
+): [Task | null, (task: Task | null) => void, boolean] {
   const { data: session } = authClient.useSession();
   const userId = session?.user?.id;
 
@@ -30,11 +33,12 @@ export function usePersistedSelectedTask(
   const [localTaskId, setLocalTaskId] = useState<string | null | undefined>(
     undefined,
   );
+  const [hydrated, setHydrated] = useState(false);
   const hydratedRef = useRef(false);
 
   useEffect(() => {
     hydratedRef.current = false;
-    
+    setHydrated(false);
     setLocalTaskId(undefined);
     setSelectedTaskState(null);
     
@@ -68,6 +72,7 @@ export function usePersistedSelectedTask(
     setSelectedTaskState(serverTask);
     writeSelectedTaskId(userId, serverTask?._id ?? null).catch(() => {});
     hydratedRef.current = true;
+    setHydrated(true);
   }, [userId, tasks, localTaskId, serverState]);
 
   const setSelectedTask = useCallback(
@@ -84,5 +89,5 @@ export function usePersistedSelectedTask(
     [userId, setSelectedTaskMutation],
   );
 
-  return [selectedTask, setSelectedTask];
+  return [selectedTask, setSelectedTask, hydrated];
 }

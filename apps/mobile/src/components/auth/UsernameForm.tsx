@@ -1,7 +1,9 @@
 import { View, Text, TextInput, type TextInputProps } from "react-native";
-import { AppPressable as Pressable } from "../AppPressable";
-import { LinearGradient } from "expo-linear-gradient";
 import type { ComponentType } from "react";
+import { OnboardingButton } from "../onboarding/OnboardingButton";
+import { onboardingColors as colors, onboardingStyles as styles } from "../onboarding/theme";
+
+export type UsernameFormField = "username" | "password";
 
 interface UsernameFormProps {
   username: string;
@@ -12,8 +14,16 @@ interface UsernameFormProps {
   submitLabel: string;
   busy: boolean;
   error?: string | null;
+  /** Field the error belongs to; highlights that input. */
+  errorField?: UsernameFormField | null;
   InputComponent?: ComponentType<TextInputProps>;
 }
+
+const inputStyle = {
+  minHeight: 54, borderRadius: 14, borderWidth: 1, borderColor: colors.border,
+  backgroundColor: colors.white, paddingHorizontal: 16, paddingVertical: 14,
+  fontFamily: "Inter-Regular", fontSize: 16, color: colors.ink,
+};
 
 export function UsernameForm({
   username,
@@ -24,18 +34,22 @@ export function UsernameForm({
   submitLabel,
   busy,
   error,
+  errorField,
   InputComponent = TextInput,
 }: UsernameFormProps) {
   const Input = InputComponent;
+  const borderFor = (field: UsernameFormField) =>
+    errorField === field ? colors.danger : colors.border;
+
   return (
-    <View>
+    <View style={{ gap: 18 }}>
       <View style={{ gap: 12 }}>
         <Input
           value={username}
           onChangeText={onUsernameChange}
           placeholder="Username"
-          placeholderTextColor="#99a1af"
-          className="border border-[#e5e7eb] rounded-3xl px-5 py-4 text-base text-[#1e2939]"
+          placeholderTextColor={colors.muted}
+          style={[inputStyle, { borderColor: borderFor("username") }]}
           autoCapitalize="none"
           autoCorrect={false}
         />
@@ -43,39 +57,19 @@ export function UsernameForm({
           value={password}
           onChangeText={onPasswordChange}
           placeholder="Password"
-          placeholderTextColor="#99a1af"
-          className="border border-[#e5e7eb] rounded-3xl px-5 py-4 text-base text-[#1e2939]"
+          placeholderTextColor={colors.muted}
+          style={[inputStyle, { borderColor: borderFor("password") }]}
           secureTextEntry
           autoComplete="password"
           textContentType="password"
         />
+        {error ? <Text style={[styles.link, { color: colors.danger }]}>{error}</Text> : null}
       </View>
-      {error && (
-        <Text className="text-sm text-[#ff6b6b] mt-2 text-center">
-          {error}
-        </Text>
-      )}
-      <LinearGradient
-        colors={["#a2d2ff", "#cdb4db"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={{
-          height: 52,
-          borderRadius: 9999,
-          marginTop: 20,
-          opacity: busy ? 0.5 : 1,
-        }}
-      >
-        <Pressable
-          onPress={onSubmit}
-          disabled={busy}
-          className="flex-1 items-center justify-center"
-        >
-          <Text className="text-white font-semibold text-base">
-            {busy ? "Please wait..." : submitLabel}
-          </Text>
-        </Pressable>
-      </LinearGradient>
+      <OnboardingButton
+        label={busy ? "Please wait..." : submitLabel}
+        onPress={onSubmit}
+        disabled={busy}
+      />
     </View>
   );
 }

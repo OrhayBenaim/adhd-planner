@@ -1,4 +1,4 @@
-import { View, LayoutChangeEvent } from "react-native";
+import { View, Text, LayoutChangeEvent } from "react-native";
 import Animated, {
   FadeIn,
   FadeOut,
@@ -12,11 +12,13 @@ import { LinearGradient } from "expo-linear-gradient";
 import { getMoodLabel } from "../lib/moodLabels";
 import { useEffect, useRef, useState } from "react";
 
-const THUMB_SIZE = 28;
-const TRACK_HEIGHT = 12;
+import { homeColors, homeStyles } from "./home/theme";
+
+const THUMB_SIZE = 24;
+const TRACK_HEIGHT = 11;
 
 function valueToThumbX(value: number, trackWidth: number): number {
-  const max = trackWidth - THUMB_SIZE;
+  const max = Math.max(0, trackWidth - THUMB_SIZE);
   return max > 0 ? (value / 100) * max : 0;
 }
 
@@ -33,7 +35,7 @@ export function MoodSlider({ value, onChange }: Props) {
   const thumbX = useSharedValue(valueToThumbX(value, trackWidth));
 
   const notifyChange = (x: number) => {
-    const pct = Math.min(Math.max(x / (trackWidth - THUMB_SIZE), 0), 1);
+    const pct = Math.min(Math.max(x / Math.max(1, trackWidth - THUMB_SIZE), 0), 1);
     onChange(Math.round(pct * 100));
   };
 
@@ -47,7 +49,7 @@ export function MoodSlider({ value, onChange }: Props) {
       scheduleOnRN(setDragging, true);
     })
     .onChange((e) => {
-      const max = trackWidth - THUMB_SIZE;
+      const max = Math.max(0, trackWidth - THUMB_SIZE);
       thumbX.value = clamp(thumbX.value + e.changeX, 0, max);
       scheduleOnRN(notifyChange, thumbX.value);
     })
@@ -56,7 +58,7 @@ export function MoodSlider({ value, onChange }: Props) {
     });
 
   const tap = Gesture.Tap().onEnd((e) => {
-    const max = trackWidth - THUMB_SIZE;
+    const max = Math.max(0, trackWidth - THUMB_SIZE);
     const x = clamp(e.x - THUMB_SIZE / 2, 0, max);
     thumbX.value = x;
     scheduleOnRN(notifyChange, x);
@@ -79,31 +81,37 @@ export function MoodSlider({ value, onChange }: Props) {
 
   return (
     <View className="w-full">
-      {/* Cross-fading mood label */}
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 12 }}>
+      <Text style={[homeStyles.heading, { fontSize: 21, lineHeight: 26, flexShrink: 1 }]}>How are you feeling?</Text>
       <Animated.Text
         key={label}
         entering={FadeIn.duration(200)}
         exiting={FadeOut.duration(200)}
-        className="text-center text-lg font-medium text-[#364153] mb-4"
+        style={homeStyles.caption}
       >
         {label}
       </Animated.Text>
+      </View>
 
       {/* Track + thumb */}
       <GestureDetector gesture={Gesture.Simultaneous(pan, tap)}>
         <View
-          style={{ height: THUMB_SIZE + 8, justifyContent: "center" }}
+          accessible accessibilityRole="adjustable" accessibilityLabel="Energy level"
+          accessibilityValue={{ min: 0, max: 100, now: value, text: label }}
+          accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
+          onAccessibilityAction={event => onChange(Math.max(0, Math.min(100, value + (event.nativeEvent.actionName === "increment" ? 10 : -10))))}
+          style={{ height: 44, justifyContent: "center" }}
           onLayout={handleLayout}
         >
           {/* Gradient track with shadow */}
           <View
             style={{
               position: "absolute",
-              left: THUMB_SIZE / 2,
-              right: THUMB_SIZE / 2,
+              left: 0,
+              right: 0,
               height: TRACK_HEIGHT,
               borderRadius: 9999,
-              boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.12)",
+
             }}
           >
             <LinearGradient
@@ -129,6 +137,10 @@ export function MoodSlider({ value, onChange }: Props) {
           />
         </View>
       </GestureDetector>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 5 }}>
+        <Text style={[homeStyles.caption, { fontSize: 12, color: homeColors.muted }]}>Exhausted</Text>
+        <Text style={[homeStyles.caption, { fontSize: 12, color: homeColors.muted }]}>Super motivated</Text>
+      </View>
     </View>
   );
 }

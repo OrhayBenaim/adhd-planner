@@ -8,3 +8,4 @@ dist/
 .convex/
 .worktrees/
 .cursor/mcp.json
+.secrets/

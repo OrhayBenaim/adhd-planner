@@ -6,18 +6,19 @@ const modules = import.meta.glob("../**/*.ts");
 
 const FIXED_NOW_MS = new Date("2025-06-01T12:00:00.000Z").getTime();
 
-describe("premium gated queries", () => {
-  test("insights getWeeklyReport requires premium", async () => {
+describe("insights queries", () => {
+  test("getWeeklyReport is open to free users", async () => {
     const t = convexTest(schema, modules);
     const asUser = t.withIdentity({ name: "Free", subject: "free_user" });
 
     const { api } = await import("../_generated/api");
-    await expect(
-      asUser.query(api.insights.getWeeklyReport, { nowMs: FIXED_NOW_MS }),
-    ).rejects.toThrow(/[Pp]remium/);
+    const result = await asUser.query(api.insights.getWeeklyReport, {
+      nowMs: FIXED_NOW_MS,
+    });
+    expect(result).toBeDefined();
   });
 
-  test("insights getWeeklyReport works for premium users", async () => {
+  test("getWeeklyReport works for premium users", async () => {
     const t = convexTest(schema, modules);
     await t.run(async (ctx) => {
       await ctx.db.insert("subscriptions", {
@@ -34,5 +35,13 @@ describe("premium gated queries", () => {
       nowMs: FIXED_NOW_MS,
     });
     expect(result).toBeDefined();
+  });
+
+  test("getWeeklyReport still requires a signed-in user", async () => {
+    const t = convexTest(schema, modules);
+    const { api } = await import("../_generated/api");
+    await expect(
+      t.query(api.insights.getWeeklyReport, { nowMs: FIXED_NOW_MS }),
+    ).rejects.toThrow();
   });
 });

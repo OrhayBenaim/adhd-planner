@@ -61,8 +61,7 @@ export function ScrollingWaveform({ volume }: { volume: number }) {
             width: BAR_W,
             height: MIN_H + bar.v * (MAX_H - MIN_H),
             borderRadius: BAR_W / 2,
-            backgroundColor: "#ffafcc",
-            opacity: 0.7,
+            backgroundColor: "#771344",
             marginHorizontal: BAR_GAP / 2,
           }}
         />
