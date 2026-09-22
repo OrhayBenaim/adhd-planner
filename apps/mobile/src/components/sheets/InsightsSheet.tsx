@@ -3,6 +3,7 @@ import { View, Text } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { SheetBackdrop } from "./SheetBackdrop";
 import { useQuery } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
 import { useSheetNav } from "../home/SheetNavProvider";
@@ -77,6 +78,7 @@ export const InsightsSheet = forwardRef<BottomSheet, Props>(
         ref={ref}
         index={-1}
         snapPoints={["70%"]}
+        backdropComponent={SheetBackdrop}
         enablePanDownToClose
         onClose={onClose}
         backgroundStyle={{

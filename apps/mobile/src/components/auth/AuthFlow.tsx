@@ -7,7 +7,7 @@ import {
 } from "react";
 import { View, Text, type TextInputProps, type StyleProp, type ViewStyle } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
-import { Ionicons } from "@expo/vector-icons";
+import { onboardingColors as colors, onboardingStyles as styles } from "../onboarding/theme";
 import { useSocialAuth } from "../../hooks/useSocialAuth";
 import {
   initialAuthFlowState,
@@ -22,13 +22,13 @@ import { SignUpWithUsername } from "./SignUpWithUsername";
 
 const COPY = {
   link: {
-    title: "Link an account",
-    subtitle: "Your tasks and progress will be preserved",
+    title: "Keep your progress with you.",
+    subtitle: "Choose how you’d like to create your account.",
     errorTitle: "Link failed",
   },
   signIn: {
-    title: "Sign in",
-    subtitle: "Sign in to your existing account",
+    title: "Welcome back.",
+    subtitle: "Sign in to sync your saved tasks and progress.",
     errorTitle: "Sign-in failed",
   },
 } as const;
@@ -39,14 +39,13 @@ export interface AuthFlowPresentation {
   /** Hide title/subtitle above social buttons (parent provides its own header). */
   hideOptionsHeader?: boolean;
   socialLabelPrefix?: string;
-  socialShowShadow?: boolean;
   signUpName?: string;
   usernameSignInTitle?: string;
   usernameSignInSubtitle?: string;
   usernameSignUpTitle?: string;
   usernameSignUpSubtitle?: string;
   /** Back control below username form; omit when parent renders header back. */
-  usernameBack?: "none" | "text" | "arrow" | "gate-link";
+  usernameBack?: "none" | "back" | "gate-link";
 }
 
 export interface AuthFlowProps {
@@ -134,7 +133,6 @@ export function AuthFlow({
   const {
     hideOptionsHeader = false,
     socialLabelPrefix,
-    socialShowShadow,
     signUpName,
     usernameSignInTitle,
     usernameSignInSubtitle,
@@ -157,11 +155,14 @@ export function AuthFlow({
         onUsername: () => apply({ type: "CHOOSE_USERNAME" }),
         busy: socialBusyOrMachine,
       }) : (
-        <View>
+        <View style={{ gap: 18 }}>
           {!hideOptionsHeader && (
             <>
-              <Text className="text-xl font-semibold text-[#1e2939] mb-2">{copy.title}</Text>
-              <Text className="text-sm text-[#6a7282] mb-6">{copy.subtitle}</Text>
+              <Text style={[styles.link, { fontSize: 13, color: colors.primary }]}>YOUR ACCOUNT</Text>
+              <Text accessibilityRole="header" style={[styles.heading, { fontSize: 34, lineHeight: 43 }]}>
+                {copy.title}
+              </Text>
+              <Text style={[styles.body, { fontSize: 17, lineHeight: 21 }]}>{copy.subtitle}</Text>
             </>
           )}
           <SocialAuthButtons
@@ -169,7 +170,6 @@ export function AuthFlow({
             onUsername={() => apply({ type: "CHOOSE_USERNAME" })}
             busy={socialBusyOrMachine}
             labelPrefix={socialLabelPrefix}
-            showShadow={socialShowShadow}
           />
         </View>
       ))}
@@ -214,38 +214,15 @@ function UsernameBackButton({
   variant: Exclude<AuthFlowPresentation["usernameBack"], "none" | undefined>;
   onPress: () => void;
 }) {
-  if (variant === "gate-link") {
-    return (
-      <View className="items-center mt-6">
-        <Pressable onPress={onPress}>
-          <Text className="text-sm text-[#6a7282]">Back to sign-in options</Text>
-        </Pressable>
-      </View>
-    );
-  }
-
-  if (variant === "text") {
-    return (
-      <View className="items-center pb-6" style={{ paddingTop: 16 }}>
-        <Pressable
-          onPress={onPress}
-          className="flex-row items-center justify-center h-14"
-          style={{ gap: 6 }}
-        >
-          <Text className="text-lg font-medium text-[#6a7282]">Back</Text>
-        </Pressable>
-      </View>
-    );
-  }
+  const label = variant === "gate-link" ? "Back to sign-in options" : "Back";
 
   return (
     <Pressable
+      accessibilityRole="button"
       onPress={onPress}
-      className="mt-4 flex-row items-center justify-center py-2"
-      style={{ gap: 6 }}
+      style={{ minHeight: 44, justifyContent: "center", marginTop: 18 }}
     >
-      <Ionicons name="arrow-back" size={18} color="#6a7282" />
-      <Text className="text-base font-medium text-[#6a7282]">Back</Text>
+      <Text style={[styles.link, { textAlign: "center" }]}>{label}</Text>
     </Pressable>
   );
 }

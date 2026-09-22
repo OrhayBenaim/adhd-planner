@@ -1,13 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import * as Sentry from "@sentry/react-native";
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  Platform,
-} from "react-native";
-import { AppPressable as Pressable } from "../AppPressable";
-import { Ionicons } from "@expo/vector-icons";
+import { Platform } from "react-native";
 import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 
 const LANGUAGES: Record<string, string> = {
@@ -46,7 +39,7 @@ const REGIONS: Record<string, string> = {
   VN: "Vietnam", ZA: "South Africa",
 };
 
-function getLocaleName(code: string): string {
+export function getLocaleName(code: string): string {
   const [lang, region] = code.split("-");
   const langName = LANGUAGES[lang] ?? lang;
   if (!region) return langName;
@@ -55,7 +48,6 @@ function getLocaleName(code: string): string {
 }
 
 export function useVoiceLanguages() {
-  const [expanded, setExpanded] = useState(false);
   const [locales, setLocales] = useState<string[]>([]);
   const [installedLocales, setInstalledLocales] = useState<Set<string>>(
     new Set(),
@@ -107,84 +99,5 @@ export function useVoiceLanguages() {
     [installedLocales, downloading, fetchLocales],
   );
 
-  const toggleExpanded = useCallback(() => setExpanded((v) => !v), []);
-
-  return {
-    expanded,
-    toggleExpanded,
-    locales: expanded ? locales : [],
-    installedLocales,
-    downloading,
-    handleLocalePress,
-  };
-}
-
-export function VoiceLanguagesHeader({
-  expanded,
-  onToggle,
-}: {
-  expanded: boolean;
-  onToggle: () => void;
-}) {
-  if (Platform.OS !== "android") return null;
-
-  return (
-    <View className="mb-3">
-      <Pressable
-        onPress={onToggle}
-        className="bg-[#f5f7fa] rounded-3xl px-4 py-4 flex-row items-center justify-between"
-      >
-        <View className="flex-row items-center gap-3">
-          <View
-            className="w-10 h-10 rounded-full items-center justify-center"
-            style={{ backgroundColor: "#cdb4db" }}
-          >
-            <Ionicons name="language" size={20} color="#fff" />
-          </View>
-          <View>
-            <Text className="text-sm font-medium text-[#1e2939]">
-              Voice Languages
-            </Text>
-            <Text className="text-xs text-[#6a7282]">
-              Offline speech models
-            </Text>
-          </View>
-        </View>
-        <Ionicons
-          name={expanded ? "chevron-up" : "chevron-down"}
-          size={20}
-          color="#6a7282"
-        />
-      </Pressable>
-    </View>
-  );
-}
-
-export function VoiceLocaleRow({
-  locale,
-  installed,
-  isDownloading,
-  onPress,
-}: {
-  locale: string;
-  installed: boolean;
-  isDownloading: boolean;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      className="flex-row items-center justify-between px-3 py-2.5 mx-2 rounded-xl"
-      style={{ opacity: isDownloading ? 0.5 : 1 }}
-    >
-      <Text className="text-sm text-[#1e2939]">
-        {getLocaleName(locale)}
-      </Text>
-      {isDownloading ? (
-        <ActivityIndicator size="small" color="#a2d2ff" />
-      ) : installed ? (
-        <Ionicons name="checkmark-circle" size={18} color="#86efac" />
-      ) : null}
-    </Pressable>
-  );
+  return { locales, installedLocales, downloading, handleLocalePress };
 }

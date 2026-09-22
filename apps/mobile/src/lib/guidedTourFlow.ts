@@ -29,7 +29,6 @@ export type GuidedTourEvent =
   | { type: "daySelected" }
   | { type: "timeSelected" }
   | { type: "moodStepAcknowledged" }
-  | { type: "aiPickHandled" }
   | { type: "taskCompleted" }
   | { type: "celebrationFinished" }
   | { type: "saveProgressDone" }
@@ -181,13 +180,9 @@ export function transition(
       if (stepName !== "moodMeter") return noop(state);
       return advanceTo(state, 5);
 
-    case "aiPickHandled":
-      if (stepName !== "aiPick") return noop(state);
-      return advanceTo(state, 6);
-
     case "taskCompleted":
       if (stepName !== "completeTask") return noop(state);
-      return advanceTo(state, 7, [{ type: "track", event: "guided_tour_task_completed" }]);
+      return advanceTo(state, 6, [{ type: "track", event: "guided_tour_task_completed" }]);
 
     case "celebrationFinished":
       if (stepName !== "celebration") return noop(state);
@@ -195,7 +190,7 @@ export function transition(
         return completeTour(state, [{ type: "track", event: "guided_tour_completed" }]);
       }
       return {
-        state: { ...state, stepIndex: 8 },
+        state: { ...state, stepIndex: 7 },
         effects: [
           { type: "track", event: "guided_tour_completed" },
           { type: "track", event: "onboarding_save_progress_shown" },

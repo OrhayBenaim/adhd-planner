@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { View } from "react-native";
-import { BottomSheetBackdrop, type BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
+import type { BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import Animated, { useAnimatedReaction, useAnimatedStyle } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
+import { SheetBackdrop } from "../sheets/SheetBackdrop";
 import { TourTooltip } from "./TourTooltip";
 import type { TourSheetUi } from "../../lib/guidedTourFlow";
 
@@ -17,13 +18,10 @@ export function ScheduleTourBackdrop({ tour, ...props }: BottomSheetBackdropProp
     top: Math.max(12, props.animatedPosition.value - height - 16),
     opacity: props.animatedIndex.value < 0 ? 0 : 1,
   }));
-  // A transparent backdrop can still intercept presses over Home or AddTask.
-  // Mount it only once this sheet is open, including when the tour awaits it.
-  if (!tour || !visible) return null;
   return <View pointerEvents="box-none" style={{ position: "absolute", inset: 0 }}>
-    <BottomSheetBackdrop {...props} appearsOnIndex={0} disappearsOnIndex={-1}
-      opacity={0.32} pressBehavior={tour ? "none" : "close"} />
-    {tour && <Animated.View pointerEvents="none" onLayout={e => setHeight(e.nativeEvent.layout.height)}
+    <SheetBackdrop {...props} pressBehavior={tour ? "none" : "close"} />
+    {/* The tooltip floats above the sheet, so mount it only once the sheet is open. */}
+    {tour && visible && <Animated.View pointerEvents="none" onLayout={e => setHeight(e.nativeEvent.layout.height)}
       style={[{ position: "absolute", left: 0, right: 0 }, style]}>
       <TourTooltip {...tour.tooltip} />
     </Animated.View>}

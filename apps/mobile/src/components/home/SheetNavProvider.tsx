@@ -7,11 +7,7 @@ export type ActiveSheet =
   | "addTask"
   | "selectDay"
   | "selectTime"
-  | "allTasks"
-  | "settings"
-  | "preferences"
   | "taskSummary"
-  | "profile"
   | "insights";
 
 export type SheetEntry = { name: ActiveSheet; ref: React.RefObject<BottomSheet | null> };

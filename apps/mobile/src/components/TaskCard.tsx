@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { Text, View } from "react-native";
 import type { Task } from "@adhd-planner/types";
-import { AppPressable } from "./AppPressable";
 import { OnboardingButton } from "./onboarding/OnboardingButton";
 import { homeStyles } from "./home/theme";
 import { getDifficultyLabel } from "../lib/moodLabels";
@@ -9,14 +8,12 @@ import { getDifficultyLabel } from "../lib/moodLabels";
 interface Props {
   task: Task | null;
   onComplete: (task: Task) => Promise<void>;
-  onPick: () => void;
   onAdd: () => void;
   hasTasks: boolean;
-  pickButtonRef?: React.Ref<View>;
   completeButtonRef?: React.Ref<View>;
 }
 
-export function TaskCard({ task, onComplete, onPick, onAdd, hasTasks, pickButtonRef, completeButtonRef }: Props) {
+export function TaskCard({ task, onComplete, onAdd, hasTasks, completeButtonRef }: Props) {
   const completing = useRef(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,20 +26,31 @@ export function TaskCard({ task, onComplete, onPick, onAdd, hasTasks, pickButton
     catch { setError("Couldn't complete this task. Please try again."); }
     finally { completing.current = false; setBusy(false); }
   }
+
+  // Nothing to show: either there is no task at all, or none fits the current mood.
+  if (!task) {
+    return <View style={[homeStyles.card, { paddingVertical: 28, paddingHorizontal: 20, gap: 12, alignItems: "center" }]}>
+      <Text style={[homeStyles.heading, { fontSize: 24, lineHeight: 26, textAlign: "center" }]}>
+        {hasTasks ? "One thing at a time" : "Nothing planned yet"}
+      </Text>
+      <Text style={[homeStyles.body, { textAlign: "center" }]}>
+        {hasTasks
+          ? "Nothing matches your energy right now. Try moving the slider."
+          : "Add one small thing and it will show up here."}
+      </Text>
+      <View style={{ alignSelf: "stretch" }}>
+        <OnboardingButton label="Add a task" onPress={onAdd} />
+      </View>
+    </View>;
+  }
+
   return <View style={homeStyles.card}>
     <Text style={homeStyles.eyebrow}>YOUR NEXT STEP</Text>
-    <Text style={homeStyles.heading}>{task?.title ?? (hasTasks ? "One thing at a time" : "Make room for a small win")}</Text>
-    <Text style={homeStyles.body}>{task?.description || (task ? "Start with just one thing." : hasTasks ? "Let’s find a task for your energy right now." : "Add something you’d like to get done. Big or tiny.")}</Text>
-    {task && <Text style={homeStyles.caption}>{getDifficultyLabel(task.difficulty)}</Text>}
+    <Text style={homeStyles.heading}>{task.title}</Text>
+    <Text style={homeStyles.body}>{task.description || "Start with just one thing."}</Text>
+    <Text style={homeStyles.caption}>{getDifficultyLabel(task.difficulty)}</Text>
     <View ref={completeButtonRef} collapsable={false}>
-      <OnboardingButton label={task ? (busy ? "Saving…" : "✓   Done") : "Add a task"}
-        onPress={task ? complete : onAdd} disabled={busy} />
-    </View>
-    <View ref={pickButtonRef} collapsable={false}>
-      <AppPressable accessibilityRole="button" disabled={busy} onPress={onPick}
-        style={{ minHeight: 44, alignItems: "center", justifyContent: "center" }}>
-        <Text style={[homeStyles.caption, { fontSize: 14, lineHeight: 20, textDecorationLine: "underline" }]}>{task ? "Pick a different" : "Pick for me"}</Text>
-      </AppPressable>
+      <OnboardingButton label={busy ? "Saving…" : "✓   Done"} onPress={complete} disabled={busy} />
     </View>
     {error && <Text accessibilityRole="alert" style={homeStyles.caption}>{error}</Text>}
   </View>;

@@ -29,6 +29,8 @@ interface HomeContextValue {
   streak: StreakData | undefined;
   moodLevel: number;
   selectedTask: Task | null;
+  /** False until the stored selection has been restored. */
+  selectedTaskHydrated: boolean;
   toast: { points: number; visible: boolean };
 
   // Actions
@@ -63,7 +65,8 @@ export function HomeProvider({ children }: { children: ReactNode }) {
 
   const tasksData = useQuery(api.tasks.list);
   const tasks = useMemo(() => tasksData ?? [], [tasksData]);
-  const [selectedTask, setSelectedTask] = usePersistedSelectedTask(tasksData);
+  const [selectedTask, setSelectedTask, selectedTaskHydrated] =
+    usePersistedSelectedTask(tasksData);
   const createTaskMutation = useMutation(api.tasks.create);
   const completeTaskMutation = useMutation(api.tasks.completeTask);
   const deleteTaskMutation = useMutation(api.tasks.remove);
@@ -144,6 +147,7 @@ export function HomeProvider({ children }: { children: ReactNode }) {
       streak,
       moodLevel,
       selectedTask,
+      selectedTaskHydrated,
       toast,
       setMoodLevel,
       setSelectedTask,
@@ -160,6 +164,7 @@ export function HomeProvider({ children }: { children: ReactNode }) {
       streak,
       moodLevel,
       selectedTask,
+      selectedTaskHydrated,
       toast,
       setSelectedTask,
       showToast,

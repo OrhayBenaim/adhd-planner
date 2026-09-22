@@ -11,21 +11,18 @@ import type { Task } from "@adhd-planner/types";
 
 type TourLayoutState = {
   mood: LayoutRectangle | null;
-  aiButton: LayoutRectangle | null;
   taskCard: LayoutRectangle | null;
   addButton: LayoutRectangle | null;
 };
 
 type TourLayoutAction =
   | { type: "mood"; layout: LayoutRectangle }
-  | { type: "aiButton"; layout: LayoutRectangle }
   | { type: "taskCard"; layout: LayoutRectangle }
   | { type: "addButton"; layout: LayoutRectangle };
 
 export type HomeTourRefs = {
   rootViewRef: RefObject<View | null>;
   moodSliderRef: RefObject<View | null>;
-  aiButtonRef: RefObject<View | null>;
   taskCardRef: RefObject<View | null>;
   addNavButtonRef: RefObject<View | null>;
 };
@@ -36,14 +33,12 @@ export function useHomeTour() {
 
   const rootViewRef = useRef<View>(null);
   const moodSliderRef = useRef<View>(null);
-  const aiButtonRef = useRef<View>(null);
   const taskCardRef = useRef<View>(null);
   const addNavButtonRef = useRef<View>(null);
 
   const refs: HomeTourRefs = {
     rootViewRef,
     moodSliderRef,
-    aiButtonRef,
     taskCardRef,
     addNavButtonRef,
   };
@@ -53,7 +48,7 @@ export function useHomeTour() {
       ...state,
       [action.type]: action.layout,
     }),
-    { mood: null, aiButton: null, taskCard: null, addButton: null },
+    { mood: null, taskCard: null, addButton: null },
   );
 
   const currentStepIndex = tour?.currentStepIndex;
@@ -79,8 +74,6 @@ export function useHomeTour() {
       measure(addNavButtonRef, "addButton");
     } else if (currentStepName === "moodMeter") {
       measure(moodSliderRef, "mood");
-    } else if (currentStepName === "aiPick") {
-      measure(aiButtonRef, "aiButton");
     } else if (currentStepName === "completeTask") {
       measure(taskCardRef, "taskCard");
     }
@@ -88,19 +81,6 @@ export function useHomeTour() {
       if (timer) clearTimeout(timer);
     };
   }, [currentStepIndex, currentStepName, viewport.width, viewport.height]);
-
-  const tryHandleAIPick = useCallback(
-    (tasks: Task[], setSelectedTask: (task: Task | null) => void): boolean => {
-      if (tour?.currentStepName !== "aiPick") return false;
-      const firstTask = tasks.find((t) => !t.completed);
-      if (firstTask) {
-        setSelectedTask(firstTask);
-        tour.reportAiPickHandled();
-      }
-      return true;
-    },
-    [tour],
-  );
 
   const notifyTaskCompleted = useCallback(() => {
     if (tour?.currentStepName !== "completeTask") return;
@@ -121,19 +101,25 @@ export function useHomeTour() {
 
   const isCompleteTaskStep = tour?.currentStepName === "completeTask";
 
+  const showsTaskCard =
+    tour?.currentStepName === "moodMeter" || tour?.currentStepName === "completeTask";
+
+  /**
+   * The task made during the tour is unscored until the AI rates it, so the
+   * mood-based auto-pick cannot see it yet. Select it directly instead.
+   */
   const ensureTourTaskSelected = useCallback(
     (tasks: Task[], selectedTask: Task | null, setSelectedTask: (task: Task | null) => void) => {
-      if (!isCompleteTaskStep || selectedTask) return;
+      if (!showsTaskCard || selectedTask) return;
       const firstTask = tasks.find((t) => !t.completed);
       if (firstTask) setSelectedTask(firstTask);
     },
-    [isCompleteTaskStep],
+    [showsTaskCard],
   );
 
   return {
     refs,
     tourLayouts,
-    tryHandleAIPick,
     notifyTaskCompleted,
     handleAddPress,
     ensureTourTaskSelected,
@@ -189,22 +175,12 @@ export function HomeTourOverlays({ tourLayouts }: HomeTourOverlaysProps) {
           tooltipPosition="below"
         />
       )}
-      {tour.currentStepName === "aiPick" && (
-        <TourSpotlight
-          targetLayout={tourLayouts.aiButton}
-          title={TOUR_STEPS[5].title}
-          description={TOUR_STEPS[5].description}
-          stepNumber={TOUR_STEPS[5].step}
-          totalSteps={VISIBLE_TOUR_STEP_COUNT}
-          tooltipPosition="below"
-        />
-      )}
       {tour.currentStepName === "completeTask" && (
         <TourSpotlight
           targetLayout={tourLayouts.taskCard}
-          title={TOUR_STEPS[6].title}
-          description={TOUR_STEPS[6].description}
-          stepNumber={TOUR_STEPS[6].step}
+          title={TOUR_STEPS[5].title}
+          description={TOUR_STEPS[5].description}
+          stepNumber={TOUR_STEPS[5].step}
           totalSteps={VISIBLE_TOUR_STEP_COUNT}
           tooltipPosition="below"
         />

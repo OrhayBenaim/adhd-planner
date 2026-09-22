@@ -1,13 +1,8 @@
 // apps/mobile/src/components/home/MainContent.tsx
 import { View, ScrollView, Text } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
-import { useCallback, useEffect, useRef, useState } from "react";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSequence,
-  withTiming,
-} from "react-native-reanimated";
+import { useCallback, useEffect, useRef } from "react";
+import { useRouter } from "expo-router";
 import { SvgXml } from "react-native-svg";
 import { homeArtwork } from "../../../assets/home/artwork";
 import { HomeHeader } from "./HomeHeader";
@@ -43,6 +38,7 @@ export function MainContent() {
     setMoodLevel,
     selectedTask,
     setSelectedTask,
+    selectedTaskHydrated,
     toast,
     hideToast,
     completeTask,
@@ -55,7 +51,8 @@ export function MainContent() {
     surveyRewardToast,
     evaluateAiPick,
   } = useHomeExperience(tasks);
-  const { openSheet, closeSheet } = useSheetNav();
+  const { openSheet } = useSheetNav();
+  const router = useRouter();
   const scrollRef = useRef<ScrollView>(null);
   const flow = useTaskCreationFlow();
   const homeTour = useHomeTour();
@@ -64,7 +61,6 @@ export function MainContent() {
   const {
     refs: tourRefs,
     tourLayouts,
-    tryHandleAIPick,
     notifyTaskCompleted,
     handleAddPress,
     ensureTourTaskSelected,
@@ -72,57 +68,22 @@ export function MainContent() {
 
   const { isPremium, showPaywall } = usePremium();
 
-  // "No tasks" toast
-  const [noTasksMsg, setNoTasksMsg] = useState<string | null>(null);
-  const noTasksOpacity = useSharedValue(0);
-  const noTasksTranslateY = useSharedValue(0);
-  const noTasksAnimStyle = useAnimatedStyle(() => ({
-    opacity: noTasksOpacity.value,
-    transform: [{ translateY: noTasksTranslateY.value }],
-  }));
-
-  const showNoTasksToast = useCallback(
-    (message: string) => {
-      setNoTasksMsg(message);
-      noTasksTranslateY.value = 0;
-      noTasksOpacity.value = withSequence(
-        withTiming(1, { duration: 200 }),
-        withTiming(1, { duration: 2000 }),
-        withTiming(0, { duration: 300 }),
-      );
-      noTasksTranslateY.value = withTiming(-30, { duration: 2500 });
-    },
-    [noTasksOpacity, noTasksTranslateY],
-  );
-
-  const handleAIPick = useCallback(() => {
-    if (tryHandleAIPick(tasks, setSelectedTask)) return;
-
-    const outcome = evaluateAiPick(moodLevel, selectedTask?._id);
-    if (outcome.type === "none-in-window") {
-      const days = outcome.daysAhead;
-      showNoTasksToast(
-        `No tasks in the next ${days} day${days === 1 ? "" : "s"}`,
-      );
-      return;
-    }
-    if (outcome.type === "none-match-energy") {
-      showNoTasksToast("No tasks match your energy right now");
-      return;
-    }
-
-    if (outcome.task._id === selectedTask?._id) {
-      showNoTasksToast("This is the only task matching your energy right now.");
-      return;
-    }
-    setSelectedTask(outcome.task);
+  /**
+   * The next task surfaces on its own: whenever nothing is selected, pick the
+   * best match for the current mood. Waits for the stored selection to load so
+   * it cannot overwrite what the user left on screen.
+   */
+  useEffect(() => {
+    if (!selectedTaskHydrated || selectedTask || guidedTour?.isActive) return;
+    const outcome = evaluateAiPick(moodLevel);
+    if (outcome.type === "picked") setSelectedTask(outcome.task);
   }, [
-    tryHandleAIPick,
-    tasks,
-    setSelectedTask,
+    selectedTaskHydrated,
+    selectedTask,
+    guidedTour?.isActive,
     evaluateAiPick,
     moodLevel,
-    showNoTasksToast,
+    setSelectedTask,
   ]);
 
   const handleComplete = useCallback(
@@ -145,14 +106,14 @@ export function MainContent() {
           <MoodSlider value={moodLevel} onChange={setMoodLevel} />
         </View>);
   const taskCard = (<View key="task" style={{ marginHorizontal: 24 }}>
-          <TaskCard task={selectedTask} onComplete={handleComplete} onPick={handleAIPick}
+          <TaskCard task={selectedTask} onComplete={handleComplete}
             onAdd={() => handleAddPress(() => flow.start())} hasTasks={tasks.some(task => !task.completed)}
-            pickButtonRef={tourRefs.aiButtonRef} completeButtonRef={tourRefs.taskCardRef} />
+            completeButtonRef={tourRefs.taskCardRef} />
         </View>);
 
   return (
     <View ref={tourRefs.rootViewRef} collapsable={false} style={{ flex: 1, backgroundColor: "white" }}>
-      <HomeHeader onSettings={() => openSheet("settings")} />
+      <HomeHeader onSettings={() => router.push("/settings")} />
       <ScrollView
         ref={scrollRef}
         scrollEnabled={!guidedTour?.isActive}
@@ -170,9 +131,6 @@ export function MainContent() {
           <PointsToast points={toast.points} visible={toast.visible} onDone={hideToast} />
         </View>
         {guidedTour?.isActive ? [taskCard, moodControl] : [moodControl, taskCard]}
-        {noTasksMsg && <Animated.View style={[noTasksAnimStyle, { marginHorizontal: 24 }]}>
-          <Text accessibilityLiveRegion="polite" style={homeStyles.caption}>{noTasksMsg}</Text>
-        </Animated.View>}
 
         {/* AI ceiling banner */}
         {banner.visible && (
@@ -230,8 +188,8 @@ export function MainContent() {
 
       {surveyRewardToast ? (
         <View className="absolute top-24 left-0 right-0 items-center z-[950] px-6">
-          <View className="bg-white rounded-full px-5 py-3 shadow-sm border border-[#f3f4f6]">
-            <Text className="text-sm font-medium text-[#0A0A0A]">
+          <View style={{ backgroundColor: homeColors.white, borderColor: homeColors.border, borderWidth: 1, borderRadius: 999, paddingHorizontal: 20, paddingVertical: 12, boxShadow: "0px 6px 18px rgba(119, 19, 68, 0.14)" }}>
+            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 15, lineHeight: 21, color: homeColors.ink }}>
               {surveyRewardToast}
             </Text>
           </View>
@@ -240,11 +198,11 @@ export function MainContent() {
 
       {/* Bottom nav */}
       <BottomNav
+        active="today"
         addButtonRef={tourRefs.addNavButtonRef}
-        onListPress={() => openSheet("allTasks")}
-        onTodayPress={() => { closeSheet(); scrollRef.current?.scrollTo({ y: 0, animated: true }); }}
+        onListPress={() => router.push("/plan")}
+        onTodayPress={() => scrollRef.current?.scrollTo({ y: 0, animated: true })}
         onAddPress={() => handleAddPress(() => flow.start())}
-
       />
       <HomeTourOverlays tourLayouts={tourLayouts} />
     </View>

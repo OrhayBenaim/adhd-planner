@@ -8,7 +8,7 @@ export function OnboardingAuth({ mode, name, onBack, onSuccess, onBeforeAuth }: 
   onSuccess: () => void; onBeforeAuth?: () => Promise<void>;
 }) {
   return <AuthFlow mode={mode} style={{ flex: 1 }} onSuccess={onSuccess} onBeforeAuth={onBeforeAuth}
-    presentation={{ hideOptionsHeader: true, signUpName: name.trim(), usernameBack: "text" }}
+    presentation={{ hideOptionsHeader: true, signUpName: name.trim(), usernameBack: "back" }}
     renderHeader={({ view }) => view === "options" ? <View style={{ gap: 18 }}>
       <Text style={[styles.link, { fontSize: 13, color: colors.primary }]}>YOUR ACCOUNT</Text>
       <Text accessibilityRole="header" style={[styles.heading, { fontSize: 34, lineHeight: 43 }]}>

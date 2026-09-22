@@ -1,9 +1,10 @@
 import { StyleSheet } from "react-native";
 
-// Scoped to onboarding so other app flows retain their existing theme.
+// Shared by onboarding, home and auth; flows still on the old theme keep their own colors.
 export const onboardingColors = {
   ink: "#510b31", primary: "#771344", body: "#4f3c64", muted: "#837591",
   accent: "#f17faf", border: "#f2cadc", selected: "#ffe4ef", white: "#ffffff",
+  danger: "#c02a4d",
 };
 
 export const onboardingStyles = StyleSheet.create({

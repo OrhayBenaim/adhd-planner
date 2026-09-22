@@ -1,13 +1,11 @@
-import { View, Text, Platform } from "react-native";
-import { AppPressable as Pressable } from "../AppPressable";
-import { Ionicons } from "@expo/vector-icons";
+import { View, Platform } from "react-native";
+import { OnboardingButton } from "../onboarding/OnboardingButton";
 
 interface SocialAuthButtonsProps {
   onSocial: (provider: "google" | "apple") => void;
   onUsername: () => void;
   busy: boolean;
   labelPrefix?: string;
-  showShadow?: boolean;
 }
 
 export function SocialAuthButtons({
@@ -15,78 +13,23 @@ export function SocialAuthButtons({
   onUsername,
   busy,
   labelPrefix = "Continue with",
-  showShadow = false,
 }: SocialAuthButtonsProps) {
-  const shadowStyle = showShadow
-    ? { boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)" as any }
-    : {};
+  const provider = Platform.OS === "ios" ? ("apple" as const) : ("google" as const);
+  const providerLabel = provider === "apple" ? "Apple" : "Google";
 
   return (
-    <View style={{ gap: 12 }}>
-      {Platform.OS === "android" && (
-        <Pressable
-          onPress={() => onSocial("google")}
-          disabled={busy}
-          className="flex-row items-center bg-white"
-          style={{
-            gap: 12,
-            paddingHorizontal: 18,
-            paddingVertical: 16,
-            borderRadius: 24,
-            borderWidth: 1.5,
-            borderColor: "#e5e7eb",
-            opacity: busy ? 0.5 : 1,
-            ...shadowStyle,
-          }}
-        >
-          <Ionicons name="logo-google" size={24} color="#4285F4" />
-          <Text className="text-base font-medium text-[#364153]">
-            {busy ? "Please wait..." : `${labelPrefix} Google`}
-          </Text>
-        </Pressable>
-      )}
-      {Platform.OS === "ios" && (
-        <Pressable
-          onPress={() => onSocial("apple")}
-          disabled={busy}
-          className="flex-row items-center bg-white"
-          style={{
-            gap: 12,
-            paddingHorizontal: 18,
-            paddingVertical: 16,
-            borderRadius: 24,
-            borderWidth: 1.5,
-            borderColor: "#e5e7eb",
-            opacity: busy ? 0.5 : 1,
-            ...shadowStyle,
-          }}
-        >
-          <Ionicons name="logo-apple" size={24} color="#000" />
-          <Text className="text-base font-medium text-[#364153]">
-            {busy ? "Please wait..." : `${labelPrefix} Apple`}
-          </Text>
-        </Pressable>
-      )}
-      <Pressable
-        onPress={onUsername}
+    <View style={{ gap: 18 }}>
+      <OnboardingButton
+        label={busy ? "Please wait..." : `${labelPrefix} ${providerLabel}`}
         disabled={busy}
-        className="flex-row items-center bg-white"
-        style={{
-          gap: 12,
-          paddingHorizontal: 18,
-          paddingVertical: 16,
-          borderRadius: 24,
-          borderWidth: 1.5,
-          borderColor: "#e5e7eb",
-          opacity: busy ? 0.5 : 1,
-          ...shadowStyle,
-        }}
-      >
-        <Ionicons name="person-outline" size={24} color="#6a7282" />
-        <Text className="text-base font-medium text-[#364153]">
-          {`${labelPrefix} Username`}
-        </Text>
-      </Pressable>
+        onPress={() => onSocial(provider)}
+      />
+      <OnboardingButton
+        secondary
+        label={`${labelPrefix} username`}
+        disabled={busy}
+        onPress={onUsername}
+      />
     </View>
   );
 }
