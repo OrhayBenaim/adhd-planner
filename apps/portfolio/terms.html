@@ -5,95 +5,121 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Terms of Service — Lullio</title>
   <meta name="description" content="Lullio Terms of Service.">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --blue: #a2d2ff;
-      --purple: #cdb4db;
-      --text-dark: #1e2939;
-      --text-secondary: #364153;
-      --text-gray: #6a7282;
-      --white: #ffffff;
-      --bg: #f5f7fa;
-    }
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Inter', sans-serif;
-      color: var(--text-dark);
-      background: var(--bg);
-      line-height: 1.7;
-    }
-    .header {
-      background: linear-gradient(135deg, var(--blue) 0%, var(--purple) 100%);
-      padding: 40px 24px;
-      text-align: center;
-    }
-    .header a {
-      color: var(--text-dark);
-      text-decoration: none;
-      font-size: 28px;
-      font-weight: 700;
-      letter-spacing: -1px;
-    }
-    .content {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 48px 24px 80px;
-      background: var(--white);
-      min-height: calc(100vh - 120px);
-    }
-    h1 { font-size: 32px; font-weight: 700; margin-bottom: 8px; }
-    .updated { color: var(--text-gray); font-size: 14px; margin-bottom: 32px; }
-    h2 { font-size: 20px; font-weight: 700; color: var(--text-secondary); margin-top: 32px; margin-bottom: 12px; }
-    p { margin-bottom: 16px; color: var(--text-secondary); font-size: 15px; }
-    ul { margin-bottom: 16px; padding-left: 24px; }
-    li { margin-bottom: 8px; color: var(--text-secondary); font-size: 15px; }
-    li strong { color: var(--text-dark); }
-    .footer-simple {
-      text-align: center;
-      padding: 24px;
-      color: var(--text-gray);
-      font-size: 13px;
-    }
-    .footer-simple a { color: var(--text-gray); text-decoration: underline; }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="site.css">
 </head>
-<body>
-  <div class="header">
-    <a href="/">Lullio</a>
-  </div>
-  <div class="content">
+<body class="legal">
+  <header class="legal-nav">
+    <a href="index.html" class="wordmark">lullio</a>
+    <a class="legal-nav-cta" href="https://play.google.com/store/apps/details?id=com.ottersprod.lullio.app">
+      <span class="long">Get it on Google Play &nbsp;→</span><span class="short">Get the app &nbsp;→</span>
+    </a>
+  </header>
+  <div class="reading-progress" aria-hidden="true"><span></span></div>
+
+  <div class="legal-header">
+    <img class="legal-dog" src="img/dog-wave.png" alt="">
     <h1>Terms of Service</h1>
-    <p class="updated">Last updated: March 10, 2026</p>
-
-    <p>By using Lullio ("the app"), you agree to these terms. If you do not agree, please do not use the app.</p>
-
-    <h2>1. Use of the App</h2>
-    <p>Lullio is a task management app designed to help you organize and complete tasks. You may use it for personal, non-commercial purposes. You agree not to misuse the app, attempt to access it through unauthorized means, or use it to store illegal content.</p>
-
-    <h2>2. Accounts</h2>
-    <p>You may use Lullio anonymously or create an account via email, Google, or Apple sign-in. You are responsible for maintaining the security of your account credentials. We may suspend or terminate accounts that violate these terms.</p>
-
-    <h2>3. Your Data</h2>
-    <p>You own your task data. We store it to provide the service. See our <a href="/privacy.html" style="color: var(--blue);">Privacy Policy</a> for details on how we handle your information.</p>
-
-    <h2>4. AI Features</h2>
-    <p>Lullio uses AI to score task difficulty. These scores are suggestions based on the task title and your preferences. They are <strong>not medical advice</strong>. Lullio is a productivity tool, not a medical or therapeutic application. If you have ADHD or any other condition, please consult a qualified healthcare professional for guidance.</p>
-
-    <h2>5. Availability</h2>
-    <p>We strive to keep Lullio available but do not guarantee uninterrupted access. The app may be temporarily unavailable for maintenance, updates, or due to circumstances beyond our control. We do not offer a service level agreement (SLA).</p>
-
-    <h2>6. Limitation of Liability</h2>
-    <p>Lullio is provided "as is" without warranties of any kind. To the fullest extent permitted by law, we are not liable for any damages arising from your use of the app, including but not limited to lost data, missed tasks, or reliance on AI-generated scores.</p>
-
-    <h2>7. Changes to These Terms</h2>
-    <p>We may update these terms from time to time. Continued use of the app after changes constitutes acceptance. We will notify you of significant changes through the app.</p>
-
-    <h2>8. Contact</h2>
-    <p>For questions about these terms, contact us at: <strong>ottersprod@gmail.com</strong></p>
+    <div class="legal-meta">
+      <p class="legal-updated">Last updated: March 10, 2026</p>
+      <nav class="doc-switch" aria-label="Legal documents">
+        <a href="terms.html" aria-current="page">Terms of Service</a>
+        <a href="privacy.html">Privacy Policy</a>
+      </nav>
+    </div>
   </div>
-  <div class="footer-simple">
-    <a href="/">Lullio</a> &middot; <a href="/privacy.html">Privacy Policy</a> &middot; &copy; 2026
-  </div>
+
+  <main class="legal-body">
+    <details class="toc" open>
+      <summary>On this page
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M4.5 7.2L9 11.7L13.5 7.2" stroke="#771344" stroke-width="1.98" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <ol>
+        <li><a href="#use">1. Use of the App</a></li>
+        <li><a href="#accounts">2. Accounts</a></li>
+        <li><a href="#data">3. Your Data</a></li>
+        <li><a href="#ai">4. AI Features</a></li>
+        <li><a href="#availability">5. Availability</a></li>
+        <li><a href="#liability">6. Limitation of Liability</a></li>
+        <li><a href="#changes">7. Changes to These Terms</a></li>
+        <li><a href="#contact">8. Contact</a></li>
+      </ol>
+    </details>
+
+    <article class="article">
+      <p class="lede">By using Lullio ("the app"), you agree to these terms. If you do not agree, please do not use the app.</p>
+
+      <section id="use">
+        <h2>1. Use of the App</h2>
+        <p>Lullio is a task management app designed to help you organize and complete tasks. You may use it for personal, non-commercial purposes. You agree not to misuse the app, attempt to access it through unauthorized means, or use it to store illegal content.</p>
+      </section>
+
+      <section id="accounts">
+        <h2>2. Accounts</h2>
+        <p>You may use Lullio anonymously or create an account via email, Google, or Apple sign-in. You are responsible for maintaining the security of your account credentials. We may suspend or terminate accounts that violate these terms.</p>
+      </section>
+
+      <section id="data">
+        <h2>3. Your Data</h2>
+        <p>You own your task data. We store it to provide the service. See our <a href="privacy.html">Privacy Policy</a> for details on how we handle your information.</p>
+      </section>
+
+      <section id="ai">
+        <h2>4. AI Features</h2>
+        <p>Lullio uses AI to score task difficulty. These scores are suggestions based on the task title and your preferences. They are <strong>not medical advice</strong>. Lullio is a productivity tool, not a medical or therapeutic application. If you have ADHD or any other condition, please consult a qualified healthcare professional for guidance.</p>
+      </section>
+
+      <section id="availability">
+        <h2>5. Availability</h2>
+        <p>We strive to keep Lullio available but do not guarantee uninterrupted access. The app may be temporarily unavailable for maintenance, updates, or due to circumstances beyond our control. We do not offer a service level agreement (SLA).</p>
+      </section>
+
+      <section id="liability">
+        <h2>6. Limitation of Liability</h2>
+        <p>Lullio is provided "as is" without warranties of any kind. To the fullest extent permitted by law, we are not liable for any damages arising from your use of the app, including but not limited to lost data, missed tasks, or reliance on AI-generated scores.</p>
+      </section>
+
+      <section id="changes">
+        <h2>7. Changes to These Terms</h2>
+        <p>We may update these terms from time to time. Continued use of the app after changes constitutes acceptance. We will notify you of significant changes through the app.</p>
+      </section>
+
+      <section id="contact">
+        <h2>8. Contact</h2>
+        <p>For questions about these terms, contact us at: <strong>ottersprod@gmail.com</strong></p>
+      </section>
+    </article>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-top">
+        <div>
+          <a href="index.html" class="wordmark">lullio</a>
+          <p class="footer-tagline">One task at a time.</p>
+        </div>
+        <div class="footer-cols">
+          <div class="footer-col">
+            <h2>LEGAL</h2>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms of Service</a>
+          </div>
+          <div class="footer-col">
+            <h2>CONTACT</h2>
+            <a href="mailto:ottersprod@gmail.com">ottersprod@gmail.com</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-rule"></div>
+      <div class="footer-bottom">
+        <p>© 2026 Lullio</p>
+        <p class="footer-disclaimer">Lullio is a productivity tool, not medical advice.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="legal.js"></script>
 </body>
 </html>
