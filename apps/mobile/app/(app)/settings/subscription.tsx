@@ -9,7 +9,6 @@ import { track } from "../../../src/lib/analytics";
 
 const INCLUDED = [
   "AI coach — personalised nudges & tips",
-  "Insights — weekly stats and trends",
   "Achievements — badges and levels",
   "Voice languages — offline speech models",
 ];
@@ -37,7 +36,7 @@ export default function SubscriptionRoute() {
 
   return (
     <SettingsPage parent="Account" title="Subscription"
-      explanation="Lullio Pro unlocks the AI coach, insights and achievements."
+      explanation="Lullio Pro unlocks the AI coach and achievements."
       note={isPremium
         ? "Billing is handled by the App Store or Google Play.\nManage opens your store subscription settings."
         : "Billing is handled by the App Store or Google Play."}>

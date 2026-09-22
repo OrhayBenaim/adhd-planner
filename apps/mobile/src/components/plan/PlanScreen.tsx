@@ -94,10 +94,11 @@ export function PlanScreen() {
     return () => sub.remove();
   }, [isSheetOpen, closeSheet]));
 
-  const goToday = useCallback(() => {
+  // navigate (not push) so switching tabs pops back to a screen already in the
+  // stack instead of stacking Today on top of My plan on top of Today.
+  const goTab = useCallback((href: "/" | "/insights") => {
     closeSheet();
-    if (router.canGoBack()) router.back();
-    else router.replace("/");
+    router.navigate(href);
   }, [closeSheet, router]);
 
   const groups = groupTasksByDue(tasks);
@@ -124,7 +125,7 @@ export function PlanScreen() {
         ))
       )}
     </ScrollView>
-    <BottomNav active="plan" onTodayPress={goToday} onListPress={() => {}}
-      onAddPress={() => flow.start()} />
+    <BottomNav active="plan" onTodayPress={() => goTab("/")} onListPress={() => {}}
+      onInsightsPress={() => goTab("/insights")} onAddPress={() => flow.start()} />
   </View>;
 }
