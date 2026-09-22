@@ -8,18 +8,41 @@
   <meta property="og:title" content="Lullio — A calmer to-do list for busy brains">
   <meta property="og:description" content="Tell Lullio how you feel. It picks one task that fits. The rest can wait.">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="/img/card-1.png">
+  <meta property="og:image" content="/img/screen-1.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Nunito:wght@800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="site.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script>
+    // The 3D phone needs WebGL and an http(s) origin (browsers block local images in WebGL).
+    // Everyone else, and reduced motion, gets the flat phone with a crossfade.
+    try {
+      if (location.protocol !== 'file:'
+        && !matchMedia('(prefers-reduced-motion: reduce)').matches
+        && document.createElement('canvas').getContext('webgl2')) {
+        document.documentElement.classList.add('will-3d');
+      }
+    } catch (e) {}
+  </script>
   <style>
     :root {
-      --deck-w: min(440px, 38vw, calc((100vh - 200px) * 0.732));
+      --deck-col: min(440px, 38vw);
+      --phone-h: min(640px, calc(100vh - 240px));
+      --phone-w: calc(var(--phone-h) * 0.4857);
+      --spring: cubic-bezier(0.34, 1.4, 0.64, 1);
     }
 
-    /* The hero stays pinned for four screens of scrolling while the deck advances. */
-    .deck-scroll { height: 400vh; }
+    /* The hero stays pinned while the phone steps through the app: 0.8 screens per step,
+       plus a longer hold on the last screen so it isn't skipped on the way to the footer. */
+    .deck-scroll { height: 388vh; }
 
     .hero {
       position: sticky;
@@ -30,23 +53,22 @@
       padding: 48px var(--gutter);
       overflow: hidden;
     }
-    .hero-nav { max-width: 1280px; width: 100%; margin: 0 auto; }
+    .hero-nav { position: relative; z-index: 1; max-width: 1280px; width: 100%; margin: 0 auto; }
     .hero-nav .wordmark { font-size: 30px; }
 
     .hero-grid {
       flex: 1;
       max-width: 1280px;
       width: 100%;
-      margin: 0 auto;
+      margin: 49px auto 0;
       display: grid;
-      grid-template-columns: minmax(0, 556px) var(--deck-w);
+      grid-template-columns: minmax(0, 556px) var(--deck-col);
       grid-template-areas: "copy deck" "dog deck";
       grid-template-rows: auto 1fr;
       column-gap: clamp(40px, 10.7vw, 154px);
-      margin-top: 49px;
     }
 
-    .hero-copy { grid-area: copy; padding-top: 15px; }
+    .hero-copy { grid-area: copy; padding-top: 15px; position: relative; z-index: 1; }
     .hero-copy h1 {
       font-family: var(--display);
       font-weight: 800;
@@ -62,6 +84,7 @@
     .dog-block {
       grid-area: dog;
       position: relative;
+      z-index: 1;
       width: min(430px, 100%, calc((100vh - 470px) * 1.2));
       padding-top: 66px;
       margin: 41px 0 0 -16px;
@@ -79,34 +102,82 @@
       line-height: 34px;
       color: var(--ink);
       white-space: nowrap;
-      transition: opacity 0.2s;
+      transform-origin: 20% 100%;
+      transition: opacity 0.2s, transform 0.5s var(--spring);
     }
-    .bubble.is-fading { opacity: 0; }
+    .bubble.is-fading { opacity: 0; transform: scale(0.8) translateY(8px); }
+    .dog-block img.is-bobbing { animation: bob 0.7s var(--spring); }
+    @keyframes bob {
+      40% { transform: translateY(-10px) rotate(-2deg); }
+    }
+
+    /* ---------- Phone ---------- */
 
     .hero-deck { grid-area: deck; align-self: start; }
-    .deck {
+    .stage {
       position: relative;
-      width: var(--deck-w);
-      aspect-ratio: 440 / 601;
+      width: var(--phone-w);
+      height: var(--phone-h);
+      margin: 0 auto;
       touch-action: pan-y;
     }
-    .deck.is-tall { aspect-ratio: 440 / 644; }
-    .card {
+    #phone3d {
       position: absolute;
-      top: 0;
-      left: 0;
+      left: 50%;
+      top: 50%;
+      width: 260%;
+      height: 130%;
+      transform: translate(-50%, -50%);
+      opacity: 0;
+      transition: opacity 0.4s;
+      pointer-events: none;
+    }
+    .stage.is-3d #phone3d { opacity: 1; }
+
+    /* Flat phone: the fallback, and what screen readers read (the 3D canvas is decorative). */
+    .phone {
+      position: absolute;
+      inset: 0;
+      padding: calc(var(--phone-w) * 0.044);
+      border-radius: calc(var(--phone-w) * 0.147);
+      background: #08070a;
+      box-shadow:
+        0 0 0 calc(var(--phone-w) * 0.014) #f4c7d7,
+        0 calc(var(--phone-w) * 0.1) calc(var(--phone-w) * 0.22) rgba(82, 10, 48, 0.25);
+      transition: opacity 0.4s;
+    }
+    .will-3d .phone { opacity: 0; }
+    .phone-screen {
+      position: relative;
+      height: 100%;
+      border-radius: calc(var(--phone-w) * 0.098);
+      overflow: hidden;
+      background: var(--white);
+    }
+    .screen {
+      position: absolute;
+      inset: 0;
       width: 100%;
-      border-radius: calc(var(--deck-w) * 0.079);
-      box-shadow: 0 calc(var(--deck-w) * 0.063) calc(var(--deck-w) * 0.147) rgba(82, 10, 48, 0.18);
-      transition: transform 0.45s cubic-bezier(0.3, 0.7, 0.3, 1), opacity 0.45s;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity 0.5s;
       user-select: none;
       -webkit-user-drag: none;
     }
-    .card[data-state="active"] { z-index: 2; }
-    .card[data-state="gone"] { z-index: 3; opacity: 0; transform: translateY(-40%) rotate(-8deg); pointer-events: none; }
-    .card[data-state="next"] { z-index: 1; opacity: 0; transform: translateY(16px) scale(0.96); }
+    .screen.is-active { opacity: 1; }
+    .island {
+      position: absolute;
+      top: calc(var(--phone-w) * 0.07);
+      left: 50%;
+      width: 29%;
+      height: calc(var(--phone-w) * 0.08);
+      transform: translateX(-50%);
+      border-radius: 999px;
+      background: #000;
+    }
 
-    .dots { display: flex; gap: 8px; justify-content: center; margin-top: 24px; }
+    .dots { display: flex; gap: 8px; justify-content: center; margin-top: 28px; }
     .dots span {
       width: 8px;
       height: 8px;
@@ -118,13 +189,14 @@
     .dots span.is-active { width: 28px; opacity: 1; }
 
     @media (prefers-reduced-motion: reduce) {
-      .card, .card[data-state] { transform: none; transition: opacity 0.3s; }
-      .dots span { transition: none; }
+      .screen, .dots span, .bubble { transition: opacity 0.2s; }
+      .bubble.is-fading { transform: none; }
+      .dog-block img.is-bobbing { animation: none; }
     }
 
-    /* Mobile (and short windows): nothing pinned, the deck is a swipeable stack. */
+    /* Mobile (and short windows): nothing pinned; the phone auto-advances and swipes. */
     @media (max-width: 899px), (max-height: 639px) {
-      :root { --deck-w: min(300px, calc(100vw - 48px)); }
+      :root { --phone-h: min(560px, calc((100vw - 48px) * 1.7)); }
       .deck-scroll { height: auto; }
       .hero { position: static; height: auto; padding: 24px var(--gutter) 32px; }
       .hero-nav .wordmark { font-size: 32px; }
@@ -139,8 +211,8 @@
       .hero-sub { margin-top: 16px; font-size: 17px; line-height: 26px; }
       .hero-cta { margin-top: 22px; gap: 14px; }
       .hero-cta p { font-size: 14px; }
-      .hero-deck { justify-self: center; margin-top: 40px; }
-      .dots { margin-top: 20px; }
+      .hero-deck { justify-self: center; margin-top: 44px; }
+      .dots { margin-top: 24px; }
       .dog-block { width: 100%; max-width: 345px; padding-top: 0; margin: 28px 0 0; }
       .dog-block img { width: 190px; }
       .bubble { top: 25px; left: 132px; padding: 12px 16px; font-size: 18px; line-height: 24px; }
@@ -170,11 +242,17 @@
         </div>
 
         <div class="hero-deck">
-          <div class="deck" id="deck">
-            <img class="card" data-line="Just one thing today?" src="img/card-1.png" alt="Lullio home: set your mood and get one next step, like “Clear your desk”.">
-            <img class="card" data-line="Tell me how you feel first." src="img/card-2.png" alt="Lullio asks how you feel before it picks a task.">
-            <img class="card" data-line="Say it before you forget it." src="img/card-3.png" alt="Adding a task by voice: “Book the dentist on Thursday morning”.">
-            <img class="card" data-line="You did more than you think." src="img/card-4.png" alt="Lullio insights: tasks completed this week and your best day.">
+          <div class="stage" id="stage">
+            <canvas id="phone3d" aria-hidden="true"></canvas>
+            <div class="phone">
+              <div class="phone-screen">
+                <img class="screen" data-line="Just one thing today?" src="img/screen-1.png" alt="Lullio home: set your mood and get one next step, like “Clear your desk”.">
+                <img class="screen" data-line="Tell me how you feel first." src="img/screen-2.png" alt="Lullio asks how you feel before it picks a task.">
+                <img class="screen" data-line="Say it before you forget it." src="img/screen-3.png" alt="Adding a task by voice: “Book the dentist on Thursday morning”.">
+                <img class="screen" data-line="You did more than you think." src="img/screen-4.png" alt="Lullio insights: tasks completed this week and your best day.">
+              </div>
+              <span class="island"></span>
+            </div>
           </div>
           <div class="dots" id="dots" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
         </div>
@@ -211,59 +289,87 @@
 
   <script>
     const scroller = document.querySelector('.deck-scroll');
-    const deck = document.getElementById('deck');
-    const cards = [...deck.children];
+    const stage = document.getElementById('stage');
+    const screens = [...stage.querySelectorAll('.screen')];
+    const N = screens.length;
     const dots = [...document.getElementById('dots').children];
     const bubble = document.getElementById('bubble');
+    const dog = document.querySelector('.dog-block img');
     const pinned = matchMedia('(min-width: 900px) and (min-height: 640px)');
+    const mod = (n) => ((n % N) + N) % N;
+    const smoothstep = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+
+    // The deck position, read by phone3d.js. Fractions are mid-transition; on mobile it counts up past N and wraps.
+    const deckState = window.deckState = { target: 0 };
     let active = -1;
     let fade;
 
     function show(i) {
       if (i === active) return;
       active = i;
-      cards.forEach((c, j) => { c.dataset.state = j < i ? 'gone' : j === i ? 'active' : 'next'; });
+      screens.forEach((s, j) => s.classList.toggle('is-active', j === i));
       dots.forEach((d, j) => d.classList.toggle('is-active', j === i));
-      deck.classList.toggle('is-tall', i === cards.length - 1);
 
       clearTimeout(fade);
       bubble.classList.add('is-fading');
       fade = setTimeout(() => {
-        bubble.textContent = cards[i].dataset.line;
+        bubble.textContent = screens[i].dataset.line;
         bubble.classList.remove('is-fading');
+        dog.classList.remove('is-bobbing');
+        void dog.offsetWidth;
+        dog.classList.add('is-bobbing');
       }, 200);
     }
 
-    // Desktop: scroll position picks the card; scrolling back reverses the deck.
+    // Desktop: each screen holds for a moment of scrolling, then the next one takes over.
+    // The last 0.6 of a step is an extra hold on the final screen before the hero unpins.
+    const END_HOLD = 0.6;
     function onScroll() {
       if (!pinned.matches) return;
       const range = scroller.offsetHeight - innerHeight;
-      const progress = -scroller.getBoundingClientRect().top / range;
-      show(Math.min(cards.length - 1, Math.max(0, Math.floor(progress * cards.length))));
+      const progress = Math.min(1, Math.max(0, -scroller.getBoundingClientRect().top / range));
+      const x = Math.min(N - 1, progress * (N - 1 + END_HOLD));
+      const i = Math.min(N - 2, Math.floor(x));
+      deckState.target = i + smoothstep(0.15, 0.85, x - i);
+      show(Math.round(deckState.target));
     }
     addEventListener('scroll', onScroll, { passive: true });
 
-    // Mobile: auto-advance every 4s until the visitor touches the deck, then swipe.
+    // Mobile: auto-advance every 4s until the visitor touches the phone, then swipe.
+    function step(dir) {
+      deckState.target = Math.round(deckState.target) + dir;
+      show(mod(deckState.target));
+    }
     let timer;
     function autoplay() {
       clearInterval(timer);
-      if (!pinned.matches) timer = setInterval(() => show((active + 1) % cards.length), 4000);
+      if (!pinned.matches) timer = setInterval(() => step(1), 4000);
     }
     let startX = null;
-    deck.addEventListener('pointerdown', (e) => { clearInterval(timer); startX = e.clientX; });
-    deck.addEventListener('pointerup', (e) => {
+    stage.addEventListener('pointerdown', (e) => { clearInterval(timer); startX = e.clientX; });
+    stage.addEventListener('pointerup', (e) => {
       if (pinned.matches || startX === null) return;
       const dx = e.clientX - startX;
       startX = null;
-      if (Math.abs(dx) < 40) return;
-      show((active + (dx < 0 ? 1 : cards.length - 1)) % cards.length);
+      if (Math.abs(dx) >= 40) step(dx < 0 ? 1 : -1);
     });
 
-    pinned.addEventListener('change', () => { autoplay(); onScroll(); });
+    pinned.addEventListener('change', () => {
+      deckState.target = active;
+      autoplay();
+      onScroll();
+    });
     show(0);
     bubble.classList.remove('is-fading');
     autoplay();
     onScroll();
+
+    // Load the 3D phone; if it can't start, fall back to the flat phone.
+    if (document.documentElement.classList.contains('will-3d')) {
+      const fallback = () => document.documentElement.classList.remove('will-3d');
+      import('./phone3d.js').catch(fallback);
+      setTimeout(() => { if (!stage.classList.contains('is-3d')) fallback(); }, 6000);
+    }
   </script>
 </body>
 </html>
