@@ -5,6 +5,8 @@ export const onboardingColors = {
   ink: "#510b31", primary: "#771344", body: "#4f3c64", muted: "#837591",
   accent: "#f17faf", border: "#f2cadc", selected: "#ffe4ef", white: "#ffffff",
   danger: "#c02a4d",
+  // Chart and decorative accents, from the Lullio / Redesign draft collection.
+  lavender: "#a89cd5", mint: "#77aba0",
 };
 
 export const onboardingStyles = StyleSheet.create({
