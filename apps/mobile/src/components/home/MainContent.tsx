@@ -122,7 +122,7 @@ export function MainContent() {
         showsVerticalScrollIndicator={false}
       >
         <View style={{ paddingHorizontal: 24, flexDirection: "row", gap: 12, alignItems: "center" }}>
-          {isPremium && streak && <Pressable accessibilityRole="button" accessibilityLabel="View streak insights" onPress={() => openSheet("insights")}
+          {streak && <Pressable accessibilityRole="button" accessibilityLabel="View streak insights" onPress={() => router.navigate("/insights")}
             style={{ minHeight: 40, flexDirection: "row", gap: 8, alignItems: "center", paddingHorizontal: 8, borderRadius: 14, backgroundColor: homeColors.surface }}>
             <SvgXml xml={homeArtwork.flame} width={22} height={22} />
             <Text style={[homeStyles.caption, { color: homeColors.primary }]}>{streak.currentStreak} day streak</Text>
@@ -200,7 +200,8 @@ export function MainContent() {
       <BottomNav
         active="today"
         addButtonRef={tourRefs.addNavButtonRef}
-        onListPress={() => router.push("/plan")}
+        onListPress={() => router.navigate("/plan")}
+        onInsightsPress={() => router.navigate("/insights")}
         onTodayPress={() => scrollRef.current?.scrollTo({ y: 0, animated: true })}
         onAddPress={() => handleAddPress(() => flow.start())}
       />

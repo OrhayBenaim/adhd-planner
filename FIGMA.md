@@ -79,7 +79,7 @@ Code: `app/(app)/settings/profile.tsx`, `auth/AuthFlow.tsx`
 
 ## Insights
 
-Code: `InsightsSheet.tsx`
+Code: `app/(app)/insights.tsx`, `InsightsScreen.tsx`, `BottomNav.tsx`
 
 | Frame | Node | Step |
 |-------|------|------|
@@ -218,7 +218,7 @@ Settings and its detail screens share the parent `273:590`.
 | Lullio / Achievements | `279:780` | Achievements — badge grid |
 | Lullio / My plan | `280:724` | My plan — list grouped by day |
 | Lullio / My plan / empty | `280:906` | My plan — empty state |
-| Lullio / Insights | `281:760` | Insights — weekly stats |
+| Lullio / Insights | `320:1292` | Insights — weekly stats, reached from the Insights tab |
 | Lullio / Add a task | `282:750` | Task creation — addTask |
 | Lullio / Add a task / voice | `282:839` | Task creation — addTask (voice) |
 | Lullio / Pick a day | `284:778` | Task creation — selectDay |

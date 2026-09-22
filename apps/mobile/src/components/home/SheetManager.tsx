@@ -5,7 +5,6 @@ import { AddTaskSheet } from "../sheets/AddTaskSheet";
 import { SelectDaySheet } from "../sheets/SelectDaySheet";
 import { SelectTimeSheet } from "../sheets/SelectTimeSheet";
 import { TaskSummarySheet } from "../sheets/TaskSummarySheet";
-import { InsightsSheet } from "../sheets/InsightsSheet";
 import { useSheetNav } from "./SheetNavProvider";
 
 export function SheetManager() {
@@ -15,14 +14,12 @@ export function SheetManager() {
   const daySheetRef = useRef<BottomSheet>(null);
   const timeSheetRef = useRef<BottomSheet>(null);
   const taskSummaryRef = useRef<BottomSheet>(null);
-  const insightsSheetRef = useRef<BottomSheet>(null);
 
   useEffect(() => {
     registerSheet({ name: "addTask", ref: addSheetRef });
     registerSheet({ name: "selectDay", ref: daySheetRef });
     registerSheet({ name: "selectTime", ref: timeSheetRef });
     registerSheet({ name: "taskSummary", ref: taskSummaryRef });
-    registerSheet({ name: "insights", ref: insightsSheetRef });
   }, [registerSheet]);
 
   return (
@@ -31,7 +28,6 @@ export function SheetManager() {
       <SelectDaySheet ref={daySheetRef} onClose={() => onSheetClose("selectDay")} />
       <SelectTimeSheet ref={timeSheetRef} onClose={() => onSheetClose("selectTime")} />
       <TaskSummarySheet ref={taskSummaryRef} onClose={() => onSheetClose("taskSummary")} />
-      <InsightsSheet ref={insightsSheetRef} onClose={() => onSheetClose("insights")} />
     </>
   );
 }
