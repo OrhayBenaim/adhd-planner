@@ -1,7 +1,6 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
-import { requirePremium } from "./subscriptions";
 import {
   getTrendsSince,
   getWeeklyBoundaries,
@@ -21,7 +20,6 @@ export const getWeeklyReport = query({
   returns: weeklyReportReturns,
   handler: async (ctx, { nowMs }) => {
     const userId = await requireAuth(ctx);
-    await requirePremium(ctx, userId, nowMs);
 
     const { weekAgoMs, twoWeeksAgoMs } = getWeeklyBoundaries(nowMs);
 
@@ -86,7 +84,6 @@ export const getCompletionTrends = query({
   returns: v.record(v.string(), v.number()),
   handler: async (ctx, { nowMs, days = 30 }) => {
     const userId = await requireAuth(ctx);
-    await requirePremium(ctx, userId, nowMs);
 
     const since = getTrendsSince(nowMs, days);
 

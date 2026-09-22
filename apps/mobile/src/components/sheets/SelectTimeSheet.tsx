@@ -1,13 +1,15 @@
-import { forwardRef, useState, useMemo, useEffect } from "react";
+import { forwardRef, useState, useMemo, useEffect, useCallback } from "react";
 import { View, Text, Keyboard } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetView, BottomSheetTextInput, type BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import { useTaskCreationFlow } from "../home/TaskCreationFlowProvider";
 import { timeSelectionToTime } from "../../lib/dateTimeConvert";
-import { GradientOption } from "../GradientOption";
+import { ScheduleTourBackdrop } from "../tour/ScheduleTourBackdrop";
+import { ScheduleOption } from "./ScheduleOption";
+import { homeStyles } from "../home/theme";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
-import { TourTooltip } from "../tour/TourTooltip";
+
 
 interface Props {
   onClose: () => void;
@@ -18,6 +20,7 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
     const flow = useTaskCreationFlow();
     const tour = useGuidedTour();
     const timeSheetTour = tour?.timeSheetTour ?? null;
+    const renderBackdrop = useCallback((props: BottomSheetBackdropProps) => <ScheduleTourBackdrop {...props} tour={timeSheetTour} />, [timeSheetTour]);
     const isSelected = (time: string) => {
       if (!flow.editingExistingTaskId || !flow.selectedTime) return false;
       return timeSelectionToTime(time) === flow.selectedTime;
@@ -60,18 +63,20 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
       <BottomSheet
         ref={ref}
         index={-1}
+        backdropComponent={renderBackdrop}
         snapPoints={snapPoints}
         enablePanDownToClose={!timeSheetTour?.lockSheet}
         onClose={onClose}
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustPan"
-        backgroundStyle={{ borderTopLeftRadius: 48, borderTopRightRadius: 48 }}
+        enableDynamicSizing
+        backgroundStyle={{ borderTopLeftRadius: 36, borderTopRightRadius: 36 }}
         handleIndicatorStyle={{ display: "none" }}
       >
-        <BottomSheetView className="px-6 pt-6">
+        <BottomSheetView style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 32 }}>
           <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-xl font-semibold text-[#1e2939]">What time?</Text>
+            <Text style={[homeStyles.heading, { fontSize: 28, lineHeight: 36 }]}>What time?</Text>
             {!timeSheetTour?.lockSheet && (
               <Pressable onPress={() => { Keyboard.dismiss(); onClose(); }}>
                 <Ionicons name="close" size={24} color="#364153" />
@@ -80,12 +85,12 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
           </View>
           <View className="gap-3">
             <View className="flex-row gap-3">
-              <GradientOption label="By Morning" colors={["#bde0fe", "#a2d2ff"]} onPress={() => handleSelect("noon")} selected={isSelected("noon")} />
-              <GradientOption label="By Afternoon" colors={["#a2d2ff", "#cdb4db"]} onPress={() => handleSelect("afternoon")} selected={isSelected("afternoon")} />
+              <ScheduleOption label="By morning" onPress={() => handleSelect("noon")} selected={isSelected("noon")} />
+              <ScheduleOption label="By afternoon" onPress={() => handleSelect("afternoon")} selected={isSelected("afternoon")} />
             </View>
             <View className="flex-row gap-3">
-              <GradientOption label="By Evening" colors={["#cdb4db", "#ffc8dd"]} onPress={() => handleSelect("end_of_day")} selected={isSelected("end_of_day")} />
-              <GradientOption label="Custom" colors={["#ffc8dd", "#ffafcc"]} onPress={() => handleSelect("custom")} />
+              <ScheduleOption label="By evening" onPress={() => handleSelect("end_of_day")} selected={isSelected("end_of_day")} />
+              <ScheduleOption label="Pick a time" onPress={() => handleSelect("custom")} />
             </View>
             {showCustomInput && (
               <View className="flex-row items-center gap-2 mt-1">
@@ -101,25 +106,14 @@ export const SelectTimeSheet = forwardRef<BottomSheet, Props>(
                 />
                 <Pressable
                   onPress={handleCustomSubmit}
-                  style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "#a2d2ff", alignItems: "center", justifyContent: "center" }}
+                  style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "#771344", alignItems: "center", justifyContent: "center" }}
                 >
                   <Ionicons name="checkmark" size={22} color="#fff" />
                 </Pressable>
               </View>
             )}
           </View>
-          {timeSheetTour && (
-            <View className="mt-4">
-              <TourTooltip
-                title={timeSheetTour.tooltip.title}
-                description={timeSheetTour.tooltip.description}
-                showMascot={false}
-                stepNumber={timeSheetTour.tooltip.stepNumber}
-                totalSteps={timeSheetTour.tooltip.totalSteps}
-                arrow="up"
-              />
-            </View>
-          )}
+          <Text style={[homeStyles.caption, { marginTop: 16 }]}>We nudge times toward your best work times.</Text>
         </BottomSheetView>
       </BottomSheet>
     );

@@ -1,20 +1,16 @@
-import { forwardRef, useState, useMemo, useEffect } from "react";
+import { forwardRef, useState, useMemo, useEffect, useCallback } from "react";
 import { View, Text, Keyboard } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetView, BottomSheetTextInput } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetView, BottomSheetTextInput, type BottomSheetBackdropProps } from "@gorhom/bottom-sheet";
 import { useTaskCreationFlow } from "../home/TaskCreationFlowProvider";
 import { daySelectionToDate } from "../../lib/dateTimeConvert";
-import { GradientOption, type GradientPair } from "../GradientOption";
+import { ScheduleTourBackdrop } from "../tour/ScheduleTourBackdrop";
+import { ScheduleOption } from "./ScheduleOption";
+import { homeStyles } from "../home/theme";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
-import { TourTooltip } from "../tour/TourTooltip";
 
-const DAY_GRADIENTS: GradientPair[] = [
-  ["#bde0fe", "#a2d2ff"],
-  ["#a2d2ff", "#cdb4db"],
-  ["#cdb4db", "#ffc8dd"],
-  ["#ffc8dd", "#ffafcc"],
-];
+
 
 interface Props {
   onClose: () => void;
@@ -25,6 +21,7 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
     const flow = useTaskCreationFlow();
     const tour = useGuidedTour();
     const daySheetTour = tour?.daySheetTour ?? null;
+    const renderBackdrop = useCallback((props: BottomSheetBackdropProps) => <ScheduleTourBackdrop {...props} tour={daySheetTour} />, [daySheetTour]);
     const isSelected = (day: string) => {
       if (!flow.editingExistingTaskId || !flow.selectedDay) return false;
       return daySelectionToDate(day) === flow.selectedDay;
@@ -67,18 +64,20 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
       <BottomSheet
         ref={ref}
         index={-1}
+        backdropComponent={renderBackdrop}
         snapPoints={snapPoints}
         enablePanDownToClose={!daySheetTour?.lockSheet}
         onClose={onClose}
         keyboardBehavior="interactive"
         keyboardBlurBehavior="restore"
         android_keyboardInputMode="adjustPan"
-        backgroundStyle={{ borderTopLeftRadius: 48, borderTopRightRadius: 48 }}
+        enableDynamicSizing
+        backgroundStyle={{ borderTopLeftRadius: 36, borderTopRightRadius: 36 }}
         handleIndicatorStyle={{ display: "none" }}
       >
-        <BottomSheetView className="px-6 pt-6">
+        <BottomSheetView style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 32 }}>
           <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-xl font-semibold text-[#1e2939]">When is this due?</Text>
+            <Text style={[homeStyles.heading, { fontSize: 28, lineHeight: 36 }]}>When is this due?</Text>
             {!daySheetTour?.lockSheet && (
               <Pressable onPress={() => { Keyboard.dismiss(); onClose(); }}>
                 <Ionicons name="close" size={24} color="#364153" />
@@ -88,12 +87,12 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
 
           <View className="gap-3">
             <View className="flex-row gap-3">
-              <GradientOption label="Today" colors={DAY_GRADIENTS[0]} onPress={() => handleSelect("today")} selected={isSelected("today")} />
-              <GradientOption label="Tomorrow" colors={DAY_GRADIENTS[1]} onPress={() => handleSelect("tomorrow")} selected={isSelected("tomorrow")} />
+              <ScheduleOption label="Today" onPress={() => handleSelect("today")} selected={isSelected("today")} />
+              <ScheduleOption label="Tomorrow" onPress={() => handleSelect("tomorrow")} selected={isSelected("tomorrow")} />
             </View>
             <View className="flex-row gap-3">
-              <GradientOption label="End of Week" colors={DAY_GRADIENTS[2]} onPress={() => handleSelect("end_of_week")} selected={isSelected("end_of_week")} />
-              <GradientOption label="Custom" colors={DAY_GRADIENTS[3]} onPress={() => handleSelect("custom")} />
+              <ScheduleOption label="End of week" onPress={() => handleSelect("end_of_week")} selected={isSelected("end_of_week")} />
+              <ScheduleOption label="Pick a day" onPress={() => handleSelect("custom")} />
             </View>
             {showCustomInput && (
               <View className="flex-row items-center gap-2 mt-1">
@@ -109,25 +108,14 @@ export const SelectDaySheet = forwardRef<BottomSheet, Props>(
                 />
                 <Pressable
                   onPress={handleCustomSubmit}
-                  style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "#a2d2ff", alignItems: "center", justifyContent: "center" }}
+                  style={{ width: 44, height: 44, borderRadius: 22, backgroundColor: "#771344", alignItems: "center", justifyContent: "center" }}
                 >
                   <Ionicons name="checkmark" size={22} color="#fff" />
                 </Pressable>
               </View>
             )}
           </View>
-          {daySheetTour && (
-            <View className="mt-4">
-              <TourTooltip
-                title={daySheetTour.tooltip.title}
-                description={daySheetTour.tooltip.description}
-                showMascot={false}
-                stepNumber={daySheetTour.tooltip.stepNumber}
-                totalSteps={daySheetTour.tooltip.totalSteps}
-                arrow="up"
-              />
-            </View>
-          )}
+          <Text style={[homeStyles.caption, { marginTop: 16 }]}>Pick a date opens a small date field.</Text>
         </BottomSheetView>
       </BottomSheet>
     );

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useReducer, useRef, type RefObject } from "react";
-import { View, type LayoutRectangle } from "react-native";
+import { View, useWindowDimensions, type LayoutRectangle } from "react-native";
 
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { TourIntroCard } from "../tour/TourIntroCard";
-import { TourSpotlight } from "../tour/TourSpotlight";
+import { TOUR_SCRIM_COLOR, TourSpotlight } from "../tour/TourSpotlight";
 import { TourCelebration } from "../tour/TourCelebration";
 import { SaveProgressOverlay } from "../tour/SaveProgressOverlay";
 import { TOUR_STEPS, VISIBLE_TOUR_STEP_COUNT } from "../tour/constants";
@@ -11,38 +11,34 @@ import type { Task } from "@adhd-planner/types";
 
 type TourLayoutState = {
   mood: LayoutRectangle | null;
-  aiButton: LayoutRectangle | null;
   taskCard: LayoutRectangle | null;
   addButton: LayoutRectangle | null;
 };
 
 type TourLayoutAction =
   | { type: "mood"; layout: LayoutRectangle }
-  | { type: "aiButton"; layout: LayoutRectangle }
   | { type: "taskCard"; layout: LayoutRectangle }
   | { type: "addButton"; layout: LayoutRectangle };
 
 export type HomeTourRefs = {
   rootViewRef: RefObject<View | null>;
   moodSliderRef: RefObject<View | null>;
-  aiButtonRef: RefObject<View | null>;
   taskCardRef: RefObject<View | null>;
   addNavButtonRef: RefObject<View | null>;
 };
 
 export function useHomeTour() {
   const tour = useGuidedTour();
+  const viewport = useWindowDimensions();
 
   const rootViewRef = useRef<View>(null);
   const moodSliderRef = useRef<View>(null);
-  const aiButtonRef = useRef<View>(null);
   const taskCardRef = useRef<View>(null);
   const addNavButtonRef = useRef<View>(null);
 
   const refs: HomeTourRefs = {
     rootViewRef,
     moodSliderRef,
-    aiButtonRef,
     taskCardRef,
     addNavButtonRef,
   };
@@ -52,7 +48,7 @@ export function useHomeTour() {
       ...state,
       [action.type]: action.layout,
     }),
-    { mood: null, aiButton: null, taskCard: null, addButton: null },
+    { mood: null, taskCard: null, addButton: null },
   );
 
   const currentStepIndex = tour?.currentStepIndex;
@@ -78,28 +74,13 @@ export function useHomeTour() {
       measure(addNavButtonRef, "addButton");
     } else if (currentStepName === "moodMeter") {
       measure(moodSliderRef, "mood");
-    } else if (currentStepName === "aiPick") {
-      measure(aiButtonRef, "aiButton");
     } else if (currentStepName === "completeTask") {
       measure(taskCardRef, "taskCard");
     }
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [currentStepIndex, currentStepName]);
-
-  const tryHandleAIPick = useCallback(
-    (tasks: Task[], setSelectedTask: (task: Task | null) => void): boolean => {
-      if (tour?.currentStepName !== "aiPick") return false;
-      const firstTask = tasks.find((t) => !t.completed);
-      if (firstTask) {
-        setSelectedTask(firstTask);
-        tour.reportAiPickHandled();
-      }
-      return true;
-    },
-    [tour],
-  );
+  }, [currentStepIndex, currentStepName, viewport.width, viewport.height]);
 
   const notifyTaskCompleted = useCallback(() => {
     if (tour?.currentStepName !== "completeTask") return;
@@ -120,30 +101,27 @@ export function useHomeTour() {
 
   const isCompleteTaskStep = tour?.currentStepName === "completeTask";
 
-  const handleTaskLater = useCallback(
-    (setSelectedTask: (task: Task | null) => void) => {
-      if (isCompleteTaskStep) return;
-      setSelectedTask(null);
-    },
-    [isCompleteTaskStep],
-  );
+  const showsTaskCard =
+    tour?.currentStepName === "moodMeter" || tour?.currentStepName === "completeTask";
 
+  /**
+   * The task made during the tour is unscored until the AI rates it, so the
+   * mood-based auto-pick cannot see it yet. Select it directly instead.
+   */
   const ensureTourTaskSelected = useCallback(
     (tasks: Task[], selectedTask: Task | null, setSelectedTask: (task: Task | null) => void) => {
-      if (!isCompleteTaskStep || selectedTask) return;
+      if (!showsTaskCard || selectedTask) return;
       const firstTask = tasks.find((t) => !t.completed);
       if (firstTask) setSelectedTask(firstTask);
     },
-    [isCompleteTaskStep],
+    [showsTaskCard],
   );
 
   return {
     refs,
     tourLayouts,
-    tryHandleAIPick,
     notifyTaskCompleted,
     handleAddPress,
-    handleTaskLater,
     ensureTourTaskSelected,
     isCompleteTaskStep,
   };
@@ -154,7 +132,7 @@ export function HomeTourIntro() {
   if (tour?.currentStepName !== "intro") return null;
 
   return (
-    <View className="px-0 py-4">
+    <View accessibilityViewIsModal style={{ position: "absolute", inset: 0, zIndex: 900, justifyContent: "center", backgroundColor: TOUR_SCRIM_COLOR }}>
       <TourIntroCard
         onStart={tour.reportIntroAcknowledged}
         onSkip={tour.skip}
@@ -173,6 +151,7 @@ export function HomeTourOverlays({ tourLayouts }: HomeTourOverlaysProps) {
 
   return (
     <>
+      <HomeTourIntro />
       {tour.currentStepName === "createTask" && (
         <TourSpotlight
           targetLayout={tourLayouts.addButton}
@@ -196,24 +175,14 @@ export function HomeTourOverlays({ tourLayouts }: HomeTourOverlaysProps) {
           tooltipPosition="below"
         />
       )}
-      {tour.currentStepName === "aiPick" && (
+      {tour.currentStepName === "completeTask" && (
         <TourSpotlight
-          targetLayout={tourLayouts.aiButton}
+          targetLayout={tourLayouts.taskCard}
           title={TOUR_STEPS[5].title}
           description={TOUR_STEPS[5].description}
           stepNumber={TOUR_STEPS[5].step}
           totalSteps={VISIBLE_TOUR_STEP_COUNT}
           tooltipPosition="below"
-        />
-      )}
-      {tour.currentStepName === "completeTask" && (
-        <TourSpotlight
-          targetLayout={tourLayouts.taskCard}
-          title={TOUR_STEPS[6].title}
-          description={TOUR_STEPS[6].description}
-          stepNumber={TOUR_STEPS[6].step}
-          totalSteps={VISIBLE_TOUR_STEP_COUNT}
-          tooltipPosition="above"
         />
       )}
       {tour.currentStepName === "celebration" && (

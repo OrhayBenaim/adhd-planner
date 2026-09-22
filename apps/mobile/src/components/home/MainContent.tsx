@@ -1,23 +1,19 @@
 // apps/mobile/src/components/home/MainContent.tsx
 import { View, ScrollView, Text } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
-import { useCallback, useEffect, useState } from "react";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSequence,
-  withTiming,
-  Easing,
-} from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
-import { Ionicons } from "@expo/vector-icons";
+import { useCallback, useEffect, useRef } from "react";
+import { useRouter } from "expo-router";
+import { SvgXml } from "react-native-svg";
+import { homeArtwork } from "../../../assets/home/artwork";
+import { HomeHeader } from "./HomeHeader";
+import { homeColors, homeStyles } from "./theme";
 
 import { XPBar } from "../XPBar";
 import { MoodSlider } from "../MoodSlider";
 import { TaskCard } from "../TaskCard";
 import { BottomNav } from "../BottomNav";
 import { PointsToast } from "../PointsToast";
-import { StreakBadge } from "../StreakBadge";
+
 import { AiCeilingBanner } from "../AiCeilingBanner";
 import { SurveyInviteOverlay } from "../surveys/SurveyInviteOverlay";
 import { SurveyFormOverlay } from "../surveys/SurveyFormOverlay";
@@ -31,7 +27,7 @@ import { useHomeExperience } from "../../hooks/useHomeExperience";
 import { useRatingPrompt } from "../../hooks/useRatingPrompt";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { track } from "../../lib/analytics";
-import { useHomeTour, HomeTourIntro, HomeTourOverlays } from "./HomeTour";
+import { useHomeTour, HomeTourOverlays } from "./HomeTour";
 
 export function MainContent() {
   const {
@@ -42,6 +38,7 @@ export function MainContent() {
     setMoodLevel,
     selectedTask,
     setSelectedTask,
+    selectedTaskHydrated,
     toast,
     hideToast,
     completeTask,
@@ -55,6 +52,8 @@ export function MainContent() {
     evaluateAiPick,
   } = useHomeExperience(tasks);
   const { openSheet } = useSheetNav();
+  const router = useRouter();
+  const scrollRef = useRef<ScrollView>(null);
   const flow = useTaskCreationFlow();
   const homeTour = useHomeTour();
   const guidedTour = useGuidedTour();
@@ -62,82 +61,29 @@ export function MainContent() {
   const {
     refs: tourRefs,
     tourLayouts,
-    tryHandleAIPick,
     notifyTaskCompleted,
     handleAddPress,
-    handleTaskLater,
     ensureTourTaskSelected,
-    isCompleteTaskStep,
   } = homeTour;
 
   const { isPremium, showPaywall } = usePremium();
 
-  // AI button animation — local to this component
-  const aiScale = useSharedValue(1);
-  const aiRotate = useSharedValue(0);
-
-  // "No tasks" toast
-  const [noTasksMsg, setNoTasksMsg] = useState<string | null>(null);
-  const noTasksOpacity = useSharedValue(0);
-  const noTasksTranslateY = useSharedValue(0);
-  const noTasksAnimStyle = useAnimatedStyle(() => ({
-    opacity: noTasksOpacity.value,
-    transform: [{ translateY: noTasksTranslateY.value }],
-  }));
-
-  const playAiPickAnimation = useCallback(() => {
-    const ease = { duration: 300, easing: Easing.out(Easing.quad) };
-    const settle = { duration: 400, easing: Easing.inOut(Easing.quad) };
-
-    aiRotate.value = withSequence(
-      withTiming(0.04, ease),
-      withTiming(-0.04, ease),
-      withTiming(0, settle),
-    );
-    aiScale.value = withSequence(withTiming(1.06, ease), withTiming(1, settle));
-  }, [aiRotate, aiScale]);
-
-  const showNoTasksToast = useCallback(
-    (message: string) => {
-      setNoTasksMsg(message);
-      noTasksTranslateY.value = 0;
-      noTasksOpacity.value = withSequence(
-        withTiming(1, { duration: 200 }),
-        withTiming(1, { duration: 2000 }),
-        withTiming(0, { duration: 300 }),
-      );
-      noTasksTranslateY.value = withTiming(-30, { duration: 2500 });
-    },
-    [noTasksOpacity, noTasksTranslateY],
-  );
-
-  const handleAIPick = useCallback(() => {
-    if (tryHandleAIPick(tasks, setSelectedTask)) return;
-
-    playAiPickAnimation();
-
+  /**
+   * The next task surfaces on its own: whenever nothing is selected, pick the
+   * best match for the current mood. Waits for the stored selection to load so
+   * it cannot overwrite what the user left on screen.
+   */
+  useEffect(() => {
+    if (!selectedTaskHydrated || selectedTask || guidedTour?.isActive) return;
     const outcome = evaluateAiPick(moodLevel);
-    if (outcome.type === "none-in-window") {
-      const days = outcome.daysAhead;
-      showNoTasksToast(
-        `No tasks in the next ${days} day${days === 1 ? "" : "s"}`,
-      );
-      return;
-    }
-    if (outcome.type === "none-match-energy") {
-      showNoTasksToast("No tasks match your energy right now");
-      return;
-    }
-
-    setTimeout(() => setSelectedTask(outcome.task), 500);
+    if (outcome.type === "picked") setSelectedTask(outcome.task);
   }, [
-    tryHandleAIPick,
-    tasks,
-    setSelectedTask,
-    playAiPickAnimation,
+    selectedTaskHydrated,
+    selectedTask,
+    guidedTour?.isActive,
     evaluateAiPick,
     moodLevel,
-    showNoTasksToast,
+    setSelectedTask,
   ]);
 
   const handleComplete = useCallback(
@@ -156,99 +102,35 @@ export function MainContent() {
     ensureTourTaskSelected(tasks, selectedTask, setSelectedTask);
   }, [ensureTourTaskSelected, tasks, selectedTask, setSelectedTask]);
 
-  const aiAnimStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: aiScale.value }, { rotate: `${aiRotate.value}rad` }],
-  }));
+  const moodControl = (<View key="mood" ref={tourRefs.moodSliderRef} collapsable={false} style={{ marginHorizontal: 24 }}>
+          <MoodSlider value={moodLevel} onChange={setMoodLevel} />
+        </View>);
+  const taskCard = (<View key="task" style={{ marginHorizontal: 24 }}>
+          <TaskCard task={selectedTask} onComplete={handleComplete}
+            onAdd={() => handleAddPress(() => flow.start())} hasTasks={tasks.some(task => !task.completed)}
+            completeButtonRef={tourRefs.taskCardRef} />
+        </View>);
 
   return (
-    <View ref={tourRefs.rootViewRef} collapsable={false} className="flex-1 bg-[#f5f7fa]">
+    <View ref={tourRefs.rootViewRef} collapsable={false} style={{ flex: 1, backgroundColor: "white" }}>
+      <HomeHeader onSettings={() => router.push("/settings")} />
       <ScrollView
+        ref={scrollRef}
+        scrollEnabled={!guidedTour?.isActive}
         className="flex-1"
-        contentContainerStyle={{ paddingBottom: 130 }}
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 24, gap: 18 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View className="items-center pt-8 pb-4 px-6">
-          <Text className="text-2xl font-medium text-[#0a0a0a] text-center">
-            How are you feeling?
-          </Text>
-          <Text className="text-sm text-[#6a7282] text-center mt-1">
-            Let's find the perfect task for you
-          </Text>
+        <View style={{ paddingHorizontal: 24, flexDirection: "row", gap: 12, alignItems: "center" }}>
+          {streak && <Pressable accessibilityRole="button" accessibilityLabel="View streak insights" onPress={() => router.navigate("/insights")}
+            style={{ minHeight: 40, flexDirection: "row", gap: 8, alignItems: "center", paddingHorizontal: 8, borderRadius: 14, backgroundColor: homeColors.surface }}>
+            <SvgXml xml={homeArtwork.flame} width={22} height={22} />
+            <Text style={[homeStyles.caption, { color: homeColors.primary }]}>{streak.currentStreak} day streak</Text>
+          </Pressable>}
+          <XPBar progress={progress} />
+          <PointsToast points={toast.points} visible={toast.visible} onDone={hideToast} />
         </View>
-
-        {/* Streak badge (premium) */}
-        {isPremium && streak && (
-          <StreakBadge
-            streak={streak.currentStreak}
-          />
-        )}
-
-        {/* XP bar */}
-        <View className="py-6">
-          <View className="relative">
-            <XPBar progress={progress} />
-            <PointsToast
-              points={toast.points}
-              visible={toast.visible}
-              onDone={hideToast}
-            />
-          </View>
-        </View>
-
-        {/* Mood slider */}
-        <View ref={tourRefs.moodSliderRef} className="px-6 pt-2 pb-8">
-          <MoodSlider value={moodLevel} onChange={setMoodLevel} />
-        </View>
-
-        {/* AI button */}
-        <View ref={tourRefs.aiButtonRef} className="items-center pb-6">
-          <Animated.View style={aiAnimStyle}>
-            <Pressable onPress={handleAIPick}>
-              <View
-                style={{
-                  width: 154,
-                  height: 154,
-                  borderRadius: 77,
-                  backgroundColor: "#b9cbea",
-                  boxShadow: "0px 10px 15px rgba(0, 0, 0, 0.1)",
-                }}
-              >
-                <View
-                  style={{
-                    width: 154,
-                    height: 154,
-                    borderRadius: 77,
-                    overflow: "hidden",
-                  }}
-                >
-                  <LinearGradient
-                    colors={["#a2d2ff", "#cdb4db"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={{
-                      flex: 1,
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Ionicons name="sparkles-outline" size={58} color="#fff" />
-                  </LinearGradient>
-                </View>
-              </View>
-            </Pressable>
-          </Animated.View>
-
-          {/* No-tasks toast */}
-          {noTasksMsg && (
-            <Animated.View
-              style={noTasksAnimStyle}
-              className="absolute -bottom-2 self-center bg-white rounded-full px-4 py-1.5 shadow-sm"
-            >
-              <Text className="text-[#6a7282] font-medium text-sm">{noTasksMsg}</Text>
-            </Animated.View>
-          )}
-        </View>
+        {guidedTour?.isActive ? [taskCard, moodControl] : [moodControl, taskCard]}
 
         {/* AI ceiling banner */}
         {banner.visible && (
@@ -262,9 +144,8 @@ export function MainContent() {
           </View>
         )}
 
-        <HomeTourIntro />
 
-        {survey.reminderVisible && survey.campaign && (
+        {!guidedTour?.isActive && survey.reminderVisible && survey.campaign && (
           <View className="px-6">
             <SurveyReminderBanner
               campaign={survey.campaign}
@@ -285,20 +166,10 @@ export function MainContent() {
             </View>
           )}
 
-        {/* Task card */}
-        <View ref={tourRefs.taskCardRef} className="px-6">
-          <TaskCard
-            task={selectedTask}
-            onComplete={handleComplete}
-            onLater={() => handleTaskLater(setSelectedTask)}
-            hideLater={isCompleteTaskStep}
-          />
-        </View>
       </ScrollView>
 
-      <HomeTourOverlays tourLayouts={tourLayouts} />
 
-      {survey.overlayVisible && survey.campaign && (
+      {!guidedTour?.isActive && survey.overlayVisible && survey.campaign && (
         <SurveyInviteOverlay
           campaign={survey.campaign}
           onStart={survey.handleStart}
@@ -307,7 +178,7 @@ export function MainContent() {
         />
       )}
 
-      {survey.formVisible && survey.formCampaign && (
+      {!guidedTour?.isActive && survey.formVisible && survey.formCampaign && (
         <SurveyFormOverlay
           campaign={survey.formCampaign}
           onClose={survey.closeSurveyForm}
@@ -317,8 +188,8 @@ export function MainContent() {
 
       {surveyRewardToast ? (
         <View className="absolute top-24 left-0 right-0 items-center z-[950] px-6">
-          <View className="bg-white rounded-full px-5 py-3 shadow-sm border border-[#f3f4f6]">
-            <Text className="text-sm font-medium text-[#0A0A0A]">
+          <View style={{ backgroundColor: homeColors.white, borderColor: homeColors.border, borderWidth: 1, borderRadius: 999, paddingHorizontal: 20, paddingVertical: 12, boxShadow: "0px 6px 18px rgba(119, 19, 68, 0.14)" }}>
+            <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 15, lineHeight: 21, color: homeColors.ink }}>
               {surveyRewardToast}
             </Text>
           </View>
@@ -327,13 +198,14 @@ export function MainContent() {
 
       {/* Bottom nav */}
       <BottomNav
+        active="today"
         addButtonRef={tourRefs.addNavButtonRef}
-        onListPress={() => openSheet("allTasks")}
-        onPreferencesPress={() => openSheet("preferences")}
+        onListPress={() => router.navigate("/plan")}
+        onInsightsPress={() => router.navigate("/insights")}
+        onTodayPress={() => scrollRef.current?.scrollTo({ y: 0, animated: true })}
         onAddPress={() => handleAddPress(() => flow.start())}
-        onSettingsPress={() => openSheet("settings")}
-        onProfilePress={() => openSheet("profile")}
       />
+      <HomeTourOverlays tourLayouts={tourLayouts} />
     </View>
   );
 }

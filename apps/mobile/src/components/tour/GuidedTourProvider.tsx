@@ -28,7 +28,6 @@ interface GuidedTourContextValue {
   reportDaySelected: () => void;
   reportTimeSelected: () => void;
   reportMoodStepAcknowledged: () => void;
-  reportAiPickHandled: () => void;
   reportTaskCompleted: () => void;
   reportCelebrationFinished: () => void;
   reportSaveProgressDone: () => void;
@@ -122,7 +121,6 @@ export function GuidedTourProvider({ children, enabled }: Props) {
         reportDaySelected: () => report({ type: "daySelected" }),
         reportTimeSelected: () => report({ type: "timeSelected" }),
         reportMoodStepAcknowledged: () => report({ type: "moodStepAcknowledged" }),
-        reportAiPickHandled: () => report({ type: "aiPickHandled" }),
         reportTaskCompleted: () => report({ type: "taskCompleted" }),
         reportCelebrationFinished: () => report({ type: "celebrationFinished" }),
         reportSaveProgressDone: () => report({ type: "saveProgressDone" }),

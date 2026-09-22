@@ -3,16 +3,29 @@ import { View, Text, TextInput } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetView, BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { SheetBackdrop } from "./SheetBackdrop";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
 } from "react-native-reanimated";
 import { SPRING_BOUNCY } from "../../animations/springs";
+import { homeColors, homeStyles } from "../home/theme";
 import { useTaskCreationFlow, type PendingTask } from "../home/TaskCreationFlowProvider";
 
 interface Props {
   onClose: () => void;
+}
+
+function Pill({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{ backgroundColor: homeColors.selected, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 5 }}
+    >
+      <Text style={{ fontFamily: "Inter-Regular", fontSize: 13, color: homeColors.primary }}>{label}</Text>
+    </Pressable>
+  );
 }
 
 function TaskCard({
@@ -29,43 +42,36 @@ function TaskCard({
   onEditTime: () => void;
 }) {
   return (
-    <View className="bg-[#f5f7fa] rounded-2xl px-4 py-3 mb-3">
-      <View className="flex-row items-start gap-3">
+    <View
+      style={{
+        flexDirection: "row", alignItems: "center", gap: 12,
+        backgroundColor: homeColors.surface, borderColor: homeColors.border, borderWidth: 1,
+        borderRadius: 18, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 10,
+      }}
+    >
+      <View style={{ flex: 1, gap: 8 }}>
         {/* Editable title */}
-        <View className="flex-1">
-          <TextInput
-            className="text-base text-[#1e2939] font-medium p-0"
-            value={task.title}
-            onChangeText={onTitleChange}
-            multiline
-          />
-          {/* Date/time pills */}
-          <View className="flex-row gap-2 mt-2">
-            <Pressable
-              onPress={onEditDate}
-              className="px-3 py-1 rounded-full"
-              style={{ backgroundColor: "rgba(162,210,255,0.3)" }}
-            >
-              <Text className="text-xs text-[#1e2939]">{task.dueDate}</Text>
-            </Pressable>
-            <Pressable
-              onPress={onEditTime}
-              className="px-3 py-1 rounded-full"
-              style={{ backgroundColor: "rgba(255,200,221,0.3)" }}
-            >
-              <Text className="text-xs text-[#1e2939]">{task.dueTime}</Text>
-            </Pressable>
-          </View>
+        <TextInput
+          style={{ fontFamily: "Inter-SemiBold", fontSize: 16, color: homeColors.ink, padding: 0 }}
+          value={task.title}
+          onChangeText={onTitleChange}
+          multiline
+        />
+        {/* Date/time pills */}
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <Pill label={task.dueDate} onPress={onEditDate} />
+          <Pill label={task.dueTime} onPress={onEditTime} />
         </View>
-        {/* Delete button */}
-        <Pressable
-          onPress={onDelete}
-          className="w-8 h-8 rounded-full items-center justify-center"
-          style={{ backgroundColor: "rgba(248,113,113,0.15)" }}
-        >
-          <Ionicons name="close" size={16} color="#f87171" />
-        </Pressable>
       </View>
+      {/* Remove button */}
+      <Pressable
+        onPress={onDelete}
+        accessibilityRole="button"
+        accessibilityLabel={`Remove ${task.title}`}
+        style={{ width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center", backgroundColor: homeColors.selected }}
+      >
+        <Ionicons name="close" size={16} color={homeColors.primary} />
+      </Pressable>
     </View>
   );
 }
@@ -83,22 +89,28 @@ export const TaskSummarySheet = forwardRef<BottomSheet, Props>(
         ref={ref}
         index={-1}
         snapPoints={["65%", "85%"]}
+        backdropComponent={SheetBackdrop}
         enablePanDownToClose
         onClose={onClose}
         backgroundStyle={{
-          borderTopLeftRadius: 48,
-          borderTopRightRadius: 48,
+          borderTopLeftRadius: 40,
+          borderTopRightRadius: 40,
         }}
         handleIndicatorStyle={{ display: "none" }}
       >
-        <BottomSheetView className="px-6 pt-6 flex-1">
+        <BottomSheetView style={{ flex: 1, paddingHorizontal: 24, paddingTop: 24 }}>
           {/* Header */}
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-xl font-semibold text-[#1e2939]">
-              We detected {flow.pendingTasks.length} tasks
+          <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
+            <Text style={[homeStyles.heading, { fontSize: 26, lineHeight: 32 }]}>
+              We found {flow.pendingTasks.length} tasks
             </Text>
-            <Pressable onPress={() => flow.reset()}>
-              <Ionicons name="close" size={24} color="#364153" />
+            <Pressable
+              onPress={() => flow.reset()}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+              style={{ width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: homeColors.selected }}
+            >
+              <Ionicons name="close" size={20} color={homeColors.primary} />
             </Pressable>
           </View>
 
@@ -119,13 +131,15 @@ export const TaskSummarySheet = forwardRef<BottomSheet, Props>(
           </BottomSheetScrollView>
 
           {/* Bottom buttons */}
-          <View className="flex-row gap-3 pb-6 pt-3">
+          <View style={{ flexDirection: "row", gap: 12, paddingTop: 18, paddingBottom: 28 }}>
             <Pressable
               onPress={() => flow.reset()}
-              className="flex-1 py-4 rounded-full items-center"
-              style={{ backgroundColor: "#f5f7fa" }}
+              style={{
+                flex: 1, height: 54, borderRadius: 999, alignItems: "center", justifyContent: "center",
+                borderWidth: 1, borderColor: homeColors.primary,
+              }}
             >
-              <Text className="text-[#6a7282] font-medium">Cancel</Text>
+              <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 17, color: homeColors.primary }}>Cancel</Text>
             </Pressable>
 
             <Animated.View style={[createStyle, { flex: 1 }]}>
@@ -137,11 +151,10 @@ export const TaskSummarySheet = forwardRef<BottomSheet, Props>(
                 onPressOut={() => {
                   createScale.value = withSpring(1, SPRING_BOUNCY);
                 }}
-                className="py-4 rounded-full items-center"
-                style={{ backgroundColor: "#a2d2ff" }}
+                style={{ height: 54, borderRadius: 999, alignItems: "center", justifyContent: "center", backgroundColor: homeColors.primary }}
               >
-                <Text className="text-white font-semibold">
-                  Create All ({flow.pendingTasks.length})
+                <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 17, color: homeColors.white }}>
+                  Create all {flow.pendingTasks.length}
                 </Text>
               </Pressable>
             </Animated.View>

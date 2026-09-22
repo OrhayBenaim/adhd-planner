@@ -1,110 +1,57 @@
-import { View, Text } from "react-native";
-import { AppPressable as Pressable } from "./AppPressable";
-import { Ionicons } from "@expo/vector-icons";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withSequence,
-  FadeInRight,
-  FadeOutLeft,
-} from "react-native-reanimated";
+import { useRef, useState } from "react";
+import { Text, View } from "react-native";
 import type { Task } from "@adhd-planner/types";
+import { OnboardingButton } from "./onboarding/OnboardingButton";
+import { homeStyles } from "./home/theme";
 import { getDifficultyLabel } from "../lib/moodLabels";
-import { SPRING_BOUNCY } from "../animations/springs";
 
 interface Props {
   task: Task | null;
-  onComplete: (task: Task) => void;
-  onLater: () => void;
-  hideLater?: boolean;
+  onComplete: (task: Task) => Promise<void>;
+  onAdd: () => void;
+  hasTasks: boolean;
+  completeButtonRef?: React.Ref<View>;
 }
 
-export function TaskCard({
-  task,
-  onComplete,
-  onLater,
-  hideLater,
-}: Props) {
-  const completeScale = useSharedValue(1);
-  const laterScale = useSharedValue(1);
-
-  const handlePrimaryPress = () => {
-    completeScale.value = withSequence(
-      withSpring(0.92, SPRING_BOUNCY),
-      withSpring(1, SPRING_BOUNCY),
-    );
-    setTimeout(() => {
-      if (!task) return;
-      onComplete(task);
-    }, 200);
-  };
-
-  const completeBtnStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: completeScale.value }],
-  }));
-
-  const laterBtnStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: laterScale.value }],
-  }));
-
-  if (!task) {
-    return (
-      <View
-        className="bg-white border border-[#f3f4f6] rounded-3xl px-6 py-6 items-center"
-        style={{ boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)" }}
-      >
-        <Text className="text-[#99a1af] text-base text-center">
-          No task selected yet
-        </Text>
-      </View>
-    );
+export function TaskCard({ task, onComplete, onAdd, hasTasks, completeButtonRef }: Props) {
+  const completing = useRef(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  async function complete() {
+    if (!task || completing.current) return;
+    completing.current = true;
+    setBusy(true);
+    setError(null);
+    try { await onComplete(task); }
+    catch { setError("Couldn't complete this task. Please try again."); }
+    finally { completing.current = false; setBusy(false); }
   }
 
-  return (
-    <Animated.View
-      entering={FadeInRight.duration(300)}
-      exiting={FadeOutLeft.duration(250)}
-      className="bg-white border border-[#f3f4f6] rounded-3xl p-6"
-      style={{ boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)" }}
-    >
-      <Text className="text-lg font-medium text-[#1e2939] mb-1">{task.title}</Text>
-      {task.description ? (
-        <Text className="text-sm text-[#4a5565] mb-3">{task.description}</Text>
-      ) : null}
-
-      <Text className="text-xs text-[#6a7282] mb-4">
-        {getDifficultyLabel(task.difficulty)}
+  // Nothing to show: either there is no task at all, or none fits the current mood.
+  if (!task) {
+    return <View style={[homeStyles.card, { paddingVertical: 28, paddingHorizontal: 20, gap: 12, alignItems: "center" }]}>
+      <Text style={[homeStyles.heading, { fontSize: 24, lineHeight: 26, textAlign: "center" }]}>
+        {hasTasks ? "One thing at a time" : "Nothing planned yet"}
       </Text>
-
-      <View className="flex-row gap-3">
-        <Animated.View style={[completeBtnStyle, { flex: 1 }]}>
-          <Pressable
-            onPress={handlePrimaryPress}
-            className="bg-[#a2d2ff] rounded-3xl py-3 items-center flex-row justify-center gap-2"
-          >
-            <Ionicons name="checkmark" size={18} color="#0a0a0a" />
-            <Text className="text-base font-medium text-[#0a0a0a]"> Complete</Text>
-          </Pressable>
-        </Animated.View>
-
-        {!hideLater && (
-          <Animated.View style={laterBtnStyle}>
-            <Pressable
-              onPress={onLater}
-              onPressIn={() => {
-                laterScale.value = withSpring(0.92, SPRING_BOUNCY);
-              }}
-              onPressOut={() => {
-                laterScale.value = withSpring(1, SPRING_BOUNCY);
-              }}
-              className="bg-[#ffc8dd] rounded-3xl py-3 px-5 items-center"
-            >
-              <Text className="text-sm font-medium text-[#0a0a0a]">Later</Text>
-            </Pressable>
-          </Animated.View>
-        )}
+      <Text style={[homeStyles.body, { textAlign: "center" }]}>
+        {hasTasks
+          ? "Nothing matches your energy right now. Try moving the slider."
+          : "Add one small thing and it will show up here."}
+      </Text>
+      <View style={{ alignSelf: "stretch" }}>
+        <OnboardingButton label="Add a task" onPress={onAdd} />
       </View>
-    </Animated.View>
-  );
+    </View>;
+  }
+
+  return <View style={homeStyles.card}>
+    <Text style={homeStyles.eyebrow}>YOUR NEXT STEP</Text>
+    <Text style={homeStyles.heading}>{task.title}</Text>
+    <Text style={homeStyles.body}>{task.description || "Start with just one thing."}</Text>
+    <Text style={homeStyles.caption}>{getDifficultyLabel(task.difficulty)}</Text>
+    <View ref={completeButtonRef} collapsable={false}>
+      <OnboardingButton label={busy ? "Saving…" : "✓   Done"} onPress={complete} disabled={busy} />
+    </View>
+    {error && <Text accessibilityRole="alert" style={homeStyles.caption}>{error}</Text>}
+  </View>;
 }
