@@ -183,12 +183,17 @@ Code: `LoadingScreen.tsx`, `AiCeilingBanner.tsx`, `PointsToast.tsx`, `ExitArming
 
 ## Store listing
 
-Marketing creatives, not an in-app journey. Section `74:17` on Production.
+Marketing creatives, not an in-app journey. Section `74:17` (`Brand & store`) on Production.
 
 | Frame | Node | Step |
 |-------|------|------|
-| Store 1–5 | `49:79`, `49:96`, `36:405`, `36:371`, `36:327` | Store listing |
-| Store collage | `42:24` | Collage |
+| Store 1 · One task | `358:2236` | Store listing |
+| Store 2 · Mood match | `358:2302` | Store listing |
+| Store 3 · Voice capture | `358:2362` | Store listing |
+| Store 4 · Rewards | `358:2459` | Store listing |
+| Store 5 · Insights | `358:2574` | Store listing |
+| Store 6 · Proof and CTA | `358:2662` | Store listing |
+| Play featured graphic · 1024×500 | `384:23` | Store listing (Google Play featured graphic) |
 | Icon / Icon dark | `46:24`, `46:74` | App icon |
 
 ## Website
