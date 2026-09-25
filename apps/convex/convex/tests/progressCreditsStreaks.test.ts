@@ -229,6 +229,54 @@ describe("streaks via updateOnCompletion", () => {
     });
   });
 
+  test("free user freeze consumes weekly allowance", async () => {
+    const t = convexTest(schema, modules);
+    await t.run(async (ctx) => {
+      await ctx.db.insert("streaks", {
+        userId: "user1",
+        currentStreak: 4,
+        longestStreak: 4,
+        lastCompletionDate: "2025-06-16",
+        freezesUsedThisWeek: 0,
+        weekStart: "2025-06-16",
+      });
+    });
+
+    const result = await t.mutation(internal.streaks.updateOnCompletion, {
+      userId: "user1",
+      nowMs: WEDNESDAY_MS,
+    });
+    expect(result.currentStreak).toBe(5);
+
+    await t.run(async (ctx) => {
+      const row = await ctx.db
+        .query("streaks")
+        .withIndex("by_user", (q) => q.eq("userId", "user1"))
+        .first();
+      expect(row?.freezesUsedThisWeek).toBe(1);
+    });
+  });
+
+  test("second miss in the same week resets the streak", async () => {
+    const t = convexTest(schema, modules);
+    await t.run(async (ctx) => {
+      await ctx.db.insert("streaks", {
+        userId: "user1",
+        currentStreak: 5,
+        longestStreak: 5,
+        lastCompletionDate: "2025-06-17",
+        freezesUsedThisWeek: 1,
+        weekStart: "2025-06-16",
+      });
+    });
+
+    const result = await t.mutation(internal.streaks.updateOnCompletion, {
+      userId: "user1",
+      nowMs: THURSDAY_MS,
+    });
+    expect(result.currentStreak).toBe(1);
+  });
+
   test("freeze counter resets on week start", async () => {
     const t = convexTest(schema, modules);
     await t.run(async (ctx) => {

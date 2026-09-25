@@ -26,28 +26,24 @@ struct StreakWidgetView: View {
     let entry: StreakEntry
 
     var body: some View {
-        if !entry.data.isPremium {
-            PremiumUpsellView()
-        } else {
-            VStack(spacing: 6) {
-                Text("🔥")
-                    .font(.title2)
-                Text("\(entry.data.streak)")
-                    .font(.system(size: 36, weight: .bold, design: .rounded))
-                    .foregroundColor(Color(red: 0.12, green: 0.23, blue: 0.37))
-                Text("Day Streak")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                ProgressView(value: Double(entry.data.points),
-                             total: Double(max(entry.data.pointsToNextLevel, 1)))
-                    .tint(.blue)
-                Text("Level \(entry.data.level)")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
-            .padding()
-            .containerBackground(.fill.tertiary, for: .widget)
+        VStack(spacing: 6) {
+            Text("🔥")
+                .font(.title2)
+            Text("\(entry.data.streak)")
+                .font(.system(size: 36, weight: .bold, design: .rounded))
+                .foregroundColor(Color(red: 0.12, green: 0.23, blue: 0.37))
+            Text("Day Streak")
+                .font(.caption)
+                .foregroundColor(.secondary)
+            ProgressView(value: Double(entry.data.points),
+                         total: Double(max(entry.data.pointsToNextLevel, 1)))
+                .tint(.blue)
+            Text("Level \(entry.data.level)")
+                .font(.caption2)
+                .foregroundColor(.secondary)
         }
+        .padding()
+        .containerBackground(.fill.tertiary, for: .widget)
     }
 }
 

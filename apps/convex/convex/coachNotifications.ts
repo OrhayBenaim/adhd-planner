@@ -40,6 +40,28 @@ export const logNotification = internalMutation({
   },
 });
 
+export const listRecipientIds = internalQuery({
+  args: {},
+  returns: v.array(v.string()),
+  handler: async (ctx) => {
+    const settings = await ctx.db
+      .query("userSettings")
+      .withIndex("by_coach_enabled", (q) => q.eq("coachNotificationsEnabled", true))
+      .collect();
+
+    const userIds: string[] = [];
+    for (const row of settings) {
+      if (row.notificationsEnabled === false) continue;
+      const token = await ctx.db
+        .query("pushTokens")
+        .withIndex("by_user", (q) => q.eq("userId", row.userId))
+        .first();
+      if (token) userIds.push(row.userId);
+    }
+    return userIds;
+  },
+});
+
 export const getUserCoachContext = internalQuery({
   args: { userId: v.string(), today: v.string() },
   handler: async (ctx, { userId, today: todayStr }) => {
@@ -48,7 +70,10 @@ export const getUserCoachContext = internalQuery({
       .withIndex("by_user", (q) => q.eq("userId", userId))
       .first();
 
-    if (settings?.notificationsEnabled === false) {
+    if (
+      settings?.coachNotificationsEnabled !== true ||
+      settings.notificationsEnabled === false
+    ) {
       return null;
     }
 
@@ -93,8 +118,8 @@ export const processAllUsers = internalAction({
     const todayStr = today(nowMs);
 
     const userIds = await ctx.runQuery(
-      internal.subscriptions.listActiveSubscriberIds,
-      { nowMs },
+      internal.coachNotifications.listRecipientIds,
+      {},
     );
 
     for (const userId of userIds) {

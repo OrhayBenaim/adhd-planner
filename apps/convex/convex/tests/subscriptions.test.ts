@@ -103,33 +103,6 @@ describe("isPremium", () => {
   });
 });
 
-describe("listActiveSubscriberIds", () => {
-  test("excludes expired-but-flagged-active subscribers", async () => {
-    const t = convexTest(schema, modules);
-    await t.run(async (ctx) => {
-      await ctx.db.insert("subscriptions", {
-        userId: "active",
-        revenueCatId: "rc_active",
-        entitlement: "premium",
-        isActive: true,
-        expiresAt: "2099-01-01T00:00:00.000Z",
-      });
-      await ctx.db.insert("subscriptions", {
-        userId: "lapsed",
-        revenueCatId: "rc_lapsed",
-        entitlement: "premium",
-        isActive: true,
-        expiresAt: "2020-01-01T00:00:00.000Z",
-      });
-    });
-
-    const ids = await t.query(internal.subscriptions.listActiveSubscriberIds, {
-      nowMs: FIXED_NOW_MS,
-    });
-    expect(ids).toEqual(["active"]);
-  });
-});
-
 describe("getStatus", () => {
   test("returns null when no subscription exists", async () => {
     const t = convexTest(schema, modules);

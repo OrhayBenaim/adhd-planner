@@ -34,36 +34,32 @@ struct MoodWidgetView: View {
     let entry: MoodEntry
 
     var body: some View {
-        if !entry.data.isPremium {
-            PremiumUpsellView()
-        } else {
-            VStack(spacing: 6) {
-                Text(entry.data.moodEmoji)
-                    .font(.system(size: 28))
-                Text(entry.data.moodLabel)
-                    .font(.caption)
-                    .bold()
-                    .foregroundColor(Color(red: 0.12, green: 0.23, blue: 0.37))
+        VStack(spacing: 6) {
+            Text(entry.data.moodEmoji)
+                .font(.system(size: 28))
+            Text(entry.data.moodLabel)
+                .font(.caption)
+                .bold()
+                .foregroundColor(Color(red: 0.12, green: 0.23, blue: 0.37))
 
-                if #available(iOS 17.0, *) {
-                    HStack(spacing: 4) {
-                        ForEach(moodOptions, id: \.level) { option in
-                            Button(intent: SetMoodIntent(moodLevel: option.level)) {
-                                Text(option.emoji)
-                                    .font(.system(size: 16))
-                            }
-                            .buttonStyle(.plain)
+            if #available(iOS 17.0, *) {
+                HStack(spacing: 4) {
+                    ForEach(moodOptions, id: \.level) { option in
+                        Button(intent: SetMoodIntent(moodLevel: option.level)) {
+                            Text(option.emoji)
+                                .font(.system(size: 16))
                         }
+                        .buttonStyle(.plain)
                     }
-                } else {
-                    Text("Tap to check in")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
                 }
+            } else {
+                Text("Tap to check in")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
             }
-            .padding()
-            .containerBackground(.fill.tertiary, for: .widget)
         }
+        .padding()
+        .containerBackground(.fill.tertiary, for: .widget)
     }
 }
 
