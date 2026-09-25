@@ -4,18 +4,9 @@ import { Ionicons } from "@expo/vector-icons";
 import { AppPressable } from "../AppPressable";
 import { settingsColors as colors, settingsStyles as styles } from "./theme";
 
-function ProBadge() {
-  return (
-    <View style={{ backgroundColor: colors.selected, borderRadius: 999, paddingHorizontal: 5, paddingVertical: 2 }}>
-      <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 10, lineHeight: 12, color: colors.primary }}>PRO</Text>
-    </View>
-  );
-}
-
 interface RowProps {
   label: string;
   description?: string;
-  pro?: boolean;
   destructive?: boolean;
   disabled?: boolean;
   /** Navigation row. */
@@ -29,17 +20,14 @@ interface RowProps {
  * One row of a settings group: navigation rows open a detail screen, switch
  * rows flip a setting in place. Compact (no description) rows stay 52px tall.
  */
-export function SettingsRow({ label, description, pro, destructive, disabled, onPress, value, onValueChange }: RowProps) {
+export function SettingsRow({ label, description, destructive, disabled, onPress, value, onValueChange }: RowProps) {
   const isSwitch = onValueChange !== undefined;
   const body = (
     <View style={{ minHeight: description ? 64 : 52, paddingHorizontal: 16, paddingVertical: 8,
       flexDirection: "row", alignItems: "center", gap: 12, opacity: disabled ? 0.5 : 1 }}>
       <View style={{ flex: 1, gap: 2 }}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 16, lineHeight: 22,
-            color: destructive ? colors.danger : colors.ink }}>{label}</Text>
-          {pro && <ProBadge />}
-        </View>
+        <Text style={{ fontFamily: "Inter-SemiBold", fontSize: 16, lineHeight: 22,
+          color: destructive ? colors.danger : colors.ink }}>{label}</Text>
         {description ? <Text style={styles.caption}>{description}</Text> : null}
       </View>
       {isSwitch

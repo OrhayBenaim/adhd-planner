@@ -5,7 +5,6 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.view.View
 import android.widget.RemoteViews
 import com.ottersprod.lullio.R
@@ -40,42 +39,31 @@ class MoodWidgetProvider : AppWidgetProvider() {
             val data = WidgetData.load(context)
             val packageName = context.packageName
 
-            val views = if (!data.isPremium) {
-                RemoteViews(packageName, R.layout.widget_premium_upsell)
-            } else {
-                RemoteViews(packageName, R.layout.widget_mood).apply {
-                    setTextViewText(R.id.mood_label, data.moodLabel)
+            val views = RemoteViews(packageName, R.layout.widget_mood).apply {
+                setTextViewText(R.id.mood_label, data.moodLabel)
 
-                    val selected = snapIndex(data.moodLevel)
+                val selected = snapIndex(data.moodLevel)
 
-                    MOOD_ZONES.forEachIndexed { index, (tapId, level, thumbId) ->
-                        // Show only the selected thumb; RemoteViews reapplies the whole
-                        // layout, so every thumb's visibility must be set explicitly.
-                        setViewVisibility(thumbId, if (index == selected) View.VISIBLE else View.GONE)
+                MOOD_ZONES.forEachIndexed { index, (tapId, level, thumbId) ->
+                    // Show only the selected thumb; RemoteViews reapplies the whole
+                    // layout, so every thumb's visibility must be set explicitly.
+                    setViewVisibility(thumbId, if (index == selected) View.VISIBLE else View.GONE)
 
-                        val intent = Intent(context, MoodWidgetReceiver::class.java).apply {
-                            action = MoodWidgetReceiver.ACTION_SET_MOOD
-                            putExtra(MoodWidgetReceiver.EXTRA_MOOD_LEVEL, level)
-                        }
-                        val pendingIntent = PendingIntent.getBroadcast(
-                            context,
-                            level, // unique request code per mood level
-                            intent,
-                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                        )
-                        setOnClickPendingIntent(tapId, pendingIntent)
+                    val intent = Intent(context, MoodWidgetReceiver::class.java).apply {
+                        action = MoodWidgetReceiver.ACTION_SET_MOOD
+                        putExtra(MoodWidgetReceiver.EXTRA_MOOD_LEVEL, level)
                     }
+                    val pendingIntent = PendingIntent.getBroadcast(
+                        context,
+                        level, // unique request code per mood level
+                        intent,
+                        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                    )
+                    setOnClickPendingIntent(tapId, pendingIntent)
                 }
             }
 
-            // Click on root: non-premium opens paywall deep link, premium opens app
-            val rootIntent = if (!data.isPremium) {
-                Intent(Intent.ACTION_VIEW, Uri.parse("lullio://paywall")).apply {
-                    setPackage(packageName)
-                }
-            } else {
-                context.packageManager.getLaunchIntentForPackage(packageName)
-            }
+            val rootIntent = context.packageManager.getLaunchIntentForPackage(packageName)
             if (rootIntent != null) {
                 val pendingIntent = PendingIntent.getActivity(
                     context, appWidgetId, rootIntent,

@@ -87,6 +87,7 @@ export function useSettings() {
   const convexSettings = useQuery(api.settings.get);
   const setUserAiEnabled = useMutation(api.settings.setUserAiEnabled);
   const setNotificationsEnabled = useMutation(api.settings.setNotificationsEnabled);
+  const setCoachNotificationsEnabled = useMutation(api.settings.setCoachNotificationsEnabled);
 
   // Admin override — if aiEnabled is false, smart scheduling is forced off
   const adminAiEnabled = convexSettings?.aiEnabled ?? true;
@@ -105,6 +106,18 @@ export function useSettings() {
       });
     }
   }, [serverNotifications]);
+
+  // AI Coach lives on the server. Upload a legacy local "on" once, while the
+  // server has never stored a value for this user.
+  const serverCoach = convexSettings?.coachNotificationsEnabled;
+  const localCoach = localSettings.coachNotifications;
+  useEffect(() => {
+    if (serverCoach !== undefined) dispatch({ type: "coach", enabled: serverCoach });
+  }, [serverCoach]);
+  useEffect(() => {
+    if (convexSettings === undefined || serverCoach !== undefined || !localCoach) return;
+    setCoachNotificationsEnabled({ enabled: true }).catch(() => {});
+  }, [convexSettings, serverCoach, localCoach, setCoachNotificationsEnabled]);
 
   // Load stored preferences and OS permission status in a single effect
   useEffect(() => {
@@ -133,7 +146,7 @@ export function useSettings() {
     notifications: localSettings.notificationsDesired && localSettings.notificationsGranted,
     soundEffects: localSettings.soundEffects,
     smartScheduling: adminAiEnabled && userAiEnabled,
-    coachNotifications: localSettings.coachNotifications,
+    coachNotifications: localCoach,
   };
 
 
@@ -159,9 +172,10 @@ export function useSettings() {
         dispatch({ type: "sound", enabled: value });
       } else if (key === "coachNotifications") {
         dispatch({ type: "coach", enabled: value });
+        await setCoachNotificationsEnabled({ enabled: value });
       }
     },
-    [setUserAiEnabled, setNotificationsEnabled],
+    [setUserAiEnabled, setNotificationsEnabled, setCoachNotificationsEnabled],
   );
 
   return { settings, updateSetting, adminAiEnabled };
