@@ -35,7 +35,7 @@ export default function SubscriptionRoute() {
 
   return (
     <SettingsPage parent="Account" title="Subscription"
-      explanation="Every feature is free. Lullio Pro supports development and raises your monthly AI scoring limit."
+      explanation="Every feature is free. Lullio Pro supports development and show some love ❤️."
       note={isPremium
         ? "Billing is handled by the App Store or Google Play.\nManage opens your store subscription settings."
         : "Billing is handled by the App Store or Google Play."}>
