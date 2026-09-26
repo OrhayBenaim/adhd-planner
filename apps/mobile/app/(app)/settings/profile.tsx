@@ -9,7 +9,7 @@ import { SettingsGroup, SettingsRow } from "../../../src/components/settings/Set
 import { OnboardingAuth } from "../../../src/components/onboarding/OnboardingAuth";
 import { settingsColors as colors, settingsStyles as styles } from "../../../src/components/settings/theme";
 import { authClient } from "../../../src/lib/authClient";
-import { clearHadLinkedAccountMarker, getSessionAnonymousState } from "../../../src/lib/sessionState";
+import { clearHadLinkedAccountMarker, getSessionAnonymousState, markHadLinkedAccount } from "../../../src/lib/sessionState";
 import { isInternalAuthEmail } from "../../../src/lib/authUsername";
 import { usePreferences, useUpdatePreferences } from "../../../src/hooks/usePreferences";
 
@@ -67,15 +67,17 @@ export default function ProfileAccountRoute() {
   const handleSignOut = useCallback(async () => {
     setBusy(true);
     try {
-      await authClient.signOut();
+      // Clear the marker first: once the session is gone the (app) layout unmounts
+      // this screen and routes to onboarding itself, so nothing here may run after.
       await clearHadLinkedAccountMarker();
-      router.replace("/");
+      const { error } = await authClient.signOut();
+      if (error) throw error;
     } catch (e) {
       Sentry.captureException(e);
-    } finally {
+      await markHadLinkedAccount().catch(Sentry.captureException);
       setBusy(false);
     }
-  }, [router]);
+  }, []);
 
   const handleDelete = useCallback(() => {
     Alert.alert(
