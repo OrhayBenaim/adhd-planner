@@ -49,6 +49,22 @@ describe("pickTaskForMood", () => {
       .toEqual({ type: "picked", task: current });
   });
 
+  it("never re-picks the just-completed task, even when it is the only match", () => {
+    const done = makeTask({ _id: "done", dueDate: TODAY, difficulty: 30 });
+    const hard = makeTask({ _id: "hard", dueDate: TODAY, difficulty: 90 });
+    expect(pickTaskForMood({ tasks: [done, hard], moodLevel: 50, today: TODAY, daysAhead: DAYS_AHEAD, completedTaskId: done._id }))
+      .toEqual({ type: "none-match-energy" });
+    expect(pickTaskForMood({ tasks: [done], moodLevel: 50, today: TODAY, daysAhead: DAYS_AHEAD, completedTaskId: done._id }))
+      .toEqual({ type: "none-in-window", daysAhead: DAYS_AHEAD });
+  });
+
+  it("picks the next task when excluding the just-completed one", () => {
+    const done = makeTask({ _id: "done", dueDate: TODAY, difficulty: 30 });
+    const next = makeTask({ _id: "next", dueDate: CUTOFF, difficulty: 40 });
+    expect(pickTaskForMood({ tasks: [done, next], moodLevel: 50, today: TODAY, daysAhead: DAYS_AHEAD, completedTaskId: done._id }))
+      .toEqual({ type: "picked", task: next });
+  });
+
   it("returns none-in-window for an empty task list", () => {
     expect(pick([], 50)).toEqual({ type: "none-in-window", daysAhead: DAYS_AHEAD });
   });
