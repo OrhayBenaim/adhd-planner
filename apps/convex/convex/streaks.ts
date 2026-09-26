@@ -2,7 +2,6 @@ import { v } from "convex/values";
 import { query, internalMutation } from "./_generated/server";
 import { today, yesterday, weekStart, daysBetween } from "./lib/calendar";
 import { requireAuth } from "./lib/auth";
-import { checkPremium } from "./subscriptions";
 
 const streakReadReturns = v.object({
   currentStreak: v.number(),
@@ -58,8 +57,6 @@ export const updateOnCompletion = internalMutation({
   },
   returns: streakUpdateReturns,
   handler: async (ctx, { userId, nowMs = Date.now() }) => {
-    const isPremium = await checkPremium(ctx, userId, nowMs);
-
     const todayStr = today(nowMs);
     const yesterdayStr = yesterday(nowMs);
     const mondayOfThisWeek = weekStart(nowMs);
@@ -100,7 +97,7 @@ export const updateOnCompletion = internalMutation({
       const daysMissed =
         daysBetween(existing.lastCompletionDate, todayStr) - 1;
 
-      if (isPremium && daysMissed === 1 && freezesUsed < 1) {
+      if (daysMissed === 1 && freezesUsed < 1) {
         newStreak += 1;
         freezesUsed += 1;
       } else {

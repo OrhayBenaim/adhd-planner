@@ -3,12 +3,10 @@ import { useRouter } from "expo-router";
 import { SettingsPage } from "../../../src/components/settings/SettingsPage";
 import { SettingsRow, SettingsSection } from "../../../src/components/settings/SettingsRow";
 import { useSettings } from "../../../src/hooks/useSettings";
-import { usePremium } from "../../../src/hooks/usePremium";
 
 export default function SettingsPageRoute() {
   const router = useRouter();
   const { settings, updateSetting, adminAiEnabled } = useSettings();
-  const { isPremium, showPaywall } = usePremium();
 
   return (
     <SettingsPage animated screenName="Settings">
@@ -32,9 +30,9 @@ export default function SettingsPageRoute() {
       <SettingsSection title="Reminders & feedback">
         <SettingsRow label="Notifications" description="Task reminders"
           value={settings.notifications} onValueChange={(v) => updateSetting("notifications", v)} />
-        <SettingsRow label="AI Coach" description="Personalized nudges & tips" pro
+        <SettingsRow label="AI Coach" description="Personalized nudges & tips"
           disabled={!settings.notifications} value={settings.coachNotifications}
-          onValueChange={(v) => (isPremium ? updateSetting("coachNotifications", v) : showPaywall())} />
+          onValueChange={(v) => updateSetting("coachNotifications", v)} />
         <SettingsRow label="Sound & haptics" description="Sound effects & vibration"
           value={settings.soundEffects} onValueChange={(v) => updateSetting("soundEffects", v)} />
       </SettingsSection>

@@ -8,9 +8,8 @@ import { usePremium } from "../../../src/hooks/usePremium";
 import { track } from "../../../src/lib/analytics";
 
 const INCLUDED = [
-  "AI coach — personalised nudges & tips",
-  "Achievements — badges and levels",
-  "Voice languages — offline speech models",
+  "Support Lullio's development",
+  "Higher monthly AI scoring limit",
 ];
 
 const STORE_SUBSCRIPTIONS = Platform.OS === "ios"
@@ -36,7 +35,7 @@ export default function SubscriptionRoute() {
 
   return (
     <SettingsPage parent="Account" title="Subscription"
-      explanation="Lullio Pro unlocks the AI coach and achievements."
+      explanation="Every feature is free. Lullio Pro supports development and show some love ❤️."
       note={isPremium
         ? "Billing is handled by the App Store or Google Play.\nManage opens your store subscription settings."
         : "Billing is handled by the App Store or Google Play."}>
@@ -44,7 +43,7 @@ export default function SubscriptionRoute() {
         <Text style={styles.eyebrow}>CURRENT PLAN</Text>
         <Text style={styles.cardValue}>{isPremium ? "Lullio Pro" : "Free"}</Text>
         <Text style={styles.cardBody}>
-          {isPremium ? renewal ?? "Active" : "Upgrade to unlock everything below."}
+          {isPremium ? renewal ?? "Active" : "Upgrade to support Lullio."}
         </Text>
         <AppPressable accessibilityRole="button" style={styles.outlineButton}
           onPress={isPremium ? () => Linking.openURL(managementURL ?? STORE_SUBSCRIPTIONS) : handleUpgrade}>
