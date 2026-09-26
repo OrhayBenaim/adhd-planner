@@ -29,7 +29,8 @@ export interface HomeExperience {
   banner: BannerVisibility;
   survey: ReturnType<typeof useSurveyCampaign>;
   surveyRewardToast: string | null;
-  evaluateAiPick: (moodLevel: number, excludeTaskId?: string) => AiPickOutcome;
+  /** `completedTaskId` is never picked, even before the task list reflects it. */
+  evaluateAiPick: (moodLevel: number, completedTaskId?: string) => AiPickOutcome;
 }
 
 export function useHomeExperience(tasks: readonly Task[]): HomeExperience {
@@ -92,11 +93,11 @@ export function useHomeExperience(tasks: readonly Task[]): HomeExperience {
   );
 
   const evaluateAiPick = useCallback(
-    (moodLevel: number, excludeTaskId?: string): AiPickOutcome =>
+    (moodLevel: number, completedTaskId?: string): AiPickOutcome =>
       pickTaskForMood({
         tasks,
         moodLevel,
-        excludeTaskId,
+        completedTaskId,
         today: getLocalToday(),
         daysAhead: aiPickDaysAhead,
       }),
