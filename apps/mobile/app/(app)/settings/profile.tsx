@@ -67,15 +67,15 @@ export default function ProfileAccountRoute() {
   const handleSignOut = useCallback(async () => {
     setBusy(true);
     try {
-      await authClient.signOut();
+      // Clear the marker first: once the session is gone the (app) layout unmounts
+      // this screen and routes to onboarding itself, so nothing here may run after.
       await clearHadLinkedAccountMarker();
-      router.replace("/");
+      await authClient.signOut();
     } catch (e) {
       Sentry.captureException(e);
-    } finally {
       setBusy(false);
     }
-  }, [router]);
+  }, []);
 
   const handleDelete = useCallback(() => {
     Alert.alert(
