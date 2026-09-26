@@ -52,7 +52,8 @@ export function useAuthBootstrap(): AuthBootstrapResult {
       setHadLinkedAccount(marker);
       if (!session && !marker && !anonymousSignInAttemptedRef.current) {
         anonymousSignInAttemptedRef.current = true;
-        await authClient.signIn.anonymous();
+        const { error } = await authClient.signIn.anonymous();
+        if (error) throw error;
       }
     }
 
