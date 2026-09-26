@@ -118,7 +118,8 @@ export default function ProfileAccountRoute() {
         <TextInput value={name} onChangeText={setName} onBlur={saveName}
           placeholder="Your name" placeholderTextColor={colors.muted} maxLength={100}
           accessibilityLabel="Your name" style={[styles.cardValue, { padding: 0 }]} />
-        {provider ? <View style={styles.cardPill}><Text style={styles.cardPillLabel}>{provider}</Text></View> : null}
+        {provider ? <View style={styles.cardPill}><Text style={styles.cardPillLabel}
+          textBreakStrategy="simple" lineBreakStrategyIOS="standard">{provider}</Text></View> : null}
       </View>
 
       <SettingsGroup>
