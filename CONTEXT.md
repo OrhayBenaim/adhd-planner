@@ -21,3 +21,21 @@ _Avoid_: Cancel, dismiss-all, escape
 **Exit arming**:
 The short window after the first back on a clean root screen during which a second back exits the app.
 _Avoid_: Exit confirmation dialog, quit prompt
+
+### Home
+
+**Next step**:
+The single task Home surfaces for the user to do now, chosen to fit their current mood.
+_Avoid_: Current task, selected task, focus task
+
+**Nothing planned**:
+Home's empty state when the user has no incomplete tasks and completed none today.
+_Avoid_: No tasks, empty list
+
+**All done**:
+Home's empty state when the user has no incomplete tasks and completed at least one today.
+_Avoid_: Task zero, inbox zero, finished
+
+**No energy match**:
+Home's empty state when incomplete tasks exist but none fit the current mood.
+_Avoid_: No match, filtered out
