@@ -41,7 +41,9 @@ Code: `HomeScreen.tsx`, `TaskCard.tsx`
 | Frame | Node | Step |
 |-------|------|------|
 | Home | `201:36` | Home |
-| Home / no match | `309:1032` | tasks exist but none match the current energy |
+| Home / nothing planned | `413:5` | no incomplete tasks, none completed today |
+| Home / no energy match | `413:72` | tasks exist but none match the current energy |
+| Home / all done | `414:46` | no incomplete tasks, at least one completed today |
 
 ## Task creation
 
@@ -120,8 +122,13 @@ Code: `app/sign-in-gate.tsx`, `app/paywall.tsx`, `app/(app)/settings/subscriptio
 | Frame | Node | Step |
 |-------|------|------|
 | Sign-in gate / options | `300:977` | sign-in gate |
+| Paywall / Main | `410:1732` | paywall (Settings → Subscription) |
+| Paywall / AI limit reached | `410:1842` | paywall (`ai_limit` placement) |
 | Subscription | `392:1887` | plan status and management (Pro) |
 | Subscription / Free | `392:1952` | plan status (Free, upgrade to Pro) |
+
+The paywall frames sit in section `410:1512` (`Paywall`) on Production. They are a
+RevenueCat dashboard paywall; the layer names note the RC component each part maps to.
 
 ## Guided tour
 
