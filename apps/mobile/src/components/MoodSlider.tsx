@@ -24,52 +24,75 @@ function valueToThumbX(value: number, trackWidth: number): number {
 
 interface Props {
   value: number;
+  /** Called once per gesture, on release (and on tap), never per frame. */
   onChange: (value: number) => void;
+  onDraggingChange?: (dragging: boolean) => void;
 }
 
-export function MoodSlider({ value, onChange }: Props) {
-  const label = getMoodLabel(value);
+export function MoodSlider({ value, onChange, onDraggingChange }: Props) {
+  // Thumb and label are local while dragging; the mood commits on release.
+  const [liveValue, setLiveValue] = useState(value);
+  const [prevValue, setPrevValue] = useState(value);
+  if (value !== prevValue) {
+    setPrevValue(value);
+    setLiveValue(value);
+  }
+  const label = getMoodLabel(liveValue);
   const [trackWidth, setTrackWidth] = useState(1);
   const isDraggingRef = useRef(false);
+  // The value this slider just committed: the thumb is already there, so moving
+  // it to the rounded value would snap it a few pixels after release.
+  const releasedValueRef = useRef<number | null>(null);
 
   const thumbX = useSharedValue(valueToThumbX(value, trackWidth));
 
-  const notifyChange = (x: number) => {
-    const pct = Math.min(Math.max(x / Math.max(1, trackWidth - THUMB_SIZE), 0), 1);
-    onChange(Math.round(pct * 100));
+  const toValue = (x: number) =>
+    Math.round(Math.min(Math.max(x / Math.max(1, trackWidth - THUMB_SIZE), 0), 1) * 100);
+
+  const showLive = (x: number) => setLiveValue(toValue(x));
+
+  const commit = (x: number) => {
+    const next = toValue(x);
+    releasedValueRef.current = next === value ? null : next;
+    setLiveValue(next);
+    onChange(next);
   };
 
   const setDragging = (dragging: boolean) => {
     isDraggingRef.current = dragging;
+    onDraggingChange?.(dragging);
   };
 
+  // One gesture for tap and drag, so each touch commits exactly once.
   const pan = Gesture.Pan()
     .minDistance(0)
-    .onBegin(() => {
+    .onBegin((e) => {
+      const max = Math.max(0, trackWidth - THUMB_SIZE);
+      thumbX.value = clamp(e.x - THUMB_SIZE / 2, 0, max);
       scheduleOnRN(setDragging, true);
+      scheduleOnRN(showLive, thumbX.value);
     })
     .onChange((e) => {
       const max = Math.max(0, trackWidth - THUMB_SIZE);
       thumbX.value = clamp(thumbX.value + e.changeX, 0, max);
-      scheduleOnRN(notifyChange, thumbX.value);
+      scheduleOnRN(showLive, thumbX.value);
     })
     .onFinalize(() => {
+      scheduleOnRN(commit, thumbX.value);
       scheduleOnRN(setDragging, false);
     });
-
-  const tap = Gesture.Tap().onEnd((e) => {
-    const max = Math.max(0, trackWidth - THUMB_SIZE);
-    const x = clamp(e.x - THUMB_SIZE / 2, 0, max);
-    thumbX.value = x;
-    scheduleOnRN(notifyChange, x);
-  });
 
   const thumbStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: thumbX.value }],
   }));
 
+  // Outside changes (widget, accessibility actions) move the thumb.
   useEffect(() => {
     if (isDraggingRef.current) return;
+    if (value === releasedValueRef.current) {
+      releasedValueRef.current = null;
+      return;
+    }
     thumbX.value = valueToThumbX(value, trackWidth);
   }, [value, trackWidth, thumbX]);
 
@@ -94,10 +117,10 @@ export function MoodSlider({ value, onChange }: Props) {
       </View>
 
       {/* Track + thumb */}
-      <GestureDetector gesture={Gesture.Simultaneous(pan, tap)}>
+      <GestureDetector gesture={pan}>
         <View
           accessible accessibilityRole="adjustable" accessibilityLabel="Energy level"
-          accessibilityValue={{ min: 0, max: 100, now: value, text: label }}
+          accessibilityValue={{ min: 0, max: 100, now: liveValue, text: label }}
           accessibilityActions={[{ name: "increment" }, { name: "decrement" }]}
           onAccessibilityAction={event => onChange(Math.max(0, Math.min(100, value + (event.nativeEvent.actionName === "increment" ? 10 : -10))))}
           style={{ height: 44, justifyContent: "center" }}

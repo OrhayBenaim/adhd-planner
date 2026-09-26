@@ -2,6 +2,7 @@
 import { View, ScrollView, Text } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import { useCallback, useEffect, useRef } from "react";
+import Animated, { LinearTransition } from "react-native-reanimated";
 import { useRouter } from "expo-router";
 import { SvgXml } from "react-native-svg";
 import { homeArtwork } from "../../../assets/home/artwork";
@@ -10,7 +11,7 @@ import { homeColors, homeStyles } from "./theme";
 
 import { XPBar } from "../XPBar";
 import { MoodSlider } from "../MoodSlider";
-import { TaskCard } from "../TaskCard";
+import { NextStepSlot } from "./NextStepSlot";
 import { BottomNav } from "../BottomNav";
 import { PointsToast } from "../PointsToast";
 
@@ -25,9 +26,12 @@ import { useTaskCreationFlow } from "./TaskCreationFlowProvider";
 import { usePremium } from "../../hooks/usePremium";
 import { useHomeExperience } from "../../hooks/useHomeExperience";
 import { useRatingPrompt } from "../../hooks/useRatingPrompt";
+import { useNextStep } from "../../hooks/useNextStep";
 import { useGuidedTour } from "../tour/GuidedTourProvider";
 import { track } from "../../lib/analytics";
 import { useHomeTour, HomeTourOverlays } from "./HomeTour";
+
+const reflow = LinearTransition.duration(200);
 
 export function MainContent() {
   const {
@@ -68,34 +72,21 @@ export function MainContent() {
 
   const { isPremium, showPaywall } = usePremium();
 
-  /**
-   * The next task surfaces on its own: whenever nothing is selected, pick the
-   * best match for the current mood. Waits for the stored selection to load so
-   * it cannot overwrite what the user left on screen.
-   */
-  useEffect(() => {
-    if (!selectedTaskHydrated || selectedTask || guidedTour?.isActive) return;
-    const outcome = evaluateAiPick(moodLevel);
-    if (outcome.type === "picked") setSelectedTask(outcome.task);
-  }, [
-    selectedTaskHydrated,
-    selectedTask,
-    guidedTour?.isActive,
-    evaluateAiPick,
-    moodLevel,
-    setSelectedTask,
-  ]);
+  const nextStep = useNextStep({
+    tasks, streak, moodLevel, selectedTask, setSelectedTask, selectedTaskHydrated,
+    tourActive: guidedTour?.isActive ?? false, evaluateAiPick,
+  });
 
   const handleComplete = useCallback(
-    async (task: typeof selectedTask) => {
-      if (!task) return;
+    async (task: NonNullable<typeof selectedTask>) => {
       const result = await completeTask(task._id);
       track("task_completed");
-      setSelectedTask(null);
+      // Pick the next task in the same update, so the slot goes straight to it.
+      setSelectedTask(nextStep.nextAfterCompleting(task._id));
       showToast(result?.earned ?? 0);
       notifyTaskCompleted();
     },
-    [notifyTaskCompleted, completeTask, setSelectedTask, showToast],
+    [notifyTaskCompleted, completeTask, setSelectedTask, showToast, nextStep.nextAfterCompleting],
   );
 
   useEffect(() => {
@@ -103,13 +94,12 @@ export function MainContent() {
   }, [ensureTourTaskSelected, tasks, selectedTask, setSelectedTask]);
 
   const moodControl = (<View key="mood" ref={tourRefs.moodSliderRef} collapsable={false} style={{ marginHorizontal: 24 }}>
-          <MoodSlider value={moodLevel} onChange={setMoodLevel} />
+          <MoodSlider value={moodLevel} onChange={setMoodLevel} onDraggingChange={nextStep.setMoodDragging} />
         </View>);
-  const taskCard = (<View key="task" style={{ marginHorizontal: 24 }}>
-          <TaskCard task={selectedTask} onComplete={handleComplete}
-            onAdd={() => handleAddPress(() => flow.start())} hasTasks={tasks.some(task => !task.completed)}
-            completeButtonRef={tourRefs.taskCardRef} />
-        </View>);
+  const taskCard = nextStep.ready
+    ? <NextStepSlot key="task" slot={nextStep.slot} onComplete={handleComplete}
+        onAdd={() => handleAddPress(() => flow.start())} completeButtonRef={tourRefs.taskCardRef} />
+    : null;
 
   return (
     <View ref={tourRefs.rootViewRef} collapsable={false} style={{ flex: 1, backgroundColor: "white" }}>
@@ -134,36 +124,36 @@ export function MainContent() {
 
         {/* AI ceiling banner */}
         {banner.visible && (
-          <View className="px-6 pb-2">
+          <Animated.View layout={reflow} className="px-6 pb-2">
             <AiCeilingBanner
               onUpgrade={showPaywall}
               onBuyCredits={showPaywall}
               reason={banner.ceilingReason}
               creditBalance={creditBalance ?? undefined}
             />
-          </View>
+          </Animated.View>
         )}
 
 
         {!guidedTour?.isActive && survey.reminderVisible && survey.campaign && (
-          <View className="px-6">
+          <Animated.View layout={reflow} className="px-6">
             <SurveyReminderBanner
               campaign={survey.campaign}
               onTakeSurvey={survey.handleStart}
               onDismiss={survey.handleDismissReminder}
             />
-          </View>
+          </Animated.View>
         )}
 
         {ratingPrompt.visible &&
           !survey.reminderVisible &&
           !guidedTour?.isActive && (
-            <View className="px-6">
+            <Animated.View layout={reflow} className="px-6">
               <RatingPromptBanner
                 onRate={ratingPrompt.handleRate}
                 onDismiss={ratingPrompt.handleDismiss}
               />
-            </View>
+            </Animated.View>
           )}
 
       </ScrollView>

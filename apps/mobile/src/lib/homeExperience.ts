@@ -20,6 +20,8 @@ export interface AiPickInput {
   today: string;
   daysAhead: number;
   excludeTaskId?: string;
+  /** Just completed: never picked, even if the task list has not caught up yet. */
+  completedTaskId?: string;
 }
 
 export interface BannerVisibilityInput {
@@ -51,6 +53,7 @@ export function pickTaskForMood({
   today,
   daysAhead,
   excludeTaskId,
+  completedTaskId,
 }: AiPickInput): AiPickOutcome {
   const cutoff = dateStringDaysAhead(today, daysAhead);
 
@@ -58,6 +61,7 @@ export function pickTaskForMood({
     .filter(
       (t) =>
         !t.completed &&
+        t._id !== completedTaskId &&
         t.difficulty >= 0 &&
         t.dueDate >= today &&
         t.dueDate <= cutoff,
