@@ -80,7 +80,7 @@ Code: `app/(app)/settings/index.tsx`, `components/settings/*`
 
 | Frame | Node | Step |
 |-------|------|------|
-| Settings | `289:1293` | Settings |
+| Settings | `392:1826` | Settings |
 
 ## Preferences
 
@@ -120,7 +120,8 @@ Code: `app/sign-in-gate.tsx`, `app/paywall.tsx`, `app/(app)/settings/subscriptio
 | Frame | Node | Step |
 |-------|------|------|
 | Sign-in gate / options | `300:977` | sign-in gate |
-| Subscription | `274:737` | plan status and management |
+| Subscription | `392:1887` | plan status and management (Pro) |
+| Subscription / Free | `392:1952` | plan status (Free, upgrade to Pro) |
 
 ## Guided tour
 
@@ -250,3 +251,4 @@ Superseded designs, grouped by the date they left Production.
 | Section | Node | Contents |
 |---------|------|----------|
 | 2026-09-22 · pre-Lullio redesign | `329:1612` | Home, Task creation, Sheets, Onboarding, Guided tour, Routes, Overlays & banners |
+| 2026-09-26 · Pro is free (Settings, Subscription) | `398:1618` | Settings and Subscription with Pro-gated copy |

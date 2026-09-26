@@ -1,4 +1,3 @@
-import { ConvexError } from "convex/values";
 import { v } from "convex/values";
 import {
   internalMutation,
@@ -56,31 +55,6 @@ export async function checkPremium(
     .first();
   return isSubscriptionActive(sub, nowMs);
 }
-
-export async function requirePremium(
-  ctx: QueryCtx | MutationCtx,
-  userId: string,
-  nowMs: number,
-): Promise<void> {
-  const premium = await checkPremium(ctx, userId, nowMs);
-  if (!premium) {
-    throw new ConvexError("Premium subscription required");
-  }
-}
-
-export const listActiveSubscriberIds = internalQuery({
-  args: { nowMs: v.number() },
-  returns: v.array(v.string()),
-  handler: async (ctx, { nowMs }) => {
-    const subs = await ctx.db
-      .query("subscriptions")
-      .filter((q) => q.eq(q.field("isActive"), true))
-      .collect();
-    return subs
-      .filter((sub) => isSubscriptionActive(sub, nowMs))
-      .map((sub) => sub.userId);
-  },
-});
 
 export const upsertFromWebhook = internalMutation({
   args: {

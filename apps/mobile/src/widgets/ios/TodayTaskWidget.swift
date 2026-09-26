@@ -26,70 +26,66 @@ struct TodayTaskWidgetView: View {
     let entry: TodayTaskEntry
 
     var body: some View {
-        if !entry.data.isPremium {
-            PremiumUpsellView()
-        } else {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Text("📋 Today")
-                        .font(.caption)
-                        .bold()
-                    Spacer()
-                    Text("\(entry.data.todayCompletedCount)/\(entry.data.todayTaskCount)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("📋 Today")
+                    .font(.caption)
+                    .bold()
+                Spacer()
+                Text("\(entry.data.todayCompletedCount)/\(entry.data.todayTaskCount)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
 
-                let uncompletedTasks = (entry.data.tasks ?? []).filter { !$0.completed }
+            let uncompletedTasks = (entry.data.tasks ?? []).filter { !$0.completed }
 
-                if !uncompletedTasks.isEmpty {
-                    if #available(iOS 17.0, *) {
-                        ForEach(uncompletedTasks.prefix(5), id: \.id) { task in
-                            HStack(spacing: 6) {
-                                Button(intent: CompleteTaskIntent(taskId: task.id)) {
-                                    Image(systemName: "circle")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.blue)
-                                }
-                                .buttonStyle(.plain)
-                                Text(task.title)
-                                    .font(.caption)
-                                    .lineLimit(1)
-                                    .foregroundColor(Color(red: 0.12, green: 0.23, blue: 0.37))
-                            }
-                        }
-                    } else {
-                        ForEach(uncompletedTasks.prefix(5), id: \.id) { task in
-                            HStack(spacing: 6) {
+            if !uncompletedTasks.isEmpty {
+                if #available(iOS 17.0, *) {
+                    ForEach(uncompletedTasks.prefix(5), id: \.id) { task in
+                        HStack(spacing: 6) {
+                            Button(intent: CompleteTaskIntent(taskId: task.id)) {
                                 Image(systemName: "circle")
                                     .font(.system(size: 14))
                                     .foregroundColor(.blue)
-                                Text(task.title)
-                                    .font(.caption)
-                                    .lineLimit(1)
-                                    .foregroundColor(Color(red: 0.12, green: 0.23, blue: 0.37))
                             }
+                            .buttonStyle(.plain)
+                            Text(task.title)
+                                .font(.caption)
+                                .lineLimit(1)
+                                .foregroundColor(Color(red: 0.12, green: 0.23, blue: 0.37))
                         }
                     }
-                } else if let task = entry.data.suggestedTask {
-                    Text(task)
-                        .font(.subheadline)
-                        .lineLimit(2)
-                        .padding(10)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.blue.opacity(0.08))
-                        .cornerRadius(8)
                 } else {
-                    let remaining = entry.data.todayTaskCount - entry.data.todayCompletedCount
-                    Text(remaining > 0 ? "\(remaining) tasks remaining" : "All done! 🎉")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .center)
+                    ForEach(uncompletedTasks.prefix(5), id: \.id) { task in
+                        HStack(spacing: 6) {
+                            Image(systemName: "circle")
+                                .font(.system(size: 14))
+                                .foregroundColor(.blue)
+                            Text(task.title)
+                                .font(.caption)
+                                .lineLimit(1)
+                                .foregroundColor(Color(red: 0.12, green: 0.23, blue: 0.37))
+                        }
+                    }
                 }
+            } else if let task = entry.data.suggestedTask {
+                Text(task)
+                    .font(.subheadline)
+                    .lineLimit(2)
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.blue.opacity(0.08))
+                    .cornerRadius(8)
+            } else {
+                let remaining = entry.data.todayTaskCount - entry.data.todayCompletedCount
+                Text(remaining > 0 ? "\(remaining) tasks remaining" : "All done! 🎉")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
-            .padding()
-            .containerBackground(.fill.tertiary, for: .widget)
         }
+        .padding()
+        .containerBackground(.fill.tertiary, for: .widget)
     }
 }
 

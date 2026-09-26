@@ -44,6 +44,14 @@ export const setNotificationsEnabled = mutation({
   },
 });
 
+export const setCoachNotificationsEnabled = mutation({
+  args: { enabled: v.boolean() },
+  handler: async (ctx, { enabled }) => {
+    const userId = await requireAuth(ctx);
+    await upsertUserSetting(ctx, userId, { coachNotificationsEnabled: enabled });
+  },
+});
+
 export const getDeviceId = internalQuery({
   args: { userId: v.string() },
   handler: async (ctx, { userId }) => {
