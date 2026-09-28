@@ -41,7 +41,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#BDE0FE"
       },
-      "versionCode": 48,
+      "versionCode": 49,
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "adjustPan",
       "package": "com.ottersprod.lullio",
