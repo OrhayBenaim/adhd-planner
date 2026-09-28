@@ -16,6 +16,8 @@ import {
 } from "../lib/sessionState";
 import { useNeedsOnboarding, usePreferences } from "./usePreferences";
 
+const ANONYMOUS_SIGN_IN_RETRY_MS = 5_000;
+
 export interface AuthBootstrapResult {
   status: AuthBootstrapStatus;
   recoveryHref: typeof SESSION_RECOVERY_HREF;
@@ -28,6 +30,7 @@ export function useAuthBootstrap(): AuthBootstrapResult {
   const preferences = usePreferences();
   const [hadLinkedAccount, setHadLinkedAccount] = useState<boolean | null>(null);
   const [sessionRecoveryTimedOut, setSessionRecoveryTimedOut] = useState(false);
+  const [anonymousSignInRetry, setAnonymousSignInRetry] = useState(0);
   const anonymousSignInAttemptedRef = useRef(false);
   const hasLinkedSession = hasLinkedAccountSession(session);
   const isWaitingForLinkedSession =
@@ -53,10 +56,25 @@ export function useAuthBootstrap(): AuthBootstrapResult {
       if (!session && !marker && !anonymousSignInAttemptedRef.current) {
         anonymousSignInAttemptedRef.current = true;
         const { error } = await authClient.signIn.anonymous();
-        if (error) throw error;
+        if (error) {
+          // A brand-new user has no account to recover — retry instead of
+          // falling into the linked-session recovery path.
+          Sentry.captureException(
+            new Error(`Anonymous sign-in failed (${error.status})`),
+            { extra: { error } },
+          );
+          anonymousSignInAttemptedRef.current = false;
+          if (!isCancelled) {
+            retryTimeout = setTimeout(
+              () => setAnonymousSignInRetry((n) => n + 1),
+              ANONYMOUS_SIGN_IN_RETRY_MS,
+            );
+          }
+        }
       }
     }
 
+    let retryTimeout: ReturnType<typeof setTimeout> | undefined;
     syncAuthBootstrapState().catch((e: unknown) => {
       Sentry.captureException(e);
       if (!isCancelled) {
@@ -66,8 +84,9 @@ export function useAuthBootstrap(): AuthBootstrapResult {
 
     return () => {
       isCancelled = true;
+      clearTimeout(retryTimeout);
     };
-  }, [hasLinkedSession, isPending, session]);
+  }, [hasLinkedSession, isPending, session, anonymousSignInRetry]);
 
   useEffect(() => {
     if (!isWaitingForLinkedSession) {
