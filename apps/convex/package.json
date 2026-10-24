@@ -9,6 +9,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@adhd-planner/types": "*",
     "@better-auth/expo": "1.4.9",
     "@convex-dev/better-auth": "0.10.13",
     "better-auth": "1.4.9",

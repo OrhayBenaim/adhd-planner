@@ -14,6 +14,7 @@ import type * as ai from "../ai.js";
 import type * as appConfig from "../appConfig.js";
 import type * as auth from "../auth.js";
 import type * as coachNotifications from "../coachNotifications.js";
+import type * as contactMessages from "../contactMessages.js";
 import type * as credits from "../credits.js";
 import type * as crons from "../crons.js";
 import type * as http from "../http.js";
@@ -60,6 +61,7 @@ declare const fullApi: ApiFromModules<{
   appConfig: typeof appConfig;
   auth: typeof auth;
   coachNotifications: typeof coachNotifications;
+  contactMessages: typeof contactMessages;
   credits: typeof credits;
   crons: typeof crons;
   http: typeof http;

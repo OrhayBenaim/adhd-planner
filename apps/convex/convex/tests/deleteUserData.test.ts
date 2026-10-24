@@ -1,8 +1,29 @@
 import { convexTest } from "convex-test";
-import { expect, test } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import schema from "../schema";
 
 const modules = import.meta.glob("../**/*.ts");
+
+const contactMessage = {
+  topic: "bug" as const,
+  message: "The timer froze",
+  replyAddress: "ada@example.com",
+  os: "ios 18.1",
+  appVersion: "1.4.0",
+};
+
+async function contactMessagesOf(t: ReturnType<typeof convexTest>, userId: string) {
+  return t.run((ctx) =>
+    ctx.db
+      .query("contactMessages")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .collect(),
+  );
+}
+
+// Fake timers keep migration's scheduled cleanup from firing on its own.
+beforeEach(() => vi.useFakeTimers());
+afterEach(() => vi.useRealTimers());
 
 test("deleteAccount removes all user data including survey completions", async () => {
   const t = convexTest(schema, modules);
@@ -53,6 +74,7 @@ test("deleteAccount removes all user data including survey completions", async (
       rewardAmount: 1,
       rewardStatus: "granted",
     });
+    await ctx.db.insert("contactMessages", { userId: "user1", ...contactMessage });
   });
 
   const asUser = t.withIdentity({ name: "Test", subject: "user1" });
@@ -84,4 +106,27 @@ test("deleteAccount removes all user data including survey completions", async (
       .collect();
     expect(completions).toHaveLength(0);
   });
+
+  expect(await contactMessagesOf(t, "user1")).toHaveLength(0);
+});
+
+test("guest contact messages move to the linked account and the guest copies are cleaned up", async () => {
+  const t = convexTest(schema, modules);
+  const { internal } = await import("../_generated/api");
+
+  await t.run(async (ctx) => {
+    await ctx.db.insert("userSettings", { userId: "guest", aiEnabled: true });
+    await ctx.db.insert("contactMessages", { userId: "guest", ...contactMessage });
+  });
+
+  await t.mutation(internal.migration.migrateUserData, { oldUserId: "guest", newUserId: "account" });
+
+  const moved = await contactMessagesOf(t, "account");
+  expect(moved).toHaveLength(1);
+  expect(moved[0]).toMatchObject({ userId: "account", ...contactMessage });
+
+  await t.mutation(internal.migration.cleanupOldUserData, { oldUserId: "guest" });
+
+  expect(await contactMessagesOf(t, "guest")).toHaveLength(0);
+  expect(await contactMessagesOf(t, "account")).toHaveLength(1);
 });

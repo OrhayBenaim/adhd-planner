@@ -10,7 +10,7 @@ import { OnboardingAuth } from "../../../src/components/onboarding/OnboardingAut
 import { settingsColors as colors, settingsStyles as styles } from "../../../src/components/settings/theme";
 import { authClient } from "../../../src/lib/authClient";
 import { clearHadLinkedAccountMarker, getSessionAnonymousState, markHadLinkedAccount } from "../../../src/lib/sessionState";
-import { isInternalAuthEmail } from "../../../src/lib/authUsername";
+import { hasRealEmail } from "@adhd-planner/types";
 import { usePreferences, useUpdatePreferences } from "../../../src/hooks/usePreferences";
 
 interface SessionUser {
@@ -29,7 +29,7 @@ function describeProvider(user: SessionUser | undefined): string | null {
   if ((user.image ?? "").includes("googleusercontent")) return email ? `Signed in with Google · ${email}` : "Signed in with Google";
   if (email.includes("privaterelay.appleid.com")) return "Signed in with Apple";
   if (handle) return `Signed in with username · @${handle}`;
-  if (email && !isInternalAuthEmail(email)) return `Signed in with email · ${email}`;
+  if (hasRealEmail(user)) return `Signed in with email · ${email}`;
   return null;
 }
 

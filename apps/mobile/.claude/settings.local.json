@@ -14,5 +14,9 @@
       "Bash(node -e \"const p=require\\(''C:/Users/Orhay/git/adhd-planner/node_modules/lottie-react-native/package.json''\\); console.log\\(''version:'', p.version\\)\")",
       "Bash(node -e \"const d=require\\(''''fs''''\\).readFileSync\\(''''/dev/stdin'''',''''utf8''''\\);const j=JSON.parse\\(d\\);console.log\\(Object.keys\\(j.dependencies\\).filter\\(k=>k.includes\\(''''lottie''''\\)\\)\\)\")"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "lullio-sentry"
+  ],
+  "enableAllProjectMcpServers": true
 }

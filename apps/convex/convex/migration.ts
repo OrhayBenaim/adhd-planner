@@ -196,6 +196,16 @@ export const migrateUserData = internalMutation({
       }
     }
 
+    // Migrate contactMessages — copy to new user, keep old copies for stale JWT
+    const oldContactMessages = await ctx.db
+      .query("contactMessages")
+      .withIndex("by_user", (q) => q.eq("userId", oldUserId))
+      .collect();
+    for (const msg of oldContactMessages) {
+      const { _id, _creationTime, userId: _oldUid, ...msgData } = msg;
+      await ctx.db.insert("contactMessages", { ...msgData, userId: newUserId });
+    }
+
     // Schedule cleanup of orphaned old records after JWT has refreshed
     await ctx.scheduler.runAfter(30_000, internal.migration.cleanupOldUserData, {
       oldUserId,

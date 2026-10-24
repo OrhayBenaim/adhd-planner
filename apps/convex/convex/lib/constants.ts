@@ -29,3 +29,7 @@ export const CREDIT_MULTIPLIERS: Record<string, number> = {
 /** AI scoring rate limit */
 export const AI_RATE_LIMIT_WINDOW_MS = 60_000;
 export const AI_MAX_SCORES_PER_WINDOW = 10;
+
+/** Contact message rate limit */
+export const CONTACT_RATE_LIMIT_WINDOW_MS = 10 * 60_000;
+export const CONTACT_MAX_MESSAGES_PER_WINDOW = 3;

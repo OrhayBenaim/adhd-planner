@@ -15,7 +15,7 @@ import { authClient } from "../lib/authClient";
 import { getDistinctId } from "../lib/analytics";
 import { getDeviceId } from "../lib/deviceId";
 import { getSessionAnonymousState } from "../lib/sessionState";
-import { isInternalAuthEmail } from "../lib/authUsername";
+import { isInternalAuthEmail } from "@adhd-planner/types";
 import { evaluateBackendPremium } from "../lib/subscriptionStatus";
 import { usePreferences } from "./usePreferences";
 import { useQueryTime } from "./useQueryTime";
