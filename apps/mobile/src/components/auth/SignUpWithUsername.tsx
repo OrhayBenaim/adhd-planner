@@ -3,10 +3,8 @@ import { View, Text, type TextInputProps } from "react-native";
 import { AppPressable as Pressable } from "../AppPressable";
 import * as Sentry from "@sentry/react-native";
 import { authClient } from "../../lib/authClient";
-import {
-  usernameToInternalEmail,
-  validateUsername,
-} from "../../lib/authUsername";
+import { usernameToInternalEmail } from "@adhd-planner/types";
+import { validateUsername } from "../../lib/authUsername";
 import { UsernameForm, type UsernameFormField } from "./UsernameForm";
 import { onboardingColors as colors, onboardingStyles as styles } from "../onboarding/theme";
 import type { ComponentType } from "react";

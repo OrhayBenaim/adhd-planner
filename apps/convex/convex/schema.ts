@@ -171,4 +171,18 @@ export default defineSchema({
   })
     .index("by_user_campaign", ["userId", "campaignId"])
     .index("by_user", ["userId"]),
+
+  contactMessages: defineTable({
+    userId: v.string(),
+    topic: v.union(
+      v.literal("bug"),
+      v.literal("idea"),
+      v.literal("account"),
+      v.literal("other"),
+    ),
+    message: v.string(),
+    replyAddress: v.string(),
+    os: v.string(),
+    appVersion: v.string(),
+  }).index("by_user", ["userId"]),
 });

@@ -1,6 +1,11 @@
 // Domain types shared between apps
 export type SurveyRewardType = "points" | "pro_days" | "ai_credits";
 
+export { hasRealEmail, isInternalAuthEmail, usernameToInternalEmail } from "./authEmail";
+
+/** ConvexError data when a user sends too many contact messages in a row; the app matches on it. */
+export const CONTACT_RATE_LIMIT_MESSAGE = "You've sent a few messages in a row. Try again in a few minutes.";
+
 export {
   formatWidgetData,
   getMoodEmoji,
