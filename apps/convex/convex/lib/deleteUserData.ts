@@ -20,6 +20,7 @@ const MULTI_TABLES = [
   "achievements",
   "coachNotificationLog",
   "surveyCompletions",
+  "contactMessages",
 ] as const;
 
 /**
