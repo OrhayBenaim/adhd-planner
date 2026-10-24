@@ -155,7 +155,7 @@ export default function ContactRoute() {
                     return (
                       <Fragment key={t.value}>
                         {i > 0 && <View style={styles.divider} />}
-                        <AppPressable accessibilityRole="button" accessibilityLabel={t.label}
+                        <AppPressable cssInterop={false} accessibilityRole="button" accessibilityLabel={t.label}
                           accessibilityState={{ selected }}
                           onPress={() => {
                             setTopic(t.value);
