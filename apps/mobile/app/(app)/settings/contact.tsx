@@ -1,5 +1,5 @@
-import { Fragment, useEffect, useState } from "react";
-import { BackHandler, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Fragment, useState } from "react";
+import { Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import * as Application from "expo-application";
@@ -7,7 +7,14 @@ import * as Haptics from "expo-haptics";
 import Animated, { useReducedMotion } from "react-native-reanimated";
 import { useMutation } from "convex/react";
 import { api } from "@adhd-planner/convex/convex/_generated/api";
-import { hasRealEmail } from "@adhd-planner/types";
+import {
+  CONTACT_EMAIL_MAX_LENGTH,
+  CONTACT_MESSAGE_MAX_LENGTH,
+  CONTACT_TOPICS,
+  hasRealEmail,
+  isValidEmail,
+  type ContactTopic,
+} from "@adhd-planner/types";
 import { AppPressable } from "../../../src/components/AppPressable";
 import { inputStyle } from "../../../src/components/auth/UsernameForm";
 import { OnboardingButton } from "../../../src/components/onboarding/OnboardingButton";
@@ -15,7 +22,7 @@ import { onboardingStyles } from "../../../src/components/onboarding/theme";
 import { SettingsPage } from "../../../src/components/settings/SettingsPage";
 import { settingsColors as colors, settingsStyles as styles } from "../../../src/components/settings/theme";
 import { authClient } from "../../../src/lib/authClient";
-import { canSendContact, CONTACT_TOPICS, contactSendError, isValidEmail, type ContactTopic } from "../../../src/lib/contactForm";
+import { canSendContact, contactSendError } from "../../../src/lib/contactForm";
 import { useSoundEnabled } from "../../../src/lib/soundStore";
 import { CONFIRM_DELAY_MS, confirmEnter, errorLineEnter, formExit, topicMenuMotion } from "../../../src/components/settings/contactMotion";
 
@@ -24,9 +31,10 @@ const APP_VERSION = `${Application.nativeApplicationVersion ?? "unknown"} (${App
 
 export default function ContactRoute() {
   const router = useRouter();
-  const { data: session } = authClient.useSession();
+  const { data: session, isPending: sessionPending } = authClient.useSession();
   const sendMessage = useMutation(api.contactMessages.send);
-  const needsEmail = !hasRealEmail(session?.user);
+  // Wait for the session, or the Email field would flash for accounts that have a real email.
+  const needsEmail = !sessionPending && !hasRealEmail(session?.user);
   const reduced = useReducedMotion();
   // Settings groups vibration with sound ("Sound & haptics"), as in NextStepSlot.
   const soundEnabled = useSoundEnabled();
@@ -40,16 +48,6 @@ export default function ContactRoute() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
-
-  // Registered after the page's own back handler, so it runs first and only closes the menu.
-  useEffect(() => {
-    if (!menuOpen) return;
-    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      setMenuOpen(false);
-      return true;
-    });
-    return () => sub.remove();
-  }, [menuOpen]);
 
   const handleSend = async () => {
     Keyboard.dismiss();
@@ -89,7 +87,7 @@ export default function ContactRoute() {
   const topicLabel = CONTACT_TOPICS.find((t) => t.value === topic)?.label;
 
   return (
-    <SettingsPage parent="Support">
+    <SettingsPage parent="Support" dismiss={menuOpen ? () => setMenuOpen(false) : undefined}>
       {/* Title, explanation and note live here, not in SettingsPage props, so they fade out with the form. */}
       <Animated.View key="form" exiting={formExit} style={{ gap: 24 }}>
         <View style={{ gap: 12 }}>
@@ -106,7 +104,7 @@ export default function ContactRoute() {
                 <TextInput value={email} onChangeText={setEmail} onBlur={() => setEmailTouched(true)}
                   placeholder="you@example.com" placeholderTextColor={colors.muted} accessibilityLabel="Email"
                   keyboardType="email-address" autoCapitalize="none" autoCorrect={false}
-                  autoComplete="email" textContentType="emailAddress" maxLength={254}
+                  autoComplete="email" textContentType="emailAddress" maxLength={CONTACT_EMAIL_MAX_LENGTH}
                   style={[inputStyle, { borderColor: emailError ? colors.danger : colors.border }]} />
                 {emailError
                   ? <Animated.Text key="email-error" entering={errorLineEnter} style={[styles.caption, { color: colors.danger }]}>
@@ -130,7 +128,7 @@ export default function ContactRoute() {
 
             <View style={{ gap: 8 }}>
               <Text style={styles.sectionTitle}>Message</Text>
-              <TextInput value={message} onChangeText={setMessage} multiline maxLength={2000}
+              <TextInput value={message} onChangeText={setMessage} multiline maxLength={CONTACT_MESSAGE_MAX_LENGTH}
                 placeholder="What's going on? The more detail you share, the easier it is to help."
                 placeholderTextColor={colors.muted} accessibilityLabel="Message" textAlignVertical="top"
                 style={[inputStyle, { height: 180, paddingVertical: 16, lineHeight: 22 }]} />
@@ -140,7 +138,7 @@ export default function ContactRoute() {
           </View>
 
           <OnboardingButton label="Send message" onPress={handleSend} loading={sending}
-            disabled={!canSendContact({ topic, message, email, needsEmail })} />
+            disabled={sessionPending || !canSendContact({ topic, message, email, needsEmail })} />
 
           {menuOpen && (
             <>
@@ -150,7 +148,8 @@ export default function ContactRoute() {
               <Animated.View {...topicMenuMotion(reduced)} style={{ position: "absolute", left: 0, right: 0,
                 top: topicY + 86, borderRadius: 20, transformOrigin: "top",
                 backgroundColor: colors.white, boxShadow: "0px 8px 24px rgba(81, 11, 49, 0.14)" }}>
-                <View style={{ borderRadius: 20, overflow: "hidden", paddingVertical: 4 }}>
+                {/* Claims taps on its padding and dividers, so they don't bubble up to the page's dismiss. */}
+                <View onStartShouldSetResponder={() => true} style={{ borderRadius: 20, overflow: "hidden", paddingVertical: 4 }}>
                   {CONTACT_TOPICS.map((t, i) => {
                     const selected = t.value === topic;
                     return (

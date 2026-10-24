@@ -1,5 +1,12 @@
 import { ConvexError, v } from "convex/values";
-import { CONTACT_RATE_LIMIT_MESSAGE, hasRealEmail } from "@adhd-planner/types";
+import {
+  CONTACT_EMAIL_MAX_LENGTH,
+  CONTACT_MESSAGE_MAX_LENGTH,
+  CONTACT_RATE_LIMIT_MESSAGE,
+  CONTACT_TOPICS,
+  hasRealEmail,
+  isValidEmail,
+} from "@adhd-planner/types";
 import { internal } from "./_generated/api";
 import { internalAction, mutation } from "./_generated/server";
 import { requireAuth } from "./lib/auth";
@@ -7,17 +14,6 @@ import { CONTACT_MAX_MESSAGES_PER_WINDOW, CONTACT_RATE_LIMIT_WINDOW_MS } from ".
 import { sentryCaptureEvent } from "./lib/sentry";
 import { assertMaxLength, MAX_NAME } from "./lib/validation";
 import schema from "./schema";
-
-const MAX_MESSAGE = 2000;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX_EMAIL = 254;
-
-const TOPIC_LABELS = {
-  bug: "Report a bug",
-  idea: "Suggest an idea",
-  account: "Account & subscription",
-  other: "Something else",
-} as const;
 
 export const send = mutation({
   args: {
@@ -34,7 +30,7 @@ export const send = mutation({
     const identity = (await ctx.auth.getUserIdentity())!;
     const text = message.trim();
     if (!text) throw new ConvexError("Message is required");
-    assertMaxLength(text, MAX_MESSAGE, "Message");
+    assertMaxLength(text, CONTACT_MESSAGE_MAX_LENGTH, "Message");
     assertMaxLength(os, MAX_NAME, "OS");
     assertMaxLength(appVersion, MAX_NAME, "App version");
 
@@ -43,7 +39,7 @@ export const send = mutation({
       replyAddress = identity.email!;
     } else {
       replyAddress = email?.trim() ?? "";
-      if (replyAddress.length > MAX_EMAIL || !EMAIL_RE.test(replyAddress)) {
+      if (replyAddress.length > CONTACT_EMAIL_MAX_LENGTH || !isValidEmail(replyAddress)) {
         throw new ConvexError("Enter a valid email address.");
       }
     }
@@ -70,7 +66,7 @@ export const notifyTeam = internalAction({
   args: schema.tables.contactMessages.validator.fields,
   returns: v.null(),
   handler: async (_ctx, row) => {
-    const label = TOPIC_LABELS[row.topic];
+    const label = CONTACT_TOPICS.find((t) => t.value === row.topic)!.label;
     const preview = row.message.replace(/\s+/g, " ").slice(0, 60);
     try {
       const res = await fetch("https://api.resend.com/emails", {

@@ -1,5 +1,6 @@
 import { ConvexError } from "convex/values";
-import { canSendContact, contactSendError, isValidEmail } from "../contactForm";
+import { isValidEmail } from "@adhd-planner/types";
+import { canSendContact, contactSendError } from "../contactForm";
 
 describe("canSendContact", () => {
   const filled = { topic: "bug" as const, message: "It froze", email: "", needsEmail: false };

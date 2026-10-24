@@ -23,6 +23,8 @@ interface Props {
   /** Centre the content vertically, for a one-block confirmation. */
   centered?: boolean;
   onLeave?: () => void;
+  /** Set while a surface (like a menu) is open: back and taps outside it close it instead of leaving. */
+  dismiss?: () => void;
   children?: ReactNode;
 }
 
@@ -30,22 +32,23 @@ interface Props {
  * The blue, wave-bottomed surface every settings screen sits on, with the
  * header and back control the whole section shares.
  */
-export function SettingsPage({ parent, screenName, title, explanation, note, animated = false, centered = false, onLeave, children }: Props) {
+export function SettingsPage({ parent, screenName, title, explanation, note, animated = false, centered = false, onLeave, dismiss, children }: Props) {
   const { onLayout, surfaceStyle, contentStyle, close } = useWaveReveal(animated);
 
   const leave = useCallback(() => {
     onLeave?.();
     close();
   }, [onLeave, close]);
+  const back = dismiss ?? leave;
 
   // Android back has to run the same exit, or the wave would never come up.
   useFocusEffect(useCallback(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      leave();
+      back();
       return true;
     });
     return () => sub.remove();
-  }, [leave]));
+  }, [back]));
 
   return (
     <View style={{ flex: 1 }} onLayout={animated ? onLayout : undefined}>
@@ -53,14 +56,16 @@ export function SettingsPage({ parent, screenName, title, explanation, note, ani
         animated ? [surfaceStyle, { position: "absolute", left: 0, right: 0, top: 0 }] : { flex: 1 },
         { backgroundColor: colors.blue, overflow: "hidden" },
       ]}>
-        <Animated.View style={[animated ? contentStyle : null, { flex: 1 }]}>
+        {/* Taps on anything that doesn't handle them itself bubble up here; a scroll takes the touch over instead. */}
+        <Animated.View style={[animated ? contentStyle : null, { flex: 1 }]}
+          onStartShouldSetResponder={dismiss ? () => true : undefined} onResponderRelease={dismiss}>
           <View style={{ paddingHorizontal: 24, minHeight: 44, flexDirection: "row",
             alignItems: "center", justifyContent: "space-between", gap: 12 }}>
             {screenName
               ? <Text accessibilityRole="header" style={styles.screenName}>{screenName}</Text>
               : <Text accessibilityRole="header" style={styles.parent}>{parent}</Text>}
             <AppPressable accessibilityRole="button" accessibilityLabel="Back" hitSlop={4}
-              onPress={leave} style={styles.back}>
+              onPress={back} style={styles.back}>
               <Ionicons name="arrow-back" size={24} color={colors.primary} />
             </AppPressable>
           </View>

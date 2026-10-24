@@ -51,7 +51,7 @@ describe("send a contact message", () => {
     expect(rows.map((r) => r.replyAddress)).toEqual(["typed@example.com"]);
   });
 
-  test.each([undefined, "", "not-an-email", "a@b", "two@@example.com"])(
+  test.each([undefined, "", "not-an-email", "a@b", "two@@example.com", `${"a".repeat(243)}@example.com`])(
     "account without a real email rejects typed email %j",
     async (email) => {
       const t = convexTest(schema, modules);
