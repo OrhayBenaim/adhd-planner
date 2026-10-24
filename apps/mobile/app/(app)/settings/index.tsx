@@ -36,6 +36,11 @@ export default function SettingsPageRoute() {
         <SettingsRow label="Sound & haptics" description="Sound effects & vibration"
           value={settings.soundEffects} onValueChange={(v) => updateSetting("soundEffects", v)} />
       </SettingsSection>
+
+      <SettingsSection title="Support">
+        <SettingsRow label="Contact us" description="Questions, bugs & ideas"
+          onPress={() => router.push("/settings/contact")} />
+      </SettingsSection>
     </SettingsPage>
   );
 }

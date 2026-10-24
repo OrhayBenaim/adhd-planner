@@ -20,6 +20,8 @@ interface Props {
   note?: string;
   /** Root settings screen only: run the wave down on open and up on close. */
   animated?: boolean;
+  /** Centre the content vertically, for a one-block confirmation. */
+  centered?: boolean;
   onLeave?: () => void;
   children?: ReactNode;
 }
@@ -28,7 +30,7 @@ interface Props {
  * The blue, wave-bottomed surface every settings screen sits on, with the
  * header and back control the whole section shares.
  */
-export function SettingsPage({ parent, screenName, title, explanation, note, animated = false, onLeave, children }: Props) {
+export function SettingsPage({ parent, screenName, title, explanation, note, animated = false, centered = false, onLeave, children }: Props) {
   const { onLayout, surfaceStyle, contentStyle, close } = useWaveReveal(animated);
 
   const leave = useCallback(() => {
@@ -63,7 +65,8 @@ export function SettingsPage({ parent, screenName, title, explanation, note, ani
             </AppPressable>
           </View>
           <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 80, gap: 24 }}>
+            contentContainerStyle={[{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 80, gap: 24 },
+              centered && { flexGrow: 1, justifyContent: "center" }]}>
             {(title || explanation) && <View style={{ gap: 12 }}>
               {title ? <Text accessibilityRole="header" style={styles.title}>{title}</Text> : null}
               {explanation ? <Text style={styles.explanation}>{explanation}</Text> : null}

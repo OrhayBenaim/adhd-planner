@@ -19,7 +19,8 @@ interface UsernameFormProps {
   InputComponent?: ComponentType<TextInputProps>;
 }
 
-const inputStyle = {
+/** The Text field: white, 1px border, control radius, 16px padding. */
+export const inputStyle = {
   minHeight: 54, borderRadius: 14, borderWidth: 1, borderColor: colors.border,
   backgroundColor: colors.white, paddingHorizontal: 16, paddingVertical: 14,
   fontFamily: "Inter-Regular", fontSize: 16, color: colors.ink,
