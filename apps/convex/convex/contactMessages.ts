@@ -47,8 +47,7 @@ export const send = mutation({
     const windowStart = Date.now() - CONTACT_RATE_LIMIT_WINDOW_MS;
     const recent = await ctx.db
       .query("contactMessages")
-      .withIndex("by_user", (q) => q.eq("userId", userId))
-      .filter((q) => q.gte(q.field("_creationTime"), windowStart))
+      .withIndex("by_user", (q) => q.eq("userId", userId).gte("_creationTime", windowStart))
       .take(CONTACT_MAX_MESSAGES_PER_WINDOW);
     if (recent.length >= CONTACT_MAX_MESSAGES_PER_WINDOW) {
       throw new ConvexError(CONTACT_RATE_LIMIT_MESSAGE);
