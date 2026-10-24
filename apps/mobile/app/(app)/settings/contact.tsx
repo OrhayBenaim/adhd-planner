@@ -155,7 +155,9 @@ export default function ContactRoute() {
                     return (
                       <Fragment key={t.value}>
                         {i > 0 && <View style={styles.divider} />}
-                        <AppPressable cssInterop={false} accessibilityRole="button" accessibilityLabel={t.label}
+                        {/* Plain Pressable: css-interop strips cssInterop at the AppPressable wrapper and drops function styles. */}
+                        <Pressable cssInterop={false} android_disableSound={!soundEnabled}
+                          accessibilityRole="button" accessibilityLabel={t.label}
                           accessibilityState={{ selected }}
                           onPress={() => {
                             setTopic(t.value);
@@ -168,7 +170,7 @@ export default function ContactRoute() {
                           <Text style={{ flex: 1, fontFamily: "Inter-SemiBold", fontSize: 16, lineHeight: 22,
                             color: selected ? colors.primary : colors.ink }}>{t.label}</Text>
                           {selected && <Ionicons name="checkmark" size={20} color={colors.primary} />}
-                        </AppPressable>
+                        </Pressable>
                       </Fragment>
                     );
                   })}
