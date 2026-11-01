@@ -12,7 +12,7 @@
     "@adhd-planner/types": "*",
     "@better-auth/expo": "1.4.9",
     "@convex-dev/better-auth": "0.10.13",
-    "better-auth": "1.4.9",
+    "better-auth": "1.7.7",
     "convex": "1.32.0"
   },
   "devDependencies": {
