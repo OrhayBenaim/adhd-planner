@@ -82,7 +82,21 @@ Code: `app/(app)/settings/index.tsx`, `components/settings/*`
 
 | Frame | Node | Step |
 |-------|------|------|
-| Settings | `392:1826` | Settings |
+| Settings | `448:5` | Settings (with Support section) |
+
+## Contact us
+
+`Settings → Support → Contact us → sent / send failed`
+
+Code: `app/(app)/settings/contact.tsx`, `contactForm.ts`
+
+| Frame | Node | Step |
+|-------|------|------|
+| Contact us | `448:180` | form (signed in) |
+| Contact us / not signed in | `451:94` | form (email required) |
+| Contact us / topic open | `449:93` | topic menu open |
+| Contact us / sent | `456:95` | sent |
+| Contact us / send failed | `461:97` | send failed |
 
 ## Preferences
 
@@ -250,7 +264,6 @@ Unshipped. Same flow names as Production when the frame is a draft of that journ
 | Implementation reference | `203:48` | Working notes for the Lullio redesign |
 | Previous onboarding layouts / retained artwork | `259:368` | Artwork kept from the pre-Lullio onboarding |
 | Store listing · Lullio · draft | `338:1071` | Store listing — Lullio redesign of section `74:17` |
-| Contact us · draft | `448:2` | Settings → Support → Contact us (`app/(app)/settings/contact.tsx`, `contactForm.ts`) |
 
 ## Archive
 
@@ -260,3 +273,4 @@ Superseded designs, grouped by the date they left Production.
 |---------|------|----------|
 | 2026-09-22 · pre-Lullio redesign | `329:1612` | Home, Task creation, Sheets, Onboarding, Guided tour, Routes, Overlays & banners |
 | 2026-09-26 · Pro is free (Settings, Subscription) | `398:1618` | Settings and Subscription with Pro-gated copy |
+| 2026-11-06 · Contact us (Settings gains Support) | `470:1642` | Settings without the Support section |
